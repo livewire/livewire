@@ -4,7 +4,6 @@ namespace Livewire\Features\SupportTesting\Tests;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Livewire\Livewire;
 use Tests\TestComponent;
@@ -82,7 +81,7 @@ class MissingModelComponent extends TestComponent
 {
     public function showFullDetails($id)
     {
-        (new Collection)->findOrFail($id);
+        throw new ModelNotFoundException;
     }
 }
 
