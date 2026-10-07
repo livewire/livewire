@@ -13,6 +13,10 @@ use BackedEnum;
 /**
  * @template TComponent of \Livewire\Component
  *
+ * @method $this assertSuccessful()
+ * @method $this assertOk()
+ * @method $this assertStatus(int $status)
+ *
  * @mixin \Illuminate\Testing\TestResponse
  */
 

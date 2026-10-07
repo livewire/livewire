@@ -1,11 +1,12 @@
-import { replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { pushUrl, replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
-import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredFor, whenThisLinkIsPressed } from "./links"
+import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, isSamePageFragment, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredOrFocusedFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
 import { restoreScrollPositionOrScrollToTop, storeScrollInformationInHtmlBeforeNavigatingAway } from "./scroll"
 import { isPersistedElement, putPersistantElementsBack, storePersistantElementsForLater } from "./persist"
 import { finishAndHideProgressBar, removeAnyLeftOverStaleProgressBars, showAndStartProgressBar } from "./bar"
 import { packUpPersistedPopovers, unPackPersistedPopovers } from "./popover"
+import { transitionPageSwap } from "./transition"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 import { startNavigation } from "./navigation"
@@ -46,10 +47,10 @@ export default function (Alpine) {
 
         let preserveScroll = modifiers.includes('preserve-scroll')
 
-        shouldPrefetchOnHover && whenThisLinkIsHoveredFor(el, 60, () => {
+        shouldPrefetchOnHover && whenThisLinkIsHoveredOrFocusedFor(el, 60, () => {
             let destination = extractDestinationFromLink(el)
 
-            if (linkShouldBeHandledNatively(el, destination)) return
+            if (linkShouldBeHandledNatively(el, destination) || isSamePageFragment(destination)) return
 
             prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
@@ -61,7 +62,7 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            prefetchHtml(destination, (html, finalDestination) => {
+            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination) => {
                 storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
@@ -81,6 +82,24 @@ export default function (Alpine) {
 
     function navigateTo(destination, { preserveScroll = false, shouldPushToHistoryState = true }) {
         let navigation = startNavigation()
+
+        if (shouldPushToHistoryState && isSamePageFragment(destination)) {
+            navigation.ready()
+
+            storeScrollInformationInHtmlBeforeNavigatingAway()
+            updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
+
+            if (destination.href !== window.location.href) {
+                pushUrl(destination, document.documentElement.outerHTML, { sameDocument: true })
+            }
+
+            restoreScrollPositionOrScrollToTop({ scrollToFragment: ! preserveScroll })
+
+            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+            navigation.finish()
+
+            return
+        }
 
         showProgressBar && showAndStartProgressBar()
 
@@ -113,38 +132,40 @@ export default function (Alpine) {
             shouldPushToHistoryState && updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks()
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                enablePersist && storePersistantElementsForLater(persistedEl => {
-                    packUpPersistedTeleports(persistedEl)
-                    packUpPersistedPopovers(persistedEl)
-                })
-
-                if (shouldPushToHistoryState) {
-                    updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
-                } else {
-                    replaceUrl(finalDestination, html)
-                }
-
-                swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
-                    removeAnyLeftOverStaleTeleportTargets(document.body)
-
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                        unPackPersistedTeleports(persistedEl)
-                        unPackPersistedPopovers(persistedEl)
+                transitionPageSwap(html, () => {
+                    enablePersist && storePersistantElementsForLater(persistedEl => {
+                        packUpPersistedTeleports(persistedEl)
+                        packUpPersistedPopovers(persistedEl)
                     })
 
-                    !preserveScroll && restoreScrollPositionOrScrollToTop()
+                    if (shouldPushToHistoryState) {
+                        updateUrlAndStoreLatestHtmlForFutureBackButtons(html, finalDestination)
+                    } else {
+                        replaceUrl(finalDestination, html)
+                    }
 
-                    // Invoke any callbacks registered via onSwap during the navigating event
-                    swapCallbacks.forEach(callback => callback())
+                    swapCurrentPageWithNewHtml(html, (afterNewScriptsAreDoneLoading) => {
+                        removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    afterNewScriptsAreDoneLoading(() => {
-                        andAfterAllThis(() => {
-                            nowInitializeAlpineOnTheNewPage(Alpine)
-                            autofocusElementsWithTheAutofocusAttribute()
+                        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                            unPackPersistedTeleports(persistedEl)
+                            unPackPersistedPopovers(persistedEl)
+                        })
 
-                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
-                            navigation.finish()
-                            showProgressBar && finishAndHideProgressBar()
+                        !preserveScroll && restoreScrollPositionOrScrollToTop()
+
+                        // Invoke any callbacks registered via onSwap during the navigating event
+                        swapCallbacks.forEach(callback => callback())
+
+                        afterNewScriptsAreDoneLoading(() => {
+                            andAfterAllThis(() => {
+                                nowInitializeAlpineOnTheNewPage(Alpine)
+                                autofocusElementsWithTheAutofocusAttribute()
+
+                                fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                                navigation.finish()
+                                showProgressBar && finishAndHideProgressBar()
+                            })
                         })
                     })
                 })
@@ -216,35 +237,50 @@ export default function (Alpine) {
             updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
 
             preventAlpineFromPickingUpDomChanges(Alpine, andAfterAllThis => {
-                enablePersist && storePersistantElementsForLater(persistedEl => {
-                    packUpPersistedTeleports(persistedEl)
-                    packUpPersistedPopovers(persistedEl)
-                })
-
-                swapCurrentPageWithNewHtml(html, () => {
-                    removeAnyLeftOverStaleProgressBars()
-
-                    removeAnyLeftOverStaleTeleportTargets(document.body)
-
-                    enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
-                        unPackPersistedTeleports(persistedEl)
-                        unPackPersistedPopovers(persistedEl)
+                transitionPageSwap(html, () => {
+                    enablePersist && storePersistantElementsForLater(persistedEl => {
+                        packUpPersistedTeleports(persistedEl)
+                        packUpPersistedPopovers(persistedEl)
                     })
 
-                    restoreScrollPositionOrScrollToTop()
+                    swapCurrentPageWithNewHtml(html, () => {
+                        removeAnyLeftOverStaleProgressBars()
 
-                    // Invoke any callbacks registered via onSwap during the navigating event
-                    swapCallbacks.forEach(callback => callback())
+                        removeAnyLeftOverStaleTeleportTargets(document.body)
 
-                    andAfterAllThis(() => {
-                        nowInitializeAlpineOnTheNewPage(Alpine)
-                        autofocusElementsWithTheAutofocusAttribute()
+                        enablePersist && putPersistantElementsBack((persistedEl, newStub) => {
+                            unPackPersistedTeleports(persistedEl)
+                            unPackPersistedPopovers(persistedEl)
+                        })
 
-                        fireEventForOtherLibrariesToHookInto('alpine:navigated')
-                        navigation.finish()
+                        restoreScrollPositionOrScrollToTop()
+
+                        // Invoke any callbacks registered via onSwap during the navigating event
+                        swapCallbacks.forEach(callback => callback())
+
+                        andAfterAllThis(() => {
+                            nowInitializeAlpineOnTheNewPage(Alpine)
+                            autofocusElementsWithTheAutofocusAttribute()
+
+                            fireEventForOtherLibrariesToHookInto('alpine:navigated')
+                            navigation.finish()
+                        })
                     })
                 })
             })
+        },
+        (destination, snapshotHtml, currentPageUrl, currentPageKey) => {
+            let prevented = fireEventForOtherLibrariesToHookInto('alpine:navigate', {
+                url: destination, history: true, cached: true,
+            })
+
+            if (prevented) return
+
+            storeScrollInformationInHtmlBeforeNavigatingAway()
+            updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks(currentPageKey, currentPageUrl)
+            restoreScrollPositionOrScrollToTop({ snapshotHtml })
+
+            fireEventForOtherLibrariesToHookInto('alpine:navigated')
         },
     )
 

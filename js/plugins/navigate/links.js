@@ -79,19 +79,21 @@ export function whenThisLinkIsPressed(el, callback) {
     })
 }
 
-export function whenThisLinkIsHoveredFor(el, ms = 60, callback) {
-    el.addEventListener('mouseenter', e => {
-        let timeout = setTimeout(() => {
-            callback(e)
-        }, ms)
+export function whenThisLinkIsHoveredOrFocusedFor(el, ms = 60, callback) {
+    for (let [enterEvent, leaveEvent] of [['mouseenter', 'mouseleave'], ['focus', 'blur']]) {
+        el.addEventListener(enterEvent, e => {
+            let timeout = setTimeout(() => {
+                callback(e)
+            }, ms)
 
-        let handler = () => {
-            clearTimeout(timeout)
-            el.removeEventListener('mouseleave', handler)
-        }
+            let handler = () => {
+                clearTimeout(timeout)
+                el.removeEventListener(leaveEvent, handler)
+            }
 
-        el.addEventListener('mouseleave', handler)
-    })
+            el.addEventListener(leaveEvent, handler)
+        })
+    }
 }
 
 export function extractDestinationFromLink(linkEl) {
@@ -104,6 +106,13 @@ export function createUrlObjectFromString(urlString) {
 
 export function isSameOrigin(destination) {
     return !! destination && destination.origin === window.location.origin
+}
+
+export function isSamePageFragment(destination) {
+    return isSameOrigin(destination)
+        && destination.pathname === window.location.pathname
+        && destination.search === window.location.search
+        && destination.href.includes('#')
 }
 
 export function visitNatively(destination) {

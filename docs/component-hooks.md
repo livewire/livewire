@@ -144,4 +144,4 @@ class SupportCsvDownloads extends ComponentHook
 }
 ```
 
-You can 
+The callback returned from `call()` runs after the component method has finished. In this example, it can inspect each method's return value and handle `Csv` instances in one place.

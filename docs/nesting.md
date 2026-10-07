@@ -51,7 +51,7 @@ new class extends Component {
     #[Computed]
     public function todos()
     {
-        return Auth::user()->todos,
+        return Auth::user()->todos;
     }
 };
 ?>
@@ -85,7 +85,7 @@ new class extends Component {
     #[Computed]
     public function count()
     {
-        return $this->todos->count(),
+        return $this->todos->count();
     }
 };
 ?>
@@ -191,7 +191,7 @@ new class extends Component {
     #[Computed]
     public function count()
     {
-        return $this->todos->count(),
+        return $this->todos->count();
     }
 };
 ?>
@@ -235,7 +235,7 @@ new class extends Component {
     #[Computed]
     public function todos()
     {
-        return Auth::user()->todos,
+        return Auth::user()->todos;
     }
 };
 ```
@@ -576,7 +576,7 @@ new class extends Component {
     #[Computed]
     public function todos()
     {
-        return Auth::user()->todos,
+        return Auth::user()->todos;
     }
 };
 ?>
@@ -613,7 +613,7 @@ new class extends Component {
     #[Computed]
     public function todos()
     {
-        return Auth::user()->todos,
+        return Auth::user()->todos;
     }
 };
 ?>
@@ -791,7 +791,7 @@ new class extends Component {
     #[Computed]
     public function subQuestions()
     {
-        return $this->question->subQuestions,
+        return $this->question->subQuestions;
     }
 };
 ?>

@@ -490,7 +490,7 @@ trait HandlesValidation
         // Let's make sure there are no form objects that contain them...
         $allRules = $rules;
 
-        if ($this->isRootComponent()) {
+        if (empty($rules) && $this->isRootComponent()) {
             foreach ($this->getFormObjects() as $form) {
                 $allRules = array_merge($allRules, $form->getRules());
             }

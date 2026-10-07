@@ -1,4 +1,5 @@
 import { on as hook } from '@/hooks'
+import { setNextActionOrigin } from '@/request'
 
 hook('effect', ({ component, effects }) => {
     let listeners = []
@@ -17,6 +18,14 @@ function registerListeners(component, listeners) {
             if (component.isLazy && ! component.hasBeenLazyLoaded) return
 
             if (e.__livewire) e.__livewire.receivedBy.push(component)
+
+            // Event listeners may live in a completely different component than
+            // the element that dispatched the event (for example, a global toast).
+            // Preserve that element as the action origin so it receives data-loading
+            // for the listener's request.
+            if (e.target instanceof Element) {
+                setNextActionOrigin({ el: e.target })
+            }
 
             component.$wire.call('__dispatch', name, e.detail || {})
         }
@@ -41,5 +50,4 @@ function registerListeners(component, listeners) {
         })
     })
 }
-
 

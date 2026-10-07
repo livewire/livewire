@@ -1,7 +1,7 @@
 
 Livewire components are simple to test. Because they are just Laravel classes under the hood, they can be tested using Laravel's existing testing tools. However, Livewire provides many additional utilities to make testing your components a breeze.
 
-This documentation will guide you through testing Livewire components using **Pest** as the recommended testing framework, though you can also use PHPUnit if you prefer.
+**Pest** is the recommended framework for testing Livewire components. Application testing examples throughout the documentation use Pest, though you can also use [PHPUnit](#using-phpunit) if you prefer.
 
 ## Installing Pest
 
@@ -50,13 +50,13 @@ Now Pest will recognize and run tests located next to your components when you r
 
 ## Creating your first test
 
-You can generate a test file alongside a component by appending the `--test` flag to the `make:livewire` command:
+You can generate a Pest test file alongside a component by appending the `--test` flag to the `make:livewire` command:
 
 ```shell
 php artisan make:livewire post.create --test
 ```
 
-For multi-file components, this will create a test file at `resources/views/components/post/create.test.php`:
+For a single-file component, this creates `resources/views/components/post/⚡create.test.php`. With `--mfc`, the test is created at `resources/views/components/post/⚡create/create.test.php`. Both contain the same Pest test:
 
 ```php
 <?php
@@ -69,7 +69,7 @@ it('renders successfully', function () {
 });
 ```
 
-For class-based components, this creates a PHPUnit test file at `tests/Feature/Livewire/Post/CreateTest.php`. You can convert it to Pest syntax or keep using PHPUnit—both work great with Livewire.
+For class-based components, `php artisan make:livewire post.create --class --test` creates a Pest test file at `tests/Feature/Livewire/Post/CreateTest.php`.
 
 ### Testing a page contains a component
 
@@ -401,6 +401,20 @@ it('dispatches event with correct data', function () {
 });
 ```
 
+### Testing skipped rendering
+
+Use `assertRenderSkipped()` to verify that an action or event listener skipped rendering with `$this->skipRender()` or `#[Renderless]`. For example, a notification badge might skip rendering when it receives an event for another notification:
+
+```php
+it('skips rendering for unrelated notifications', function () {
+    Livewire::test('notification-badge', ['notificationId' => 1])
+        ->dispatch('notification-read', notificationId: 999)
+        ->assertRenderSkipped();
+});
+```
+
+Use `assertRenderNotSkipped()` to verify that rendering ran, even if the resulting HTML is unchanged. Both assertions check the latest request. Providing replacement HTML to `skipRender()` still counts as skipping the component's rendering.
+
 ### Testing JS evaluation
 
 Assert that a component evaluated JavaScript via `$this->js()`:
@@ -501,6 +515,8 @@ Below is a comprehensive reference of every Livewire testing method available to
 | `assertSet('title', '...')`                           | Assert that a property equals the provided value                                                                                                                        |
 | `assertNotSet('title', '...')`                        | Assert that a property does not equal the provided value                                                                                                                    |
 | `assertCount('posts', 3)`                             | Assert that a property contains 3 items                                                                                                         |
+| `assertRenderSkipped()`                              | Assert that component rendering was skipped during the latest request |
+| `assertRenderNotSkipped()`                           | Assert that component rendering was not skipped during the latest request |
 | `assertSee('...')`                             | Assert that the rendered HTML contains the provided text                                                                                                           |
 | `assertDontSee('...')`                         | Assert that the rendered HTML does not contain the provided text                                                                                                                    |
 | `assertSeeHtml('<div>...</div>')`                     | Assert that raw HTML is present in the rendered output |

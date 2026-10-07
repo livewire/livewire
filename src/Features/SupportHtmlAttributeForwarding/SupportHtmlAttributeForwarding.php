@@ -9,23 +9,17 @@ class SupportHtmlAttributeForwarding extends ComponentHook
 {
     public function render($view, $properties)
     {
-        $attributes = $this->component->getHtmlAttributes();
-
-        $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
+        $this->forwardAttributesToView($view);
     }
 
     public function renderIsland($name, $view, $properties)
     {
-        $attributes = $this->component->getHtmlAttributes();
-
-        $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
+        $this->forwardAttributesToView($view);
     }
 
     public function renderPlaceholder($view, $properties)
     {
-        $attributes = $this->component->getHtmlAttributes();
-
-        $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
+        $this->forwardAttributesToView($view);
     }
 
     function hydrate($memo)
@@ -44,5 +38,14 @@ class SupportHtmlAttributeForwarding extends ComponentHook
         if (! empty($attributes)) {
             $context->addMemo('attributes', $attributes);
         }
+    }
+
+    protected function forwardAttributesToView($view)
+    {
+        $attributes = $this->component->getHtmlAttributes();
+
+        $view->with($this->component->getNonHtmlAttributes());
+
+        $view->with(['attributes' => new ComponentAttributeBag($attributes)]);
     }
 }
