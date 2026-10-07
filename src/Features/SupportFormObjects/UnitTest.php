@@ -1234,6 +1234,23 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.profile.name', '')
             ->assertOk();
     }
+
+    public function test_can_reset_a_nested_form_property_from_the_component()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetNestedFoo()
+            {
+                $this->reset('form.content.foo');
+            }
+        })
+            ->set('form.content.foo', ['bar' => 'changed'])
+            ->set('form.content.1', false)
+            ->call('resetNestedFoo')
+            ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
+            ->assertSetStrict('form.content.1', false);
+    }
 }
 
 class PostFormStub extends Form
