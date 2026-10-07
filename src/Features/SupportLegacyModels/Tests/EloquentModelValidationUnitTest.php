@@ -221,13 +221,11 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->assertHasErrors(['contact.phone' => 'min:12']);
     }
 
-    public function test_boolean_model_attribute_uses_casted_value_for_validation()
+    public function test_integer_model_attribute_is_validated_using_raw_input()
     {
         Livewire::test(ComponentWithCastedModelAttributes::class)
-            ->set('contact.subscribed', 'not-a-boolean')
-            ->call('save')
-            ->assertSetStrict('contact.subscribed', true)// (bool) 'not-a-boolean' === true
-            ->assertHasNoErrors('contact.subscribed');
+            ->call('saveAge', '32.5')
+            ->assertHasErrors(['contact.age' => 'integer']);
     }
 }
 
@@ -392,36 +390,43 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
     }
 }
 
-class ContactWithEncryptedPhone extends Model
+class ContactWithCasts extends Model
 {
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'phone' => null, 'subscribed' => false],
+        ['id' => 1, 'phone' => null, 'age' => 40],
     ];
 
     protected $casts = [
         'phone' => 'encrypted',
-        'subscribed' => 'boolean'
+        'age' => 'integer',
     ];
 }
 
 class ComponentWithCastedModelAttributes extends Component
 {
-    public ContactWithEncryptedPhone $contact;
+    public ContactWithCasts $contact;
 
     protected $rules = [
         'contact.phone' => 'nullable|min:12|max:12',
-        'contact.subscribed' => 'required|boolean',
+        'contact.age' => 'required|integer',
     ];
 
     public function mount()
     {
-        $this->contact = ContactWithEncryptedPhone::first();
+        $this->contact = ContactWithCasts::first();
     }
 
     public function save()
     {
+        $this->validate();
+    }
+
+    public function saveAge($age)
+    {
+        $this->contact->age = $age;
+
         $this->validate();
     }
 
