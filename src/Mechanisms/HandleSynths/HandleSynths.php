@@ -11,8 +11,6 @@ use Livewire\Mechanisms\HandleComponents\Synthesizers;
 use Livewire\Drawer\Utils;
 use ReflectionUnionType;
 
-use function Livewire\on;
-
 class HandleSynths extends Mechanism
 {
     protected array $synthesizers = [
@@ -29,33 +27,11 @@ class HandleSynths extends Mechanism
     // Performance optimization: Cache which synthesizer matches which type
     protected array $typeCache = [];
 
-    // Performance: cache synth class by synthesizer key string ("arr", "clctn", etc.).
-    protected array $keyCache = [];
-
-    // Performance: cache synth class by declared PHP type name (for typed properties).
-    protected array $matchByTypeCache = [];
-
-    public function boot()
-    {
-        on('flush-state', function () {
-            $this->flushCaches();
-        });
-    }
-
-    public function flushCaches()
-    {
-        $this->typeCache = [];
-        $this->keyCache = [];
-        $this->matchByTypeCache = [];
-    }
-
     public function registerSynth($synth)
     {
         foreach ((array) $synth as $class) {
             array_unshift($this->synthesizers, $class);
         }
-
-        $this->flushCaches();
     }
 
     public function dehydrate($target, $context, $path)
@@ -207,20 +183,13 @@ class HandleSynths extends Mechanism
 
     protected function findByKey($key, $context, $path)
     {
-        // Performance optimization: Cache synthesizer matches by runtime key...
-        if (! isset($this->keyCache[$key])) {
-            foreach ($this->synthesizers as $synth) {
-                if ($synth::getKey() === $key) {
-                    $this->keyCache[$key] = $synth;
-
-                    return new $synth($context, $path);
-                }
+        foreach ($this->synthesizers as $synth) {
+            if ($synth::getKey() === $key) {
+                return new $synth($context, $path);
             }
-
-            throw new \Exception('No synthesizer found for key: "'.$key.'"');
         }
 
-        return new ($this->keyCache[$key])($context, $path);
+        throw new \Exception('No synthesizer found for key: "'.$key.'"');
     }
 
     protected function findByTarget($target, $context, $path)
@@ -245,25 +214,13 @@ class HandleSynths extends Mechanism
 
     protected function findByType($type, $context, $path)
     {
-        // Performance optimization: Cache synthesizer matches by declared type name...
-        // null is a valid cached miss (no matching synth), so use array_key_exists.
-        if (! array_key_exists($type, $this->matchByTypeCache)) {
-            foreach ($this->synthesizers as $synth) {
-                if ($synth::matchByType($type)) {
-                    $this->matchByTypeCache[$type] = $synth;
-
-                    return new $synth($context, $path);
-                }
+        foreach ($this->synthesizers as $synth) {
+            if ($synth::matchByType($type)) {
+                return new $synth($context, $path);
             }
-
-            $this->matchByTypeCache[$type] = null;
-
-            return null;
         }
 
-        $synth = $this->matchByTypeCache[$type];
-
-        return $synth ? new $synth($context, $path) : null;
+        return null;
     }
 
     protected function getMetaForPath($raw, $path)
