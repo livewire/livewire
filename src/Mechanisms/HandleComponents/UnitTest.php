@@ -208,6 +208,21 @@ class UnitTest extends \Tests\TestCase
         })->set('name.first', 'Caleb');
     }
 
+
+    public function test_shared_view_state_is_reverted_when_render_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $undefined }}</div>';
+                }
+            });
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertNull(view()->shared('_instance'));
+    }
 }
 
 class BasicComponent extends TestComponent
