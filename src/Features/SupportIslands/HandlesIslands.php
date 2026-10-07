@@ -6,6 +6,8 @@ use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 use function Livewire\trigger;
 
@@ -205,6 +207,10 @@ trait HandlesIslands
             $this->regenerateIslandCacheFiles();
         }
 
+        if (! file_exists($path)) {
+            $this->regenerateIncludedIslandCacheFiles($token);
+        }
+
         $view = app('view')->file($path);
 
         app(ExtendBlade::class)->startLivewireRendering($this);
@@ -266,6 +272,31 @@ trait HandlesIslands
         }
 
         app('blade.compiler')->compile($viewPath);
+    }
+
+    protected function regenerateIncludedIslandCacheFiles($token)
+    {
+        // Islands in an @include'd partial are only compiled with that partial,
+        // so find the partial whose path hash matches the token and compile it...
+        $hash = Str::before($token, '-');
+        $finder = app('view')->getFinder();
+        $cacheManager = app('livewire.compiler')->cacheManager;
+
+        foreach (array_merge($finder->getPaths(), ...array_values($finder->getHints())) as $directory) {
+            if (! is_dir($directory)) continue;
+
+            foreach (File::allFiles($directory) as $file) {
+                $path = $file->getPathname();
+
+                if (! str_ends_with($path, '.blade.php')) continue;
+
+                if ($cacheManager->getHash($path) !== $hash) continue;
+
+                app('blade.compiler')->compile($path);
+
+                return;
+            }
+        }
     }
 
     protected function wrapWithFragmentMarkers($output, $metadata)
