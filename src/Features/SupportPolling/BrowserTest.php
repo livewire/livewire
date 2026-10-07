@@ -149,6 +149,8 @@ class BrowserTest extends BrowserTestCase
         ->waitForTextIn('@poll-count', '2')
         ->waitForLivewire()->click('@slow-down')
         ->assertAttribute('@poller', 'wire:poll.10s', 'poll')
+        // Let any 250ms poll that was already in flight land first...
+        ->pause(500)
         ->tap(function ($b) {
             $pollCount = $b->text('@poll-count');
 

@@ -18,9 +18,8 @@ directive('poll', ({ el, directive, component, cleanup }) => {
     pauseWhile(() => sessionIsExpired())
     stopWhen(() => theElementIsDisconnected(el))
 
-    // The duration is part of the attribute name, so a morph that changes it
-    // removes this attribute and adds a new one with its own poll. This poll
-    // has to stop, or both keep running until the element leaves the DOM...
+    // A morph that changes the attribute (like "wire:poll.5s" to "wire:poll.30s")
+    // removes it and starts a new poll, so this one needs to be stopped...
     cleanup(() => stop())
 })
 
@@ -38,12 +37,10 @@ export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
-    let clear = null
+    let clear
 
     let stop = () => {
-        if (! clear) return
-
-        clear()
+        clear?.()
         clear = null
     }
 
