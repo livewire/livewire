@@ -205,7 +205,7 @@ class FrontendAssets extends Mechanism
         $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
         $versionHash = $manifest['/livewire.js'] ?? 'dev';
 
-        // The CSP-safe build is served from the same URL and cached for a year, so give it its own version...
+        // Both builds are served from the same URL, so bust the cache when switching between them...
         if (app('livewire')->isCspSafe()) {
             $versionHash .= '-csp';
         }
