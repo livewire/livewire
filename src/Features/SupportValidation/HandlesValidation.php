@@ -371,8 +371,6 @@ trait HandlesValidation
 
         $rulesForField = $rulesForField->toArray();
 
-        $ruleKeysForField = array_keys($rulesForField);
-
         $data = array_merge($this->getDataForValidation($rules), $dataOverrides);
 
         $data = $this->prepareForValidation($data);
@@ -415,13 +413,13 @@ trait HandlesValidation
             $messages = $e->validator->getMessageBag();
 
             invade($e->validator)->messages = $messages->merge(
-                $this->errorBagExcept($ruleKeysForField)
+                $this->errorBagExcept($field)
             );
 
             throw $e;
         }
 
-        $this->resetErrorBag($ruleKeysForField);
+        $this->resetErrorBag($field);
 
         return $result;
     }
