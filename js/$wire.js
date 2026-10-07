@@ -1,5 +1,5 @@
 import { cancelUpload, removeUpload, upload, uploadMultiple } from './features/supportFileUploads'
-import { dispatch, dispatchEl, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
+import { dispatch, dispatchEl, dispatchOthers, dispatchRef, dispatchSelf, dispatchTo, listen } from '@/events'
 import { generateEntangleFunction } from '@/features/supportEntangle'
 import { generateWatchFunction } from '@/features/supportWatch'
 import { findComponentByEl } from '@/store'
@@ -53,6 +53,7 @@ let aliases = {
     'dispatchSelf': '$dispatchSelf',
     'dispatchEl': '$dispatchEl',
     'dispatchRef': '$dispatchRef',
+    'dispatchOthers': '$dispatchOthers',
     'removeUpload': '$removeUpload',
     'cancelUpload': '$cancelUpload',
     'uploadMultiple': '$uploadMultiple',
@@ -331,6 +332,7 @@ wireProperty('$dispatchSelf', (component) => (...params) => dispatchSelf(compone
 wireProperty('$dispatchTo', () => (...params) => dispatchTo(...params))
 wireProperty('$dispatchEl', (component) => (...params) => dispatchEl(component, ...params))
 wireProperty('$dispatchRef', (component) => (...params) => dispatchRef(component, ...params))
+wireProperty('$dispatchOthers', (component) => (...params) => dispatchOthers(component, ...params))
 wireProperty('$upload', (component) => (...params) => upload(component, ...params))
 wireProperty('$uploadMultiple', (component) => (...params) => uploadMultiple(component, ...params))
 wireProperty('$removeUpload', (component) => (...params) => removeUpload(component, ...params))
