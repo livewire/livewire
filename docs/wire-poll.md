@@ -31,7 +31,7 @@ class SubscriberCount extends Component
 </div>
 ```
 
-Normally, this component would show the subscriber count for the user and never update until the page was refreshed. However, because of `wire:poll` on the component's template, this component will now refresh itself every `2.5` seconds, keeping the subscriber count up-to-date.
+Normally, this component would show the subscriber count for the user and never update until the page was refreshed. However, because of `wire:poll` on the component's template, this component will now refresh itself every `2` seconds, keeping the subscriber count up-to-date.
 
 You can also specify an action to fire on the polling interval by passing a value to `wire:poll`:
 
@@ -41,11 +41,11 @@ You can also specify an action to fire on the polling interval by passing a valu
 </div>
 ```
 
-Now, the `refreshSubscribers()` method on the component will be called every `2.5` seconds.
+Now, the `refreshSubscribers()` method on the component will be called every `2` seconds.
 
 ## Timing control
 
-The primary drawback of polling is that it can be resource intensive. If you have a thousand visitors on a page that uses polling, one thousand network requests will be triggered every `2.5` seconds.
+The primary drawback of polling is that it can be resource intensive. If you have a thousand visitors on a page that uses polling, one thousand network requests will be triggered every `2` seconds.
 
 The best way to reduce requests in this scenario is simply to make the polling interval longer.
 
