@@ -227,10 +227,9 @@ trait HandlesValidation
         collect($rules)
             ->keys()
             ->each(function($ruleKey) use ($data) {
-                throw_unless(
-                    array_key_exists(Utils::beforeFirstDot($ruleKey), $data),
-                    new \Exception('No property found for validation: ['.$ruleKey.']')
-                );
+                if (! array_key_exists(Utils::beforeFirstDot($ruleKey), $data)) {
+                    throw new \Exception('No property found for validation: ['.$ruleKey.']');
+                }
             });
     }
 
