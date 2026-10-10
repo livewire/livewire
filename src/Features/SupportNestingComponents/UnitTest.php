@@ -2,7 +2,12 @@
 
 namespace Livewire\Features\SupportNestingComponents;
 
+use Livewire\Attributes\Lazy;
 use Livewire\Component;
+use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use PHPUnit\Framework\Attributes\DataProvider;
 use function Livewire\store;
 
 class UnitTest extends \Tests\TestCase
@@ -108,8 +113,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_child_tag_name_with_xss_payload_throws_exception()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid Livewire child tag name');
+        $this->expectException(CorruptComponentPayloadException::class);
 
         // Create a mock parent component
         $parent = new ChildComponentForNestingStub();
@@ -125,8 +129,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_child_tag_name_with_spaces_throws_exception()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid Livewire child tag name');
+        $this->expectException(CorruptComponentPayloadException::class);
 
         $parent = new ChildComponentForNestingStub();
 
@@ -139,8 +142,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_child_tag_name_starting_with_number_throws_exception()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid Livewire child tag name');
+        $this->expectException(CorruptComponentPayloadException::class);
 
         $parent = new ChildComponentForNestingStub();
 
@@ -153,8 +155,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_child_id_with_invalid_characters_throws_exception()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid Livewire child component ID format');
+        $this->expectException(CorruptComponentPayloadException::class);
 
         $parent = new ChildComponentForNestingStub();
 
@@ -193,6 +194,75 @@ class UnitTest extends \Tests\TestCase
             $result = SupportNestingComponents::getPreviouslyRenderedChild($parent, 'child-key');
             $this->assertEquals([$tag, 'valid-id'], $result);
         }
+    }
+
+    #[DataProvider('malformedChildrenMemos')]
+    public function test_malformed_children_memo_returns_419($children)
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        app('livewire')->component('parent', ParentComponentForNestingChildrenWithWireKeyStub::class);
+        app('livewire')->component('child', ChildComponentForNestingStub::class);
+
+        $snapshot = app('livewire')->test('parent')->snapshot;
+
+        // "children" isn't covered by the checksum, so the snapshot still verifies...
+        if ($children === null) {
+            unset($snapshot['memo']['children']);
+        } else {
+            $snapshot['memo']['children'] = $children;
+        }
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                ['snapshot' => json_encode($snapshot), 'updates' => [], 'calls' => []],
+            ]])
+            ->assertStatus(419);
+    }
+
+    public static function malformedChildrenMemos()
+    {
+        return [
+            'missing children' => [null],
+            'non-array children' => ['foo'],
+            'non-array child' => [['foo' => 'div']],
+            'child without id' => [['foo' => ['div']]],
+            'associative child' => [['foo' => ['tag' => 'div', 'id' => 'abc']]],
+            'child with invalid tag' => [['foo' => ['<script>', 'abc']]],
+            'child with invalid id' => [['foo' => ['div', 'id<script>']]],
+        ];
+    }
+
+    public function test_child_tag_is_only_validated_when_the_child_is_rendered_again()
+    {
+        app('livewire')->component('parent', ParentComponentForSkipRenderWithCommentedChildStub::class);
+        app('livewire')->component('child', ChildComponentWithLeadingCommentForNestingStub::class);
+
+        $component = app('livewire')->test('parent');
+
+        // The leading comment means the child's tag is tracked as an empty string...
+        $this->assertSame('', array_values($component->snapshot['memo']['children'])[0][0]);
+
+        $component->call('skip')->assertOk();
+    }
+
+    public function test_lazy_component_still_loads()
+    {
+        // The lazy mount params container snapshot has no "children" memo...
+        SupportLazyLoading::$disableWhileTesting = false;
+
+        app('livewire')->component('lazy-child', LazyChildComponentForNestingStub::class);
+
+        $component = app('livewire')->test('lazy-child', ['name' => 'foo']);
+
+        preg_match("/__lazyLoad\('([^']+)'\)/", html_entity_decode($component->html()), $matches);
+
+        $this->assertNotEmpty($matches[1] ?? null);
+
+        $component
+            ->call('__lazyLoad', $matches[1])
+            ->assertSee('Child: foo');
     }
 }
 
@@ -277,6 +347,31 @@ class ChildComponentForNestingStub extends Component
     public function render()
     {
         return '<span>Child: {{ $this->name }}</span>';
+    }
+}
+
+class ParentComponentForSkipRenderWithCommentedChildStub extends ParentComponentForSkipRenderStub
+{
+    public function render()
+    {
+        return '<div><livewire:child /></div>';
+    }
+}
+
+class ChildComponentWithLeadingCommentForNestingStub extends Component
+{
+    public function render()
+    {
+        return "<!-- child -->\n<div>Child</div>";
+    }
+}
+
+#[Lazy]
+class LazyChildComponentForNestingStub extends ChildComponentForNestingStub
+{
+    public function placeholder()
+    {
+        return '<span>Loading...</span>';
     }
 }
 
