@@ -10,12 +10,17 @@ use Livewire\Drawer\Utils;
 use Livewire\ComponentHook;
 use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class SupportEvents extends ComponentHook
 {
     function call($method, $params, $returnEarly)
     {
         if ($method === '__dispatch') {
+            if (! is_string($params[0] ?? null) || ! is_array($params[1] ?? null)) {
+                throw new CorruptComponentPayloadException;
+            }
+
             [$name, $params] = $params;
 
             $names = static::getListenerEventNames($this->component);
