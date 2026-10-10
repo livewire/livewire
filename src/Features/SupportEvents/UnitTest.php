@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportEvents;
 
 use Livewire\Component;
 use Livewire\Livewire;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -263,6 +265,43 @@ class UnitTest extends \Tests\TestCase
         $this->expectException(\Livewire\Exceptions\EventHandlerDoesNotExist::class);
 
         Livewire::test(ReceivesEventWithMissingHandler::class)->dispatch('bar');
+    }
+
+    #[DataProvider('malformedDispatchParams')]
+    public function test_malformed_dispatch_params_return_419($params): void
+    {
+        // Disable debug mode to test production HTTP responses (404/419)...
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+            ->reportable(function (\Throwable $e) use (&$reported) {
+                $reported[] = $e;
+                return false;
+            });
+
+        $testable = Livewire::test(ReceivesEvents::class);
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($testable->snapshot),
+                    'updates' => [],
+                    'calls' => [['method' => '__dispatch', 'params' => $params, 'metadata' => []]],
+                ],
+            ]])
+            ->assertStatus(419);
+
+        $this->assertEmpty($reported);
+    }
+
+    public static function malformedDispatchParams()
+    {
+        return [
+            'no params' => [[]],
+            'event name only' => [['bar']],
+            'non-array event params' => [['bar', 'baz']],
+        ];
     }
 }
 

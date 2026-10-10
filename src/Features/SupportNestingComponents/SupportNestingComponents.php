@@ -7,6 +7,7 @@ use function Livewire\store;
 use function Livewire\on;
 use Livewire\ComponentHook;
 use Livewire\Drawer\Utils;
+use Livewire\Mechanisms\HandleComponents\CorruptComponentPayloadException;
 
 class SupportNestingComponents extends ComponentHook
 {
@@ -59,7 +60,12 @@ class SupportNestingComponents extends ComponentHook
 
     function hydrate($memo)
     {
-        $children = $memo['children'];
+        $children = $memo['children'] ?? null;
+
+        // "children" isn't covered by the checksum, so make sure it's still an array of [tag, id] pairs...
+        if (! static::hasValidChildrenShape($children)) {
+            throw new CorruptComponentPayloadException;
+        }
 
         static::setPreviouslyRenderedChildren($this->component, $children);
 
@@ -99,15 +105,28 @@ class SupportNestingComponents extends ComponentHook
         // Validate tag name - only allow valid HTML tag characters (letters, numbers, hyphens)
         // Must start with a letter to be a valid HTML tag
         if (! preg_match('/^[a-zA-Z][a-zA-Z0-9\-]*$/', $tag)) {
-            throw new \Exception('Invalid Livewire child tag name. Tag names must only contain letters, numbers, and hyphens.');
+            throw new CorruptComponentPayloadException;
         }
 
         // Validate child ID format - only allow alphanumeric and hyphens
         if (! preg_match('/^[a-zA-Z0-9\-]+$/', $childId)) {
-            throw new \Exception('Invalid Livewire child component ID format.');
+            throw new CorruptComponentPayloadException;
         }
 
         return $child;
+    }
+
+    static function hasValidChildrenShape($children)
+    {
+        if (! is_array($children)) return false;
+
+        foreach ($children as $child) {
+            if (! is_array($child) || ! array_is_list($child) || count($child) !== 2) return false;
+
+            if (! is_string($child[0]) || ! is_string($child[1])) return false;
+        }
+
+        return true;
     }
 
     function keepRenderedChildren()
