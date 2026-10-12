@@ -346,7 +346,7 @@ class UnitTest extends \Tests\TestCase
     {
         Livewire::withQueryParams(['status' => 'not-a-real-status'])
             ->test(new class extends TestComponent {
-                #[\Livewire\Attributes\Url]
+                #[BaseUrl]
                 public Status $status = Status::Draft;
             })
             ->assertSet('status', Status::Draft);
