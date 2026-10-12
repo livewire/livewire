@@ -171,14 +171,19 @@ class BrowserTest extends \Tests\BrowserTestCase
         })
             ->waitForLivewireToLoad()
             // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
-            ->tap(fn ($b) => $b->script([
-                "window.Livewire.first().on('livewire-upload-progress', () => { window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
-            ]))
+            ->tap(fn ($b) => $b->script("
+                window.uploadCancelled = false;
+                window.Livewire.first().on('livewire-upload-progress', () => {
+                    let alreadyCancelled = window.uploadCancelled;
+                    window.uploadCancelled = true;
+
+                    alreadyCancelled || (window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block');
+                    alreadyCancelled || document.querySelector('[dusk=\"cancel\"]').click();
+                });
+            "))
             ->assertMissing('@loading')
             // Large file so the request is still in flight when we cancel
             ->waitForLivewire()->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
-            ->pause(20)
-            ->click('@cancel')
             ->waitUntilMissing('@loading')
             ->assertScript('window.loadingWasDisplayed', true);
     }
