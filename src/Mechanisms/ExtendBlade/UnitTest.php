@@ -16,6 +16,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestComponent;
 
+use function Livewire\trigger;
+
 class UnitTest extends \Tests\TestCase
 {
     public function test_compilation_callbacks_use_the_currently_compiling_blade_path()
@@ -214,6 +216,39 @@ class UnitTest extends \Tests\TestCase
         } catch (ErrorException) {}
 
         $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+    }
+
+    public function test_a_render_event_triggered_outside_of_livewire_still_applies_livewire_only_directives()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        $finish = trigger('render', Livewire::new(ExtendBladeTestComponent::class), view('null-view'), []);
+
+        $inside = Blade::render('<div>@foo</div>');
+
+        $finish($inside);
+
+        $outside = Blade::render('<span>@foo</span>');
+
+        $this->assertEquals('<div>bar</div>', $inside);
+        $this->assertEquals('<span>@foo</span>', $outside);
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+    }
+
+    public function test_flushing_state_restores_a_render_that_never_finished()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        trigger('render', Livewire::new(ExtendBladeTestComponent::class), view('null-view'), []);
+
+        app('livewire')->flushState();
+
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+        $this->assertStringContainsString('@foo', Blade::render('<div>@foo</div>'));
     }
 }
 

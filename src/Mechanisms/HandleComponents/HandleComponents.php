@@ -384,10 +384,14 @@ class HandleComponents extends Mechanism
     {
         array_push(static::$renderStack, $component);
 
+        $depth = app(ExtendBlade::class)->renderCleanupDepth();
+
         try {
-            return app(ExtendBlade::class)->whileRenderingLivewireComponent($component, $callback);
+            return $callback();
         } finally {
             array_pop(static::$renderStack);
+
+            app(ExtendBlade::class)->unwindRenderCleanups($depth);
         }
     }
 

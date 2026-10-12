@@ -12,6 +12,7 @@ class ExtendBlade extends Mechanism
     protected $directives = [];
     protected $precompilers = [];
     protected $renderCounter = 0;
+    protected $renderCleanups = [];
 
     protected static $livewireComponents = [];
 
@@ -39,6 +40,38 @@ class ExtendBlade extends Mechanism
     {
         Blade::directive('this', fn() => "window.Livewire.find('{{ \$_instance->getId() }}')");
 
+        on('render', function ($target, $view) {
+            $this->startLivewireRendering($target);
+
+            $undo = $this->livewireifyBladeCompiler();
+
+            $this->renderCounter++;
+
+            $cleanup = function () use ($undo) {
+                $this->endLivewireRendering();
+
+                $this->renderCounter--;
+
+                if ($this->renderCounter === 0) {
+                    $undo();
+                }
+            };
+
+            $this->renderCleanups[] = $cleanup;
+
+            return function ($html) use ($cleanup) {
+                $index = array_search($cleanup, $this->renderCleanups, true);
+
+                if ($index !== false) {
+                    unset($this->renderCleanups[$index]);
+
+                    $cleanup();
+                }
+
+                return $html;
+            };
+        });
+
         // This is a custom view engine that gets used when rendering
         // Livewire views. Things like letting certain exceptions bubble
         // to the handler, and registering custom directives like: "@this".
@@ -51,6 +84,8 @@ class ExtendBlade extends Mechanism
         // Reset this singleton between tests and Octane requests...
         on('flush-state', function () {
             app()->singleton(DeterministicBladeKeys::class);
+
+            $this->unwindRenderCleanups();
 
             static::$livewireComponents = [];
         });
@@ -66,26 +101,17 @@ class ExtendBlade extends Mechanism
         });
     }
 
-    function whileRenderingLivewireComponent($component, $callback)
+    function renderCleanupDepth()
     {
-        $this->startLivewireRendering($component);
+        return count($this->renderCleanups);
+    }
 
-        $undo = $this->livewireifyBladeCompiler();
+    function unwindRenderCleanups($depth = 0)
+    {
+        while (count($this->renderCleanups) > $depth) {
+            $cleanup = array_pop($this->renderCleanups);
 
-        $this->renderCounter++;
-
-        // Clean up in "finally" so a render that throws doesn't leave the
-        // component on the stack or Livewire-only directives registered...
-        try {
-            return $callback();
-        } finally {
-            $this->endLivewireRendering();
-
-            $this->renderCounter--;
-
-            if ($this->renderCounter === 0) {
-                $undo();
-            }
+            $cleanup();
         }
     }
 
