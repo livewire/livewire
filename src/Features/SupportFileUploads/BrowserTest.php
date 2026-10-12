@@ -177,7 +177,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('@loading')
             // Large file so the request is still in flight when we cancel
             ->waitForLivewire()->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
-            ->pause(100)
+            ->pause(20)
             ->click('@cancel')
             ->waitUntilMissing('@loading')
             ->assertScript('window.loadingWasDisplayed', true);
