@@ -208,10 +208,16 @@ function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endL
         endLoading()
     })
 
+    let cleanupD = listen(window, 'livewire-upload-cancel', e => {
+        if (eventMismatch(e)) return
+        endLoading()
+    })
+
     return () => {
         cleanupA()
         cleanupB()
         cleanupC()
+        cleanupD()
     }
 }
 

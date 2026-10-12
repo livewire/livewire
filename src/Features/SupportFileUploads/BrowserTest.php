@@ -147,6 +147,42 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_an_element_targeting_a_file_upload_clears_loading_state_when_the_upload_is_cancelled()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photo" dusk="upload">
+
+                    <div wire:loading wire:target="photo" id="loading" dusk="loading">uploading...</div>
+
+                    <button type="button" wire:click="$cancelUpload('photo')" dusk="cancel">cancel</button>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
+            ->tap(fn ($b) => $b->script([
+                "window.Livewire.first().on('livewire-upload-progress', () => { window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block' })",
+            ]))
+            ->assertMissing('@loading')
+            // Large file so the request is still in flight when we cancel
+            ->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
+            ->waitFor('@loading')
+            ->click('@cancel')
+            ->waitUntilMissing('@loading')
+            ->assertScript('window.loadingWasDisplayed', true);
+    }
+
     public function test_file_upload_being_renderless_is_not_impacted_by_real_time_validation()
     {
         Storage::persistentFake('tmp-for-tests');
