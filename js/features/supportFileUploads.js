@@ -1,4 +1,5 @@
 import { getCsrfToken } from '@/utils';
+import { setNextActionOrigin } from '@/request'
 
 let uploadManagers = new WeakMap
 
@@ -37,9 +38,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, true, el)
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel, el)
         }
     }
 
@@ -106,7 +107,15 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    callUploadAction(method, name, ...params) {
+        let el = this.uploadBag.first(name)?.el
+
+        if (el) setNextActionOrigin({ el })
+
+        return this.component.$wire.call(method, name, ...params)
+    }
+
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, el = null) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
@@ -115,10 +124,11 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append: false,
+            el,
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true, el = null) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -127,6 +137,7 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append,
+            el,
         })
     }
 
@@ -195,7 +206,7 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
+                this.callUploadAction('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
 
                 return
             }
@@ -206,11 +217,11 @@ class UploadManager {
                 errors = request.response
             }
 
-            this.component.$wire.call('_uploadErrored', name, errors, this.uploadBag.first(name).multiple)
+            this.callUploadAction('_uploadErrored', name, errors, this.uploadBag.first(name).multiple)
         })
 
         request.addEventListener('error', () => {
-            this.component.$wire.call('_uploadErrored', name, null, this.uploadBag.first(name).multiple)
+            this.callUploadAction('_uploadErrored', name, null, this.uploadBag.first(name).multiple)
         })
 
         this.uploadBag.first(name).request = request

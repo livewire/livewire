@@ -432,6 +432,81 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
         });
     }
+
+    public function test_native_file_upload_inside_an_island_only_renders_the_island()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $file;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <p dusk="base">{{ microtime(true) }}</p>
+
+                    @island(name: 'file-upload')
+                        <p dusk="island">{{ microtime(true) }}</p>
+                        <input type="file" wire:model="file" dusk="island-upload">
+                        @if ($file) <p dusk="file-name">{{ $file->getClientOriginalName() }}</p> @endif
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+        ->tap(fn ($b) => $b->script("
+            window.initialBase = document.querySelector('[dusk=\"base\"]').textContent;
+            window.initialIsland = document.querySelector('[dusk=\"island\"]').textContent;
+        "))
+        ->attach('@island-upload', __DIR__ . '/browser_test_image.png')
+        ->waitForTextIn('@file-name', 'browser_test_image.png')
+        // Base component should not re-rendered
+        ->assertScript('document.querySelector(\'[dusk="base"]\').textContent === window.initialBase', true)
+        // Island should re-rendered
+        ->assertScript('document.querySelector(\'[dusk="island"]\').textContent !== window.initialIsland', true);
+    }
+
+    public function test_native_file_upload_errors_inside_an_island_only_render_the_island()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            #[\Livewire\Attributes\Validate('required|image')]
+            public $file;
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <p dusk="base">{{ microtime(true) }}</p>
+                    <p dusk="base-error">{{ $errors->first('file') }}</p>
+
+                    @island(name: 'file-upload')
+                        <p dusk="island">{{ microtime(true) }}</p>
+                        <input type="file" wire:model="file" dusk="island-upload">
+                        <p dusk="island-error">{{ $errors->first('file') }}</p>
+                    @endisland
+                </div>
+                HTML;
+            }
+        })
+        ->tap(fn ($b) => $b->script("
+            window.initialBase = document.querySelector('[dusk=\"base\"]').textContent;
+            window.initialIsland = document.querySelector('[dusk=\"island\"]').textContent;
+        "))
+        ->attach('@island-upload', __DIR__ . '/../../../tests/fixtures/download.txt')
+        ->waitForTextIn('@island-error', 'must be an image')
+        ->assertDontSeeIn('@base-error', 'must be an image')
+        // Base component should not re-rendered
+        ->assertScript('document.querySelector(\'[dusk="base"]\').textContent === window.initialBase', true)
+        // Island should re-rendered
+        ->assertScript('document.querySelector(\'[dusk="island"]\').textContent !== window.initialIsland', true);
+    }
 }
 
 class HttpsSignedUploadComponent extends Component
