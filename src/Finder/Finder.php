@@ -287,31 +287,34 @@ class Finder
         return $path;
     }
 
-    public function viewBasedComponentPaths(): array
+    public function getViewBasedComponentPaths(): array
     {
-        $paths = collect($this->viewComponents)->filter(function ($path) {
+        $registered = collect($this->viewComponents)->filter(function ($path) {
             return is_dir($path)
                 || (file_exists($path) && $this->hasValidSingleFileComponentSource($path));
         });
 
-        foreach ([...$this->viewLocations, ...array_values($this->viewNamespaces)] as $location) {
-            $location = $this->normalizeLocation($location);
-
-            if (! is_dir($location)) continue;
-
-            foreach (File::allFiles($location) as $file) {
-                // Build each path the way the resolvers do, so it matches the path a request compiles...
-                $path = $location . '/' . str_replace('\\', '/', $file->getRelativePathname());
-
+        $discovered = collect([...$this->viewLocations, ...$this->viewNamespaces])
+            ->map(fn ($location) => $this->normalizeLocation($location))
+            ->filter(fn ($location) => is_dir($location))
+            // Build each path the way the resolvers do, so it matches the path a request compiles...
+            ->flatMap(fn ($location) => collect(File::allFiles($location))->map(
+                fn ($file) => $location . '/' . str_replace('\\', '/', $file->getRelativePathname())
+            ))
+            ->map(function ($path) {
                 if (str_ends_with($path, '.blade.php')) {
-                    if ($this->hasValidSingleFileComponentSource($path)) $paths->push($path);
-                } elseif (str_ends_with($path, '.php') && $this->isMultiFileComponentDirectory(dirname($path))) {
-                    $paths->push(dirname($path));
+                    return $this->hasValidSingleFileComponentSource($path) ? $path : null;
                 }
-            }
-        }
 
-        return $paths->unique()->values()->all();
+                if (str_ends_with($path, '.php') && $this->isMultiFileComponentDirectory(dirname($path))) {
+                    return dirname($path);
+                }
+
+                return null;
+            })
+            ->filter();
+
+        return $registered->merge($discovered)->unique()->values()->all();
     }
 
     protected function generateClassFromName($name, $classNamespaces = []): string

@@ -40,22 +40,24 @@ class Compiler
                 $this->compilePath($path);
             }
         }
+    }
+
+    public function compileGeneratedViews(): void
+    {
+        if (! is_dir($this->cacheManager->cacheDirectory)) return;
 
         $blade = app('blade.compiler');
-        $compiled = [];
 
-        // Compiling a view writes the islands it holds as views of their own,
-        // so keep compiling the views in the cache until no new one shows up...
+        // Writing a generated view deletes its compiled file, and compiling a view
+        // writes its islands again, so repeat until every view has a compiled file
+        // (isExpired() would never settle while view.cache is off)...
         do {
-            $views = collect(is_dir($this->cacheManager->cacheDirectory) ? File::allFiles($this->cacheManager->cacheDirectory) : [])
+            $views = collect(File::allFiles($this->cacheManager->cacheDirectory))
+                // Build each path the way a request does, so it names the same compiled file...
                 ->map(fn ($file) => $this->cacheManager->cacheDirectory . '/' . str_replace('\\', '/', $file->getRelativePathname()))
-                ->filter(fn ($path) => str_ends_with($path, '.blade.php') && ! isset($compiled[$path]));
+                ->filter(fn ($view) => str_ends_with($view, '.blade.php') && ! File::exists($blade->getCompiledPath($view)));
 
-            foreach ($views as $view) {
-                if ($blade->isExpired($view)) $blade->compile($view);
-
-                $compiled[$view] = true;
-            }
+            $views->each(fn ($view) => $blade->compile($view));
         } while ($views->isNotEmpty());
     }
 
