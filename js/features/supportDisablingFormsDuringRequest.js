@@ -1,6 +1,6 @@
 import { getDirectives } from '@/directives'
 import { on } from '@/hooks'
-import { releaseAfterNavigation } from '@/plugins/navigate/navigation'
+import { onNavigationStart } from '@/plugins/navigate/navigation'
 import { interceptMessage } from '@/request'
 import { Bag } from '@/utils'
 import Alpine from 'alpinejs'
@@ -30,12 +30,46 @@ on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() =>
 }))
 
 interceptMessage(({ message, onSuccess, onFinish }) => {
+    let released = false
+
     let enableForm = () => {
+        if (released) return
+
+        released = true
+
         cleanups.each(message.component.id, cleanup => cleanup())
         cleanups.remove(message.component.id)
     }
 
-    releaseAfterNavigation({ onSuccess, onFinish }, enableForm)
+    // Navigate must keep the form locked until navigation settles.
+    // For a normal response, unlock *before* morph so the server HTML
+    // is the source of truth for disabled/readonly (otherwise the
+    // temporary lock's undo runs after morph and clears attributes the server just re-rendered).
+    let navigationWasStarted = false
+    let stopWaitingForNavigation = () => {}
+
+    onSuccess(({ onEffect }) => {
+        stopWaitingForNavigation = onNavigationStart(navigation => {
+            navigationWasStarted = true
+
+            navigation.onDestinationSettled(enableForm)
+        })
+
+        onEffect(() => {
+            stopWaitingForNavigation()
+
+            if (! navigationWasStarted) enableForm()
+        })
+    })
+
+    // Cancel / error / superseded paths never reach onEffect — still unlock.
+    onFinish(() => {
+        stopWaitingForNavigation()
+
+        if (navigationWasStarted) return
+
+        enableForm()
+    })
 })
 
 function disableForm(formEl) {
