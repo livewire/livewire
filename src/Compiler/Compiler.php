@@ -2,6 +2,7 @@
 
 namespace Livewire\Compiler;
 
+use Illuminate\Support\Facades\File;
 use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Parser\MultiFileParser;
 
@@ -27,6 +28,35 @@ class Compiler
         }
 
         return $this->cacheManager->getClassName($path);
+    }
+
+    public function compileAll(array $paths): void
+    {
+        foreach ($paths as $path) {
+            if (
+                (! $this->cacheManager->hasBeenCompiled($path))
+                || $this->cacheManager->isExpired($path)
+            ) {
+                $this->compilePath($path);
+            }
+        }
+
+        $blade = app('blade.compiler');
+        $compiled = [];
+
+        // Compiling a view writes the islands it holds as views of their own,
+        // so keep compiling the views in the cache until no new one shows up...
+        do {
+            $views = collect(is_dir($this->cacheManager->cacheDirectory) ? File::allFiles($this->cacheManager->cacheDirectory) : [])
+                ->map(fn ($file) => $this->cacheManager->cacheDirectory . '/' . str_replace('\\', '/', $file->getRelativePathname()))
+                ->filter(fn ($path) => str_ends_with($path, '.blade.php') && ! isset($compiled[$path]));
+
+            foreach ($views as $view) {
+                if ($blade->isExpired($view)) $blade->compile($view);
+
+                $compiled[$view] = true;
+            }
+        } while ($views->isNotEmpty());
     }
 
     public function compilePath(string $path): void

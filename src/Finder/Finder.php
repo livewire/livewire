@@ -2,6 +2,7 @@
 
 namespace Livewire\Finder;
 
+use Illuminate\Support\Facades\File;
 use Livewire\Component;
 
 class Finder
@@ -277,23 +278,40 @@ class Finder
             ];
 
             foreach ($dirs as $dir) {
-                $baseName = basename($dir);
-
-                $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
-
-                // Strip out the emoji from folder name to derive the file name...
-                $fileBaseName = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
-
-                if (
-                    is_dir($dir)
-                    && $this->hasValidMultiFileComponentSource($dir, $fileBaseName)
-                ) {
+                if (is_dir($dir) && $this->isMultiFileComponentDirectory($dir)) {
                     return $dir;
                 }
             }
         }
 
         return $path;
+    }
+
+    public function viewBasedComponentPaths(): array
+    {
+        $paths = collect($this->viewComponents)->filter(function ($path) {
+            return is_dir($path)
+                || (file_exists($path) && $this->hasValidSingleFileComponentSource($path));
+        });
+
+        foreach ([...$this->viewLocations, ...array_values($this->viewNamespaces)] as $location) {
+            $location = $this->normalizeLocation($location);
+
+            if (! is_dir($location)) continue;
+
+            foreach (File::allFiles($location) as $file) {
+                // Build each path the way the resolvers do, so it matches the path a request compiles...
+                $path = $location . '/' . str_replace('\\', '/', $file->getRelativePathname());
+
+                if (str_ends_with($path, '.blade.php')) {
+                    if ($this->hasValidSingleFileComponentSource($path)) $paths->push($path);
+                } elseif (str_ends_with($path, '.php') && $this->isMultiFileComponentDirectory(dirname($path))) {
+                    $paths->push(dirname($path));
+                }
+            }
+        }
+
+        return $paths->unique()->values()->all();
     }
 
     protected function generateClassFromName($name, $classNamespaces = []): string
@@ -407,6 +425,18 @@ class Finder
         // Pattern: <?php followed by 'new class' (with potential attributes/newlines between)
         // This distinguishes SFCs from regular Blade views
         return preg_match('/\<\?php.*\bnew\s+(?:#(\[(?:' . $contentIgnoredWhileMatchingBracketsPattern . '|(?1))*\])\s*)*class\b/s', $contents) === 1;
+    }
+
+    protected function isMultiFileComponentDirectory(string $dir): bool
+    {
+        $baseName = basename($dir);
+
+        $fileBaseName = str_contains($baseName, 'index') ? 'index' : $baseName;
+
+        // Strip out the emoji from folder name to derive the file name...
+        $fileBaseName = preg_replace('/' . self::ZAP . '[\x{FE0E}\x{FE0F}]?/u', '', $fileBaseName);
+
+        return $this->hasValidMultiFileComponentSource($dir, $fileBaseName);
     }
 
     protected function hasValidMultiFileComponentSource(string $dir, string $fileBaseName): bool

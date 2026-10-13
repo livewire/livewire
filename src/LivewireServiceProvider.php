@@ -82,6 +82,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Mechanisms\ExtendBlade\ExtendBlade::class,
             Mechanisms\CompileLivewireTags\CompileLivewireTags::class,
             Mechanisms\ClearCachedFiles::class,
+            Mechanisms\PrecompileComponents::class,
             Mechanisms\RenderComponent::class,
             Mechanisms\DataStore::class,
         ];
