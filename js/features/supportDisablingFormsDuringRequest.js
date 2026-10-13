@@ -30,23 +30,24 @@ on('directive.init', ({ el, directive, cleanup, component }) => setTimeout(() =>
 }))
 
 interceptMessage(({ message, onSuccess, onFinish }) => {
-    let released = false
-
-    let enableForm = () => {
-        if (released) return
-
-        released = true
-
-        cleanups.each(message.component.id, cleanup => cleanup())
-        cleanups.remove(message.component.id)
-    }
-
     // Navigate must keep the form locked until navigation settles.
     // For a normal response, unlock *before* morph so the server HTML
     // is the source of truth for disabled/readonly (otherwise the
     // temporary lock's undo runs after morph and clears attributes the server just re-rendered).
+    let released = false
     let navigationWasStarted = false
     let stopWaitingForNavigation = () => {}
+
+    let enableForm = () => {
+        if (released) return
+
+        stopWaitingForNavigation()
+
+        cleanups.each(message.component.id, cleanup => cleanup())
+        cleanups.remove(message.component.id)
+
+        released = true
+    }
 
     onSuccess(({ onEffect }) => {
         stopWaitingForNavigation = onNavigationStart(navigation => {
@@ -58,7 +59,9 @@ interceptMessage(({ message, onSuccess, onFinish }) => {
         onEffect(() => {
             stopWaitingForNavigation()
 
-            if (! navigationWasStarted) enableForm()
+            if (navigationWasStarted) return
+
+            enableForm()
         })
     })
 
