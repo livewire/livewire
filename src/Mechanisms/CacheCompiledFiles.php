@@ -26,7 +26,7 @@ class CacheCompiledFiles extends Mechanism
                     $undo = app(ExtendBlade::class)->livewireifyBladeCompiler();
 
                     try {
-                        $compiler->compileGeneratedViews();
+                        $compiler->compileGeneratedViews($event->output);
                     } finally {
                         $undo();
                     }

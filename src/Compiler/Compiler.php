@@ -5,6 +5,7 @@ namespace Livewire\Compiler;
 use Illuminate\Support\Facades\File;
 use Livewire\Compiler\Parser\SingleFileParser;
 use Livewire\Compiler\Parser\MultiFileParser;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 class Compiler
 {
@@ -42,11 +43,13 @@ class Compiler
         }
     }
 
-    public function compileGeneratedViews(): void
+    public function compileGeneratedViews($output = null): void
     {
         if (! is_dir($this->cacheManager->cacheDirectory)) return;
 
         $blade = app('blade.compiler');
+
+        $failed = [];
 
         // Writing a generated view deletes its compiled file, and compiling a view
         // writes its islands again, so repeat until every view has a compiled file
@@ -55,9 +58,20 @@ class Compiler
             $views = collect(File::allFiles($this->cacheManager->cacheDirectory))
                 // Build each path the way a request does, so it names the same compiled file...
                 ->map(fn ($file) => $this->cacheManager->cacheDirectory . '/' . str_replace('\\', '/', $file->getRelativePathname()))
-                ->filter(fn ($view) => str_ends_with($view, '.blade.php') && ! File::exists($blade->getCompiledPath($view)));
+                ->filter(fn ($view) => str_ends_with($view, '.blade.php') && ! File::exists($blade->getCompiledPath($view)))
+                ->diff($failed);
 
-            $views->each(fn ($view) => $blade->compile($view));
+            foreach ($views as $view) {
+                try {
+                    $blade->compile($view);
+                } catch (\Throwable $e) {
+                    // The cache can still hold the views of a deleted component, which no request
+                    // renders, so leave a view that fails to the request that renders it...
+                    $failed[] = $view;
+
+                    $output?->writeln('<comment>' . OutputFormatter::escape("Note: Livewire could not compile [{$view}]: {$e->getMessage()}") . '</comment>');
+                }
+            }
         } while ($views->isNotEmpty());
     }
 

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Livewire\Livewire;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 class CacheCompiledFilesUnitTest extends \Tests\TestCase
 {
@@ -43,6 +44,24 @@ class CacheCompiledFilesUnitTest extends \Tests\TestCase
 
         $compiler->compileGeneratedViews();
 
+        $this->assertIslandsAreCompiled();
+    }
+
+    public function test_a_generated_view_that_fails_to_compile_leaves_the_others_compiled()
+    {
+        Livewire::addLocation(viewPath: __DIR__ . '/../../Features/SupportIslands/fixtures');
+
+        $compiler = app('livewire.compiler');
+
+        $compiler->compileAll(app('livewire.finder')->getViewBasedComponentPaths());
+
+        // The view of a deleted component, named to compile before the others...
+        $stale = $compiler->cacheManager->cacheDirectory . '/views/00000000.blade.php';
+        File::put($stale, '<div><x-deleted-widget /></div>');
+
+        $compiler->compileGeneratedViews($output = new BufferedOutput);
+
+        $this->assertStringContainsString($stale, $output->fetch());
         $this->assertIslandsAreCompiled();
     }
 
