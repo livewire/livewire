@@ -147,12 +147,12 @@ class UploadManager {
     }
 
     handleSignedUrl(name, url) {
-        let upload = this.uploadBag.first(name)
+        let uploadItem = this.uploadBag.first(name)
 
-        if (! upload) return
+        if (! uploadItem) return
 
         let formData = new FormData()
-        Array.from(upload.files).forEach(file => formData.append('files[]', file, file.name))
+        Array.from(uploadItem.files).forEach(file => formData.append('files[]', file, file.name))
 
         let headers = {
             'Accept': 'application/json',
@@ -168,11 +168,11 @@ class UploadManager {
     }
 
     handleS3PreSignedUrl(name, payload) {
-        let upload = this.uploadBag.first(name)
+        let uploadItem = this.uploadBag.first(name)
 
-        if (! upload) return
+        if (! uploadItem) return
 
-        let formData = upload.files[0]
+        let formData = uploadItem.files[0]
 
         let headers = payload.headers
         if ('Host' in headers) delete headers.Host
