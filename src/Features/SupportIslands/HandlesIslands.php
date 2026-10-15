@@ -18,6 +18,7 @@ trait HandlesIslands
     protected $islandIsTopLevelRender = false;
     protected $renderedIslandFragments = [];
     protected $implicitIslandMorphs = [];
+    protected $renderedIslandParts = [];
 
     public function islandIsMounting()
     {
@@ -49,13 +50,13 @@ trait HandlesIslands
         return ! empty($this->renderedIslandFragments);
     }
 
-    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false, $with = [])
+    public function renderIslandDirective($name = null, $token = null, $lazy = false, $defer = false, $always = false, $skip = false, $with = [], $parts = [])
     {
         // If no name is provided, use the token...
         $name = $name ?? $token;
 
         if ($this->islandIsMounting()) {
-            $this->storeIsland($name, $token);
+            $this->storeIsland($name, $token, $parts);
 
             if ($skip) {
                 // Just render the placeholder...
@@ -168,6 +169,48 @@ trait HandlesIslands
         }
     }
 
+    public function renderIslandPart($island, $name, string $target, array $with = [], $mode = 'morph')
+    {
+        if (! in_array($mode, ['morph', 'append', 'prepend', 'remove'], true)) {
+            throw new \InvalidArgumentException("Invalid island part mode [{$mode}].");
+        }
+
+        if (trim($target) === '') throw new \InvalidArgumentException('An island part target must not be empty.');
+
+        $islands = array_filter($this->islands, fn ($entry) => $entry['name'] === $island);
+
+        if (! $islands) throw new \InvalidArgumentException("Island [{$island}] is not registered.");
+
+        foreach ($islands as $entry) {
+            if (! isset($entry['parts'][$name])) {
+                throw new \InvalidArgumentException("Part [{$name}] is not registered in island [{$island}].");
+            }
+        }
+
+        foreach ($islands as $entry) {
+            $html = $mode === 'remove' ? '' : $this->renderIslandView($island, $entry['parts'][$name], $with);
+
+            $this->renderedIslandParts[] = [
+                'island' => $island,
+                'token' => $entry['token'],
+                'name' => $name,
+                'target' => $target,
+                'mode' => $mode,
+                'html' => $html,
+            ];
+        }
+    }
+
+    public function removeIslandPart($island, $name, string $target)
+    {
+        $this->renderIslandPart($island, $name, $target, mode: 'remove');
+    }
+
+    public function getRenderedIslandParts()
+    {
+        return $this->renderedIslandParts;
+    }
+
     public function streamIsland($name, $content = null, $mode = 'morph', $with = [])
     {
         $islands = $this->getIslands();
@@ -228,23 +271,20 @@ trait HandlesIslands
         // share it the same way a full component render does...
         $revertShare = Utils::shareWithViews('__livewire', $this);
 
-        $finish = trigger('renderIsland', $this, $name, $view, $properties);
-
         try {
+            $finish = trigger('renderIsland', $this, $name, $view, $properties);
             $html = $view->render();
+            $replaceHtml = function ($newHtml) use (&$html) {
+                $html = $newHtml;
+            };
+
+            $finish($html, $replaceHtml);
+
+            return $html;
         } finally {
             $revertShare();
+            app(ExtendBlade::class)->endLivewireRendering();
         }
-
-        $replaceHtml = function ($newHtml) use (&$html) {
-            $html = $newHtml;
-        };
-
-        $finish($html, $replaceHtml);
-
-        app(ExtendBlade::class)->endLivewireRendering();
-
-        return $html;
     }
 
     protected function regenerateIslandCacheFiles()
@@ -319,12 +359,16 @@ trait HandlesIslands
         return rtrim($output, '|');
     }
 
-    protected function storeIsland($name, $token)
+    protected function storeIsland($name, $token, $parts = [])
     {
-        $this->islands[] = [
+        $island = [
             'name' => $name,
             'token' => $token,
         ];
+
+        if ($parts) $island['parts'] = $parts;
+
+        $this->islands[] = $island;
     }
 
     protected function injectLazyDirective($content, $islandName, $directive)
