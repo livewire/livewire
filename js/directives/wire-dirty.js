@@ -2,6 +2,7 @@ import { directive, getDirectives } from '@/directives'
 import { toggleBooleanStateDirective } from './shared'
 import { dataGet, WeakBag, arrayPull } from '@/utils'
 import { on } from '@/hooks'
+import Alpine from 'alpinejs'
 
 let refreshDirtyStatesByComponent = new WeakBag
 
