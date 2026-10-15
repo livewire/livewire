@@ -73,6 +73,7 @@ export function closestIsland(el) {
         isMatch: ({ type }) => {
             return type === 'island'
         },
+        hasReachedBoundary: ({ el }) => el.hasAttribute('wire:id'),
     })
 }
 

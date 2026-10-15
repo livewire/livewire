@@ -1303,6 +1303,67 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame(1, ValidationUnwrappingSpyCollection::$toArrayCalls);
     }
+
+    public function test_validate_only_on_a_field_without_rules_does_not_clear_other_errors()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $email = '';
+            public $step = 1;
+
+            protected $rules = ['email' => 'required'];
+
+            public function save()
+            {
+                $this->validate();
+            }
+
+            public function updated($property)
+            {
+                $this->validateOnly($property);
+            }
+        })
+            ->call('save')
+            ->assertHasErrors('email')
+            ->set('step', 2)
+            ->assertHasErrors('email');
+    }
+
+    public function test_validate_only_on_a_nested_field_does_not_clear_errors_on_its_siblings()
+    {
+        Livewire::test(ForValidation::class)
+            ->set('items', [
+                ['foo' => 'bar', 'baz' => ''],
+                ['foo' => 'bar', 'baz' => ''],
+            ])
+            ->call('runDeeplyNestedValidation')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
+            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
+            ->assertHasErrors(['items.0.baz', 'items.1.baz'])
+            ->set('items.1.baz', 'fixed')
+            ->call('runDeeplyNestedValidationOnly', 'items.1.baz')
+            ->assertHasErrors('items.0.baz')
+            ->assertHasNoErrors('items.1.baz');
+    }
+
+    public function test_validate_only_with_a_wildcard_field_only_validates_the_targeted_keys_in_each_item()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $sections = [
+                ['lines' => [['product' => 'Widget'], ['product' => '']]],
+                ['lines' => [['product' => ''], ['product' => '']]],
+            ];
+
+            public function validateFirstLines()
+            {
+                $this->validateOnly('sections.*.lines.0.product', [
+                    'sections.*.lines.*.product' => 'required',
+                ]);
+            }
+        })
+            ->call('validateFirstLines')
+            ->assertHasErrors('sections.1.lines.0.product')
+            ->assertHasNoErrors(['sections.0.lines.0.product', 'sections.0.lines.1.product', 'sections.1.lines.1.product']);
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection

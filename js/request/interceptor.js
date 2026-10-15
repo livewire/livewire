@@ -1,4 +1,4 @@
-import { WeakBag } from "@/utils"
+import { arrayPull, WeakBag } from "@/utils"
 
 export class MessageInterceptor {
     onSend = () => {}
@@ -95,7 +95,7 @@ export class InterceptorRegistry {
         this.messageInterceptorCallbacksByComponent.add(component, callback)
 
         return () => {
-            this.messageInterceptorCallbacksByComponent.delete(component, callback)
+            arrayPull(this.messageInterceptorCallbacksByComponent.get(component), callback)
         }
     }
 
@@ -103,7 +103,7 @@ export class InterceptorRegistry {
         this.messageInterceptorCallbacks.push(callback)
 
         return () => {
-            this.messageInterceptorCallbacks.splice(this.messageInterceptorCallbacks.indexOf(callback), 1)
+            arrayPull(this.messageInterceptorCallbacks, callback)
         }
     }
 
@@ -111,7 +111,7 @@ export class InterceptorRegistry {
         this.requestInterceptorCallbacks.push(callback)
 
         return () => {
-            this.requestInterceptorCallbacks.splice(this.requestInterceptorCallbacks.indexOf(callback), 1)
+            arrayPull(this.requestInterceptorCallbacks, callback)
         }
     }
 
@@ -127,7 +127,7 @@ export class InterceptorRegistry {
     }
 
     getRequestInterceptors(request) {
-        return this.requestInterceptorCallbacks.map(callback => {
+        return Array.from(this.requestInterceptorCallbacks).map(callback => {
             return new RequestInterceptor(request, callback)
         })
     }
