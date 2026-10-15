@@ -432,6 +432,66 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
         });
     }
+
+    public function test_cancel_upload_does_not_block_subsequent_uploads_on_same_property()
+    {
+        Storage::persistentFake('tmp-for-tests');
+
+        Livewire::visit(new class extends Component {
+            use WithFileUploads;
+
+            public $photo;
+
+            function render() { return <<<'HTML'
+                <div>
+                    <input type="file" wire:model="photo" dusk="upload">
+
+                    <button type="button" wire:click="$cancelUpload('photo')" dusk="cancel">cancel</button>
+
+                    <div>
+                        @if ($photo)
+                            <img src="{{ $photo->temporaryUrl() }}" dusk="preview">
+                            <span dusk="filename">{{ $photo->getClientOriginalName() }}</span>
+                        @endif
+                    </div>
+                </div>
+                HTML; }
+        })
+        ->waitForLivewireToLoad()
+        // Hang binary upload XHRs so the first item stays in the bag long enough to queue a second...
+        ->tap(fn ($b) => $b->script([<<<'JS'
+            window.__hungUploads = true
+            let NativeXHR = window.XMLHttpRequest
+
+            window.XMLHttpRequest = function () {
+                let xhr = new NativeXHR()
+                let send = xhr.send.bind(xhr)
+
+                xhr.send = function (body) {
+                    // Leave the request open; cancelUpload can abort it later.
+                    if (window.__hungUploads && body instanceof FormData) return
+
+                    return send(body)
+                }
+
+                return xhr
+            }
+
+            window.XMLHttpRequest.prototype = NativeXHR.prototype
+        JS]))
+        // A starts: the signed URL roundtrip finishes, then its binary request hangs...
+        ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image.png')
+        // B queues behind A → upload bag is [A, B]...
+        ->attach('@upload', __DIR__.'/browser_test_image2.png')
+        // Cancelling should drain the whole queue, not just A...
+        ->click('@cancel')
+        // Upload bag should be empty allowing the next upload to complete...
+        ->tap(fn ($b) => $b->script('window.__hungUploads = false'))
+        ->attach('@upload', __DIR__.'/browser_test_image.png')
+        ->waitFor('@preview')
+        ->assertVisible('@preview')
+        ->assertSeeIn('@filename', 'browser_test_image.png');
+    }
 }
 
 class HttpsSignedUploadComponent extends Component

@@ -147,8 +147,12 @@ class UploadManager {
     }
 
     handleSignedUrl(name, url) {
+        let upload = this.uploadBag.first(name)
+
+        if (! upload) return
+
         let formData = new FormData()
-        Array.from(this.uploadBag.first(name).files).forEach(file => formData.append('files[]', file, file.name))
+        Array.from(upload.files).forEach(file => formData.append('files[]', file, file.name))
 
         let headers = {
             'Accept': 'application/json',
@@ -164,7 +168,11 @@ class UploadManager {
     }
 
     handleS3PreSignedUrl(name, payload) {
-        let formData = this.uploadBag.first(name).files[0]
+        let upload = this.uploadBag.first(name)
+
+        if (! upload) return
+
+        let formData = upload.files[0]
 
         let headers = payload.headers
         if ('Host' in headers) delete headers.Host
@@ -231,6 +239,8 @@ class UploadManager {
     markUploadFinished(name, tmpFilenames) {
         unsetUploadLoading(this.component)
 
+        if (! this.uploadBag.first(name)) return
+
         let uploadObject = this.uploadBag.shift(name)
         uploadObject.finishCallback(uploadObject.multiple ? tmpFilenames : tmpFilenames[0])
 
@@ -240,6 +250,8 @@ class UploadManager {
     markUploadErrored(name) {
         unsetUploadLoading(this.component)
 
+        if (! this.uploadBag.first(name)) return
+
         this.uploadBag.shift(name).errorCallback()
 
         if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
@@ -248,17 +260,21 @@ class UploadManager {
     cancelUpload(name, cancelledCallback = null) {
         unsetUploadLoading(this.component)
 
-        let uploadItem = this.uploadBag.first(name);
+        let uploadItem = this.uploadBag.first(name)
 
-        if (uploadItem) {
-            if (uploadItem.request) {
-                uploadItem.request.abort();
-            }
+        if (! uploadItem) return
 
-            this.uploadBag.shift(name).cancelledCallback();
-
-            if (cancelledCallback) cancelledCallback()
+        if (uploadItem.request) {
+            uploadItem.request.abort()
         }
+
+        let queue = this.uploadBag.get(name).splice(0)
+
+        while (queue.length > 0) {
+            queue.shift().cancelledCallback?.()
+        }
+
+        if (cancelledCallback) cancelledCallback()
     }
 }
 
