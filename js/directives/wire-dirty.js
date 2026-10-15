@@ -1,6 +1,6 @@
 import { directive, getDirectives } from '@/directives'
 import { toggleBooleanStateDirective } from './shared'
-import { dataGet, WeakBag } from '@/utils'
+import { dataGet, WeakBag, arrayPull } from '@/utils'
 import { on } from '@/hooks'
 
 let refreshDirtyStatesByComponent = new WeakBag
@@ -13,7 +13,7 @@ on('commit', ({ component, succeed }) => {
     })
 })
 
-directive('dirty', ({ el, directive, component }) => {
+directive('dirty', ({ el, directive, component, cleanup }) => {
     let targets = dirtyTargets(el)
 
     let oldIsDirty = false
@@ -28,7 +28,7 @@ directive('dirty', ({ el, directive, component }) => {
 
     refreshDirtyStatesByComponent.add(component, refreshDirtyState)
 
-    Alpine.effect(() => {
+    let effectReference = Alpine.effect(() => {
         let isDirty = false
 
         isDirty = checkDirty(component, targets.length === 0 ? undefined : targets)
@@ -38,6 +38,11 @@ directive('dirty', ({ el, directive, component }) => {
         }
 
         oldIsDirty = isDirty
+    })
+
+    cleanup(() => {
+        Alpine.release(effectReference)
+        arrayPull(refreshDirtyStatesByComponent.get(component), refreshDirtyState)
     })
 })
 
