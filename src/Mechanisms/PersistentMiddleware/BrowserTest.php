@@ -181,6 +181,12 @@ JS;
 
     public function test_that_authorization_middleware_is_re_applied()
     {
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+
         Livewire::visit(Component::class)
             ->visit('/with-authorization/1/livewire-dusk/'.urlencode(Component::class))
             ->assertDontSee('Protected Content')
@@ -257,6 +263,12 @@ JS;
         if (app()->version() < '10.37.1') {
             $this->markTestSkipped();
         }
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
 
         Livewire::visit(Component::class)
             ->visit('/with-authorization/1/inline-auth')
