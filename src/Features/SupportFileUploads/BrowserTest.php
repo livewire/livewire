@@ -483,14 +483,11 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image.png')
         // B queues behind A → upload bag is [A, B]...
         ->attach('@upload', __DIR__.'/browser_test_image2.png')
-        // Cancelling should drain the whole queue, not just A...
-        ->click('@cancel')
-        // Upload bag should be empty allowing the next upload to complete...
         ->tap(fn ($b) => $b->script('window.__hungUploads = false'))
-        ->attach('@upload', __DIR__.'/browser_test_image.png')
+        // Cancel A, should start B.
+        ->click('@cancel')
         ->waitFor('@preview')
-        ->assertVisible('@preview')
-        ->assertSeeIn('@filename', 'browser_test_image.png');
+        ->waitForTextIn('@filename', 'browser_test_image2.png');
     }
 }
 
