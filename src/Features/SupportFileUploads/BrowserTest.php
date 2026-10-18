@@ -169,19 +169,18 @@ class BrowserTest extends \Tests\BrowserTestCase
                 HTML;
             }
         })
-            ->waitForLivewireToLoad()
-            // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
-            ->tap(fn ($b) => $b->script("
-                window.Livewire.first().on('livewire-upload-progress', () => {
-                    window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block';
-                    document.querySelector('[dusk=\"cancel\"]').click();
-                });
-            "))
-            ->assertMissing('@loading')
-            // Large file so the request is still in flight when we cancel
-            ->waitForLivewire()->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
-            ->waitUntilMissing('@loading')
-            ->assertScript('window.loadingWasDisplayed', true);
+        ->waitForLivewireToLoad()
+        // Set a script to record if the loading element was displayed when `livewire-upload-progress` was fired
+        ->tap(fn ($b) => $b->script(<<<'JS'
+            window.Livewire.first().on('livewire-upload-progress', () => {
+                window.loadingWasDisplayed = document.getElementById('loading').style.display === 'inline-block';
+                document.querySelector('[dusk="cancel"]').click();
+            });
+        JS))
+        ->assertMissing('@loading')
+        ->waitForLivewire()->attach('@upload', __DIR__ . '/browser_test_image_big.jpg')
+        ->waitUntilMissing('@loading')
+        ->waitUntil('window.loadingWasDisplayed === true');
     }
 
     public function test_file_upload_being_renderless_is_not_impacted_by_real_time_validation()
