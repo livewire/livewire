@@ -1222,4 +1222,26 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@set')
             ->assertSeeIn('@output', 'bar-baz');
     }
+
+    function test_wire_model_with_key_starting_with_zero_on_empty_array()
+    {
+        Livewire::visit(new class extends Component {
+            public array $data = [];
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="input" type="text" wire:model.live="data.0abc">
+
+                        <span dusk="output">{{ json_encode($data) }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@output', '[]')
+            ->waitForLivewire()->type('@input', 'hello')
+            ->assertSeeIn('@output', '{"0abc":"hello"}')
+        ;
+    }
 }
