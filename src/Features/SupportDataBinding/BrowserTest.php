@@ -9,6 +9,26 @@ use Livewire\Attributes\Computed;
 
 class BrowserTest extends BrowserTestCase
 {
+    function test_wire_properties_can_share_names_with_object_prototype_keys()
+    {
+        Livewire::visit(new class extends Component {
+            public $constructor = 'constructor value';
+            public $hasOwnProperty = 'own property value';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <span dusk="constructor" x-text="$wire.constructor"></span>
+                        <span dusk="own-property" x-text="$wire.hasOwnProperty"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@constructor', 'constructor value')
+            ->assertSeeIn('@own-property', 'own property value');
+    }
+
     function test_can_use_wire_dirty()
     {
         Livewire::visit(new class extends Component {
