@@ -21,7 +21,7 @@ class BrowserTest extends BrowserTestCase
                         <input wire:model.lazy="foo" dusk="foo">
 
                         @if ($showIndicator)
-                            <span wire:dirty wire:target="foo" dusk="dirty">Dirty Indicator</span>
+                            <span wire:dirty.class="is-dirty" wire:target="foo" dusk="dirty">Dirty Indicator</span>
                         @endif
 
                         <button type="button" wire:click="$toggle('showIndicator')" dusk="toggle"></button>
@@ -30,43 +30,28 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-            /**
-             * Dirty indicator works while mounted.
-             */
-            ->assertMissing('@dirty')
+            ->assertPresent('@dirty')
+            ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
+            ->tap(fn ($b) => $b->script("
+                window.__removedEl = document.querySelector('[dusk=\"dirty\"]')
+            "))
+            ->waitForLivewire()->click('@toggle')
+            ->waitUntilMissing('@dirty')
             ->type('@foo', 'bar')
-            ->assertVisible('@dirty')
-            ->pause(150)
-            ->waitForLivewire()->click('@dummy')
-            ->pause(25)
-            ->assertMissing('@dirty')
-
-            /**
-             * Tear down the wire:dirty element (should run directive cleanup)...
-             */
+            ->pause(100)
+            ->assertScript('window.__removedEl.classList.contains("is-dirty")', false)
+            ->click('@dummy')
+            ->assertNotPresent('@dirty')
+            ->clear('@foo')
             ->waitForLivewire()->click('@toggle')
-            ->assertMissing('@dirty')
-
-            /**
-             * Further commits after teardown must not break the component...
-             */
+            ->waitFor('@dirty')
+            ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
             ->type('@foo', 'baz')
-            ->pause(150)
-            ->waitForLivewire()->click('@dummy')
-            ->pause(25)
-            ->assertMissing('@dirty')
-
-            /**
-             * Re-mount the indicator and ensure dirty tracking still works.
-             */
-            ->waitForLivewire()->click('@toggle')
-            ->assertMissing('@dirty')
-            ->type('@foo', 'qux')
-            ->assertVisible('@dirty') // fails without cleanup
-            ->pause(150)
-            ->waitForLivewire()->click('@dummy')
-            ->pause(25)
-            ->assertMissing('@dirty')
+            ->pause(100)
+            ->assertAttribute('@dirty', 'class', 'is-dirty')
+            ->click('@dummy')
+            ->pause(100)
+            ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
         ;
     }
 }
