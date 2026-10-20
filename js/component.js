@@ -1,4 +1,4 @@
-import { dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
+import { arrayPull, dataSet, deepClone, diff, diffAndConsolidate, diffAndPatchRecursive, extractData} from '@/utils'
 import { generateWireObject } from '@/$wire'
 import { findComponentByEl, findComponent, hasComponent } from '@/store'
 import { trigger } from '@/hooks'
@@ -109,7 +109,7 @@ export class Component {
         // priority against ephemeral updates that have happend since them...
         Object.entries(this.queuedUpdates).forEach(([updateKey, updateValue]) => {
             Object.entries(diff).forEach(([diffKey, diffValue]) => {
-                if (diffKey.startsWith(updateKey)) {
+                if (diffKey === updateKey || diffKey.startsWith(updateKey + '.')) {
                     delete diff[diffKey]
                 }
             })
@@ -117,7 +117,7 @@ export class Component {
             diff[updateKey] = updateValue
         })
 
-        this.queuedUpdates = []
+        this.queuedUpdates = {}
 
         return diff
     }
@@ -324,11 +324,7 @@ export class Component {
         this.cleanups.push(cleanup)
 
         return () => {
-            let index = this.cleanups.indexOf(cleanup)
-
-            if (index === -1) return
-
-            this.cleanups.splice(index, 1)
+            arrayPull(this.cleanups, cleanup)
         }
     }
 

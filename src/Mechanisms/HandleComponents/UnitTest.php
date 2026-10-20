@@ -271,6 +271,38 @@ class UnitTest extends \Tests\TestCase
         ->assertSetStrict('refreshed', true);
     }
 
+    public function test_nested_update_to_uninitialized_typed_property_returns_419_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(new class extends TestComponent {
+            public string $name;
+        });
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($component->snapshot),
+                    'updates' => ['name.first' => 'Caleb'],
+                    'calls' => [],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_nested_update_to_uninitialized_typed_property_throws_type_error_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(new class extends TestComponent {
+            public string $name;
+        })
+        ->set('name.first', 'Caleb');
+    }
+
     public function test_invalid_call_method_name_returns_419_when_debug_is_disabled()
     {
         config()->set('app.debug', false);
@@ -332,6 +364,52 @@ class UnitTest extends \Tests\TestCase
         app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
 
         $this->assertCount(1, $reported);
+    }
+
+    public function test_shared_view_state_is_reverted_when_render_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $undefined }}</div>';
+                }
+            });
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertNull(view()->shared('_instance'));
+    }
+
+    public function test_shared_view_state_is_reverted_when_island_render_throws()
+    {
+        $component = Livewire::test(new class extends Component {
+            public bool $fail = false;
+
+            public function breakIsland()
+            {
+                $this->fail = true;
+                $this->skipRender();
+                $this->renderIsland('foo');
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    @island(name: 'foo')
+                        <div>@if ($fail) {{ $undefined }} @endif</div>
+                    @endisland
+                </div>
+                HTML;
+            }
+        });
+
+        try {
+            $component->call('breakIsland');
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
     }
 }
 

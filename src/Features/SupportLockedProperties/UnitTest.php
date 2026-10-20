@@ -2,6 +2,7 @@
 
 namespace Livewire\Features\SupportLockedProperties;
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Livewire\Livewire;
 use Livewire\Component as BaseComponent;
 use Livewire\Form;
@@ -94,6 +95,40 @@ class UnitTest extends \Tests\TestCase
             ]]);
 
         $response->assertStatus(419);
+    }
+
+    function test_locked_property_exception_is_not_reported_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CannotUpdateLockedPropertyException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CannotUpdateLockedPropertyException('count'));
+
+        $this->assertEmpty($reported);
+    }
+
+    function test_locked_property_exception_is_reported_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (CannotUpdateLockedPropertyException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new CannotUpdateLockedPropertyException('count'));
+
+        $this->assertCount(1, $reported);
     }
 }
 

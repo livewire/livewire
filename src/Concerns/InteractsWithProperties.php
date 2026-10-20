@@ -68,7 +68,7 @@ trait InteractsWithProperties
 
                 // form object reset
                 if (is_subclass_of($this->{$objectName}, Form::class)) {
-                    $this->{$objectName}->reset($propertyName);
+                    $this->{$objectName}->reset(Utils::afterFirstDot((string) $property));
                     continue;
                 }
 
