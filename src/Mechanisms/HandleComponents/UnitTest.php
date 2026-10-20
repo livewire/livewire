@@ -201,6 +201,8 @@ class UnitTest extends \Tests\TestCase
 
     public function test_nested_update_to_uninitialized_typed_property_uses_normal_type_handling()
     {
+        config()->set('app.debug', true);
+
         $this->expectException(\TypeError::class);
 
         Livewire::test(new class extends TestComponent {
