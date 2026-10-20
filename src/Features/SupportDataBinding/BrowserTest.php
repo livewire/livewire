@@ -13,20 +13,20 @@ class BrowserTest extends BrowserTestCase
     {
         Livewire::visit(new class extends Component {
             public $constructor = 'constructor value';
-            public $hasOwnProperty = 'own property value';
+            public $toString = 'string value';
 
             public function render()
             {
                 return <<<'BLADE'
                     <div>
                         <span dusk="constructor" x-text="$wire.constructor"></span>
-                        <span dusk="own-property" x-text="$wire.hasOwnProperty"></span>
+                        <span dusk="to-string" x-text="$wire.toString"></span>
                     </div>
                 BLADE;
             }
         })
             ->assertSeeIn('@constructor', 'constructor value')
-            ->assertSeeIn('@own-property', 'own property value');
+            ->assertSeeIn('@to-string', 'string value');
     }
 
     function test_can_use_wire_dirty()
