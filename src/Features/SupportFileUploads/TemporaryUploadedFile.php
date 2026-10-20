@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportFileUploads;
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
@@ -110,8 +111,15 @@ class TemporaryUploadedFile extends UploadedFile
             return 'application/octet-stream';
         }
 
-        return (new FinfoMimeTypeDetector())->detectMimeTypeFromBuffer($contents)
-            ?: 'application/octet-stream';
+        $detector = new FinfoMimeTypeDetector();
+        $mimeType = $detector->detectMimeTypeFromBuffer($contents);
+
+        // OLE documents may keep their directory beyond the sample; let libmagic seek to it locally...
+        if ($mimeType === 'application/x-ole-storage' && $this->storage->getAdapter() instanceof LocalFilesystemAdapter) {
+            $mimeType = $detector->detectMimeTypeFromFile($this->storage->path($this->path)) ?: $mimeType;
+        }
+
+        return $mimeType ?: 'application/octet-stream';
     }
 
     public function getFilename(): string
