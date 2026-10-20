@@ -202,6 +202,7 @@ class HandleComponents extends Mechanism
             if (! is_array($call)
                 || ! is_string($call['method'] ?? null)
                 || ! is_array($call['params'] ?? null)
+                || ! Utils::hasUnambiguousParameterKeys($call['params'])
             ) {
                 if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire call structure: each call must contain [method] (string) and [params] (array).');
 

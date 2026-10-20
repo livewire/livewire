@@ -4,6 +4,8 @@ namespace Livewire\Features\SupportJson;
 
 use function Livewire\on;
 use Livewire\ComponentHook;
+use Livewire\Features\SupportAttributes\AttributeLevel;
+use Livewire\Features\SupportAuthorization\BaseAuthorize;
 
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -14,6 +16,14 @@ class SupportJson extends ComponentHook
     {
         on('call', function ($component, $method, $params, $context, $returnEarly, $metadata, $index) {
             if (! static::isJsonMethod($component, $method)) return;
+
+            // This listener runs the method itself, before the regular "call" hooks
+            // would authorize it, so run any authorization checks first...
+            $component->getAttributes()
+                ->filter(fn ($i) => $i instanceof BaseAuthorize)
+                ->filter(fn ($i) => $i->getName() === $method)
+                ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
+                ->each(fn ($i) => $i->call($params));
 
             $component->skipRender();
 
