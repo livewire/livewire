@@ -830,6 +830,27 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertNull($finder->resolveSingleFileComponentPath('non-single-file-component-with-separated-closing-bracket-and-class-text'));
     }
+
+    public function test_lists_the_path_of_every_view_based_component_as_the_resolvers_return_it()
+    {
+        $finder = new Finder();
+
+        $finder->addLocation(viewPath: __DIR__ . '/Fixtures/');
+        $finder->addNamespace('nested', viewPath: __DIR__ . '/Fixtures/nested-view-based');
+
+        $paths = $finder->getViewBasedComponentPaths();
+
+        foreach (['finder-test-single-file-component', 'finder-test-single-file-component-with-zap', 'self-named-component', 'nested::self-named-component'] as $name) {
+            $this->assertContains($finder->resolveSingleFileComponentPath($name), $paths);
+        }
+
+        foreach (['multi-file-test-component', 'multi-file-zap-component', 'multi-file-index', 'nested::index'] as $name) {
+            $this->assertContains($finder->resolveMultiFileComponentPath($name), $paths);
+        }
+
+        $this->assertNotContains(__DIR__ . '/Fixtures/non-single-file-component-with-closing-brackets-and-class-text.blade.php', $paths);
+        $this->assertNotContains(__DIR__ . '/Fixtures/multi-file-test-component/multi-file-test-component.blade.php', $paths);
+    }
 }
 
 class SingleSegmentComponent extends Component
