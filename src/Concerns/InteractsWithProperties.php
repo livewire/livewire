@@ -25,7 +25,7 @@ trait InteractsWithProperties
         return $value;
     }
 
-    public function fill($values)
+    public function fill($values, $aliases = [])
     {
         $publicProperties = array_keys($this->all());
         $model = $values instanceof Model ? $values : null;
@@ -33,14 +33,16 @@ trait InteractsWithProperties
         if ($model) $values = $model->toArray();
 
         foreach ($values as $key => $value) {
-            if (! in_array(Utils::beforeFirstDot($key), $publicProperties)) continue;
+            $property = $aliases[$key] ?? $key;
+
+            if (! in_array(Utils::beforeFirstDot($property), $publicProperties)) continue;
 
             try {
-                data_set($this, $key, $value);
+                data_set($this, $property, $value);
             } catch (\TypeError $exception) {
                 if (! $model) throw $exception;
 
-                data_set($this, $key, $model->getAttribute($key));
+                data_set($this, $property, $model->getAttribute($key));
             }
         }
     }
