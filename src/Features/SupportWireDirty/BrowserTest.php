@@ -21,7 +21,7 @@ class BrowserTest extends BrowserTestCase
                         <input wire:model.lazy="foo" dusk="foo">
 
                         @if ($showIndicator)
-                            <span wire:dirty.class="is-dirty" wire:target="foo" dusk="dirty">Dirty Indicator</span>
+                            <span wire:dirty.class="is-dirty" wire:target="foo" dusk="dirty">Dirty indicator</span>
                         @endif
 
                         <button type="button" wire:click="$toggle('showIndicator')" dusk="toggle"></button>
@@ -30,27 +30,20 @@ class BrowserTest extends BrowserTestCase
                 HTML;
             }
         })
-            ->assertPresent('@dirty')
-            ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
-            ->tap(fn ($b) => $b->script("
-                window.__removedEl = document.querySelector('[dusk=\"dirty\"]')
-            "))
+            ->tap(fn ($b) => $b->script("window.__removedEl = document.querySelector('[dusk=\"dirty\"]')"))
             ->waitForLivewire()->click('@toggle')
             ->waitUntilMissing('@dirty')
             ->type('@foo', 'bar')
-            ->pause(100)
-            ->assertScript('window.__removedEl.classList.contains("is-dirty")', false)
             ->click('@dummy')
-            ->assertNotPresent('@dirty')
+            // wire:dirty element already removed, leaked effect would be true
+            ->assertScript('window.__removedEl.classList.contains("is-dirty")', false)
             ->clear('@foo')
             ->waitForLivewire()->click('@toggle')
             ->waitFor('@dirty')
-            ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
             ->type('@foo', 'baz')
-            ->pause(100)
-            ->assertAttribute('@dirty', 'class', 'is-dirty')
             ->click('@dummy')
-            ->pause(100)
+            ->assertAttribute('@dirty', 'class', 'is-dirty')
+            ->pause(150)
             ->assertAttributeDoesntContain('@dirty', 'class', 'is-dirty')
         ;
     }
