@@ -16,6 +16,8 @@ class StringableSynth extends Synth {
     }
 
     function hydrate($value) {
+        if (is_array($value)) return $value;
+
         return str($value);
     }
 }
