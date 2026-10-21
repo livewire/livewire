@@ -220,6 +220,12 @@ export function diffAndConsolidate(left, right) {
     return diffs
 }
 
+// Arrays with string keys need granular diffs because JSON.stringify ignores them,
+// and the server returns them as objects...
+function hasNonNumericKeys(arr) {
+    return isArray(arr) && Object.keys(arr).some(k => isNaN(parseInt(k)))
+}
+
 function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Are they the same?
     if (left === right) return { changed: false, consolidated: false }
@@ -227,12 +233,6 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Track if we're doing a type conversion from empty array/null/undefined to object
     // In this case, we want granular diffs, not consolidation
     let convertedToObject = false
-
-    // Helper to check if an array has non-numeric (string) keys
-    // Arrays with string keys need granular diffs because JSON.stringify ignores them
-    let hasNonNumericKeys = (arr) => {
-        return isArray(arr) && Object.keys(arr).some(k => isNaN(parseInt(k)))
-    }
 
     // Are they COMPLETELY different types?
     if (typeof left !== typeof right || (isObject(left) && isArray(right)) || (isArray(left) && isObject(right))) {
@@ -368,6 +368,12 @@ export function diffAndPatchRecursive(left, right, target) {
         leftKeys.delete(key)
 
         if (deeplyEqual(left?.[key], right[key])) return
+
+        // An array with string keys comes back from the server as an object. Patch it
+        // as an object so keys written while the request was in flight aren't lost...
+        if (hasNonNumericKeys(target[key]) && isObject(right[key])) {
+            target[key] = { ...target[key] }
+        }
 
         if (isObjecty(left?.[key]) && isObjecty(right[key]) && isObjecty(target[key])
             && isArray(right[key]) === isArray(target[key])) {

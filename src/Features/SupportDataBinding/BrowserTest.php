@@ -1222,4 +1222,42 @@ class BrowserTest extends BrowserTestCase
             ->waitForLivewire()->click('@set')
             ->assertSeeIn('@output', 'bar-baz');
     }
+
+    function test_deferred_update_written_while_a_request_is_in_flight_is_kept()
+    {
+        Livewire::visit(new class extends Component {
+            public $items = [];
+            public $data = ['name' => 'Livewire'];
+
+            public function hydrate()
+            {
+                usleep(500000);
+            }
+
+            public function render()
+            {
+                return <<<'BLADE'
+                <div>
+                    <button dusk="set-items" wire:click="$set('items.a', 'one')">Set Items A</button>
+                    <button dusk="set-data" wire:click="$set('data.a', 'one')">Set Data A</button>
+                    <input dusk="deferred-item" type="text" wire:model="items.b" />
+                    <input dusk="deferred-data" type="text" wire:model="data.b" />
+                    <button dusk="refresh" wire:click="$refresh">Refresh</button>
+                    <div dusk="items">Items: {{ count($items) }}</div>
+                    <div dusk="data">Data: {{ count($data) }}</div>
+                </div>
+                BLADE;
+            }
+        })
+            ->click('@set-items')
+            ->type('@deferred-item', 'two')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@items', 'Items: 2')
+            ->assertSeeIn('@data', 'Data: 1')
+            ->waitForLivewire()->click('@set-data')
+            ->type('@deferred-data', 'two')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@items', 'Items: 2')
+            ->assertSeeIn('@data', 'Data: 3');
+    }
 }
