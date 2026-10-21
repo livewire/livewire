@@ -22,6 +22,17 @@ use Tests\BrowserTestCase;
 
 class BrowserTest extends BrowserTestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Post::truncate();
+        Post::insert([
+            ['id' => 1, 'title' => 'First', 'user_id' => 1],
+            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
+        ]);
+    }
+
     protected function getEnvironmentSetUp($app) {
         parent::getEnvironmentSetUp($app);
 
@@ -312,12 +323,6 @@ JS;
             $this->markTestSkipped();
         }
 
-        Post::truncate();
-        Post::insert([
-            ['id' => 1, 'title' => 'First', 'user_id' => 1],
-            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
-        ]);
-
         Livewire::visit(Component::class)
             ->visit('/page-with-reactive-child/1')
             ->assertSee('test')
@@ -337,12 +342,6 @@ JS;
         if (app()->version() < '10.37.1') {
             $this->markTestSkipped();
         }
-
-        Post::truncate();
-        Post::insert([
-            ['id' => 1, 'title' => 'First', 'user_id' => 1],
-            ['id' => 2, 'title' => 'Second', 'user_id' => 2],
-        ]);
 
         Livewire::visit(Component::class)
             ->visit('/page-with-modelable-child/1')
