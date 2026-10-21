@@ -198,6 +198,33 @@ class UnitTest extends \Tests\TestCase
             ])
         ;
     }
+
+    public function test_nested_update_to_uninitialized_typed_property_uses_normal_type_handling()
+    {
+        config()->set('app.debug', true);
+
+        $this->expectException(\TypeError::class);
+
+        Livewire::test(new class extends TestComponent {
+            public string $name;
+        })->set('name.first', 'Caleb');
+    }
+
+
+    public function test_shared_view_state_is_reverted_when_render_throws()
+    {
+        try {
+            Livewire::test(new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $undefined }}</div>';
+                }
+            });
+        } catch (\Illuminate\View\ViewException) {}
+
+        $this->assertNull(view()->shared('__livewire'));
+        $this->assertNull(view()->shared('_instance'));
+    }
 }
 
 class BasicComponent extends TestComponent

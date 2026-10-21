@@ -9,6 +9,26 @@ use Livewire\Attributes\Computed;
 
 class BrowserTest extends BrowserTestCase
 {
+    function test_wire_properties_can_share_names_with_object_prototype_keys()
+    {
+        Livewire::visit(new class extends Component {
+            public $constructor = 'constructor value';
+            public $toString = 'string value';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <span dusk="constructor" x-text="$wire.constructor"></span>
+                        <span dusk="to-string" x-text="$wire.toString"></span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->assertSeeIn('@constructor', 'constructor value')
+            ->assertSeeIn('@to-string', 'string value');
+    }
+
     function test_can_use_wire_dirty()
     {
         Livewire::visit(new class extends Component {
@@ -367,5 +387,30 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@item-count', '0')
             ->assertMissing('@name')
         ;
+    }
+
+    function test_queued_set_does_not_drop_updates_to_properties_that_share_its_prefix()
+    {
+        Livewire::visit(new class extends Component {
+            public $foo = '';
+
+            public $foobar = '';
+
+            public function render()
+            {
+                return <<<'BLADE'
+                    <div>
+                        <input dusk="foobar" wire:model="foobar" />
+
+                        <button dusk="set" wire:click="$set('foo', 'bar')">Set foo</button>
+
+                        <span dusk="output">{{ $foo }}-{{ $foobar }}</span>
+                    </div>
+                BLADE;
+            }
+        })
+            ->type('@foobar', 'baz')
+            ->waitForLivewire()->click('@set')
+            ->assertSeeIn('@output', 'bar-baz');
     }
 }

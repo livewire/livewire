@@ -81,7 +81,7 @@ class Form implements Arrayable
 
     public function resetErrorBag($field = null)
     {
-        $fields = (array) $field;
+        $fields = (array) ($field ?: '*');
 
         foreach ($fields as $idx => $field) {
             $fields[$idx] = $this->propertyName . '.' . $field;
