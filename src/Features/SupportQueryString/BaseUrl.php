@@ -115,7 +115,7 @@ class BaseUrl extends LivewireAttribute
 
         try {
             $this->setValue($value, $this->nullable);
-        } catch (\TypeError $e) {
+        } catch (\TypeError|\ValueError $e) {
             // Silently ignore invalid query string types and keep the default.
             return;
         }
