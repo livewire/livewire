@@ -5,6 +5,7 @@ namespace Livewire\Features\SupportLifecycleHooks;
 use function Livewire\wrap;
 use function Livewire\on;
 use Livewire\ComponentHook;
+use Illuminate\Support\Str;
 
 class SupportLifecycleHooks extends ComponentHook
 {
@@ -14,11 +15,19 @@ class SupportLifecycleHooks extends ComponentHook
     // Performance optimization: Cache method existence checks per component class...
     protected static $methodCache = [];
 
+    // Performance optimization: Cache trait hook methods (e.g. "mountWithFileUploads") per component class and hook...
+    protected static $traitHookCache = [];
+
+    // Performance optimization: Cache protected lifecycle method names per component class...
+    protected static $protectedMethodCache = [];
+
     public static function provide()
     {
         on('flush-state', function () {
             static::$traitCache = [];
             static::$methodCache = [];
+            static::$traitHookCache = [];
+            static::$protectedMethodCache = [];
         });
     }
 
@@ -52,7 +61,7 @@ class SupportLifecycleHooks extends ComponentHook
 
         // Call "hydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
-            $this->callHook('hydrate'.str($property)->studly(), [$value]);
+            $this->callHook('hydrate'.Str::studly($property), [$value]);
         }
 
         $this->callHook('booted');
@@ -61,21 +70,21 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function update($propertyName, $fullPath, $newValue)
     {
-        $name = str($fullPath);
+        $isNested = str_contains($fullPath, '.');
 
-        $propertyName = $name->studly()->before('.');
-        $keyAfterFirstDot = $name->contains('.') ? $name->after('.')->__toString() : null;
-        $keyAfterLastDot = $name->contains('.') ? $name->afterLast('.')->__toString() : null;
+        $propertyName = Str::studly(Str::before($fullPath, '.'));
+        $keyAfterFirstDot = $isNested ? Str::after($fullPath, '.') : null;
+        $keyAfterLastDot = $isNested ? Str::afterLast($fullPath, '.') : null;
 
         $beforeMethod = 'updating'.$propertyName;
         $afterMethod = 'updated'.$propertyName;
 
-        $beforeNestedMethod = $name->contains('.')
-            ? 'updating'.$name->replace('.', '_')->studly()
+        $beforeNestedMethod = $isNested
+            ? 'updating'.Str::studly(str_replace('.', '_', $fullPath))
             : false;
 
-        $afterNestedMethod = $name->contains('.')
-            ? 'updated'.$name->replace('.', '_')->studly()
+        $afterNestedMethod = $isNested
+            ? 'updated'.Str::studly(str_replace('.', '_', $fullPath))
             : false;
 
         $this->callHook('updating', [$fullPath, $newValue]);
@@ -97,6 +106,22 @@ class SupportLifecycleHooks extends ComponentHook
 
     public function call($methodName, $params, $returnEarly, $metadata)
     {
+        throw_if(
+            Str::is($this->protectedMethods(), $methodName),
+            new DirectlyCallingLifecycleHooksNotAllowedException($methodName, $this->component->getName())
+        );
+
+        $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly, 'metadata' => $metadata]);
+    }
+
+    protected function protectedMethods()
+    {
+        $class = get_class($this->component);
+
+        if (isset(static::$protectedMethodCache[$class])) {
+            return static::$protectedMethodCache[$class];
+        }
+
         $protectedMethods = [
             'mount',
             'boot',
@@ -112,25 +137,14 @@ class SupportLifecycleHooks extends ComponentHook
         ];
 
         // Also block trait-suffixed lifecycle hooks (e.g. mountWithFileUploads, bootMyTrait)
-        $class = get_class($this->component);
-
-        if (! isset(static::$traitCache[$class])) {
-            static::$traitCache[$class] = class_uses_recursive($this->component);
-        }
-
-        foreach (static::$traitCache[$class] as $trait) {
+        foreach ($this->traits() as $trait) {
             $traitBasename = class_basename($trait);
             $protectedMethods[] = 'mount'.$traitBasename;
             $protectedMethods[] = 'boot'.$traitBasename;
             $protectedMethods[] = 'booted'.$traitBasename;
         }
 
-        throw_if(
-            str($methodName)->is($protectedMethods),
-            new DirectlyCallingLifecycleHooksNotAllowedException($methodName, $this->component->getName())
-        );
-
-        $this->callTraitHook('call', ['methodName' => $methodName, 'params' => $params, 'returnEarly' => $returnEarly, 'metadata' => $metadata]);
+        return static::$protectedMethodCache[$class] = $protectedMethods;
     }
 
     public function exception($e, $stopPropagation)
@@ -157,7 +171,7 @@ class SupportLifecycleHooks extends ComponentHook
 
         // Call "dehydrateXx" hooks for each property...
         foreach ($this->getProperties() as $property => $value) {
-            $this->callHook('dehydrate'.str($property)->studly(), [$value]);
+            $this->callHook('dehydrate'.Str::studly($property), [$value]);
         }
     }
 
@@ -178,40 +192,52 @@ class SupportLifecycleHooks extends ComponentHook
 
     function callTraitHook($name, $params = [])
     {
-        // Performance optimization: Cache trait lookups per component class
+        $methods = $this->traitHookMethods($name);
+
+        if (! $methods) return;
+
+        // resolveMethodDependencies() can produce arrays with both
+        // string and integer keys (e.g. ['postId' => '123', 0 => null]).
+        // PHP forbids positional args after named args when spreading,
+        // so strip the integer-keyed entries in that case. When all keys
+        // are the same type (e.g. updating/updated hooks pass only
+        // integer-keyed [$name, $value]), leave them as-is.
+        $keys = array_keys($params);
+        $hasStringKeys = array_filter($keys, 'is_string');
+        $hasIntKeys = array_filter($keys, 'is_int');
+
+        $paramsToSpread = ($hasStringKeys && $hasIntKeys)
+            ? array_filter($params, 'is_string', ARRAY_FILTER_USE_KEY)
+            : $params;
+
+        foreach ($methods as $method) {
+            wrap($this->component)->$method(...$paramsToSpread);
+        }
+    }
+
+    protected function traitHookMethods($name)
+    {
         $class = get_class($this->component);
 
-        if (!isset(static::$traitCache[$class])) {
-            static::$traitCache[$class] = class_uses_recursive($this->component);
+        if (isset(static::$traitHookCache[$class][$name])) {
+            return static::$traitHookCache[$class][$name];
         }
 
-        foreach (static::$traitCache[$class] as $trait) {
+        $methods = [];
+
+        foreach ($this->traits() as $trait) {
             $method = $name.class_basename($trait);
 
-            // Performance optimization: Cache method existence checks
-            $cacheKey = "{$class}::{$method}";
-
-            if (!isset(static::$methodCache[$cacheKey])) {
-                static::$methodCache[$cacheKey] = method_exists($this->component, $method);
-            }
-
-            if (static::$methodCache[$cacheKey]) {
-                // resolveMethodDependencies() can produce arrays with both
-                // string and integer keys (e.g. ['postId' => '123', 0 => null]).
-                // PHP forbids positional args after named args when spreading,
-                // so strip the integer-keyed entries in that case. When all keys
-                // are the same type (e.g. updating/updated hooks pass only
-                // integer-keyed [$name, $value]), leave them as-is.
-                $keys = array_keys($params);
-                $hasStringKeys = array_filter($keys, 'is_string');
-                $hasIntKeys = array_filter($keys, 'is_int');
-
-                $paramsToSpread = ($hasStringKeys && $hasIntKeys)
-                    ? array_filter($params, 'is_string', ARRAY_FILTER_USE_KEY)
-                    : $params;
-
-                wrap($this->component)->$method(...$paramsToSpread);
+            if (method_exists($this->component, $method)) {
+                $methods[] = $method;
             }
         }
+
+        return static::$traitHookCache[$class][$name] = $methods;
+    }
+
+    protected function traits()
+    {
+        return static::$traitCache[get_class($this->component)] ??= class_uses_recursive($this->component);
     }
 }
