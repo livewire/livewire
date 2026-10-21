@@ -204,6 +204,12 @@ class FrontendAssets extends Mechanism
         $manifestPath = __DIR__.'/../../../dist/manifest.json';
         $manifest = file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : [];
         $versionHash = $manifest['/livewire.js'] ?? 'dev';
+
+        // Both builds are served from the same URL, so bust the cache when switching between them...
+        if (app('livewire')->isCspSafe()) {
+            $versionHash .= '-csp';
+        }
+
         $url = $url . (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . "id={$versionHash}";
 
         $token = app()->has('session.store') ? csrf_token() : '';

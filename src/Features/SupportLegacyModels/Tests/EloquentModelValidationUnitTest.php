@@ -209,6 +209,24 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
 
         $this->assertEquals('sparkling', $cart->fresh()->items[0]->title);
     }
+
+    public function test_encrypted_model_attribute_is_validated_using_decrypted_value()
+    {
+        Livewire::test(ComponentWithCastedModelAttributes::class)
+            ->set('contact.phone', '111 111-1111') // 12 characters
+            ->call('save')
+            ->assertHasNoErrors('contact.phone')
+            ->set('contact.phone', '111')
+            ->call('save')
+            ->assertHasErrors(['contact.phone' => 'min:12']);
+    }
+
+    public function test_integer_model_attribute_is_validated_using_raw_input()
+    {
+        Livewire::test(ComponentWithCastedModelAttributes::class)
+            ->call('saveAge', '32.5')
+            ->assertHasErrors(['contact.age' => 'integer']);
+    }
 }
 
 class Foo extends Model
@@ -364,6 +382,52 @@ class ComponentForEloquentModelNestedHydrationMiddleware extends Component
         $this->validate();
 
         $this->cart->items->each->save();
+    }
+
+    public function render()
+    {
+        return \view('dump-errors');
+    }
+}
+
+class ContactWithCasts extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'phone' => null, 'age' => 40],
+    ];
+
+    protected $casts = [
+        'phone' => 'encrypted',
+        'age' => 'integer',
+    ];
+}
+
+class ComponentWithCastedModelAttributes extends Component
+{
+    public ContactWithCasts $contact;
+
+    protected $rules = [
+        'contact.phone' => 'nullable|min:12|max:12',
+        'contact.age' => 'required|integer',
+    ];
+
+    public function mount()
+    {
+        $this->contact = ContactWithCasts::first();
+    }
+
+    public function save()
+    {
+        $this->validate();
+    }
+
+    public function saveAge($age)
+    {
+        $this->contact->age = $age;
+
+        $this->validate();
     }
 
     public function render()
