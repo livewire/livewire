@@ -1077,6 +1077,37 @@ class UnitTest extends \Tests\TestCase
         ], $keys);
     }
 
+    public function test_conditionally_rendered_sibling_wire_key_does_not_leak_into_later_child_auto_key()
+    {
+        app('livewire')->component('keys-parent-with-conditional-sibling-key', KeysParentWithConditionalSiblingKey::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $component = Livewire::test(KeysParentWithConditionalSiblingKey::class);
+
+        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
+        $keysBefore = array_keys($childrenBefore);
+
+        $this->assertEquals(1, count($keysBefore));
+
+        $component->set('open', true);
+
+        $childrenAfterOpen = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $this->assertEquals($keysBefore, array_keys($childrenAfterOpen));
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfterOpen[$key]);
+        }
+
+        $component->set('open', false);
+
+        $childrenAfterClose = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        $this->assertEquals($keysBefore, array_keys($childrenAfterClose));
+        foreach ($childrenBefore as $key => $childBefore) {
+            $this->assertEquals($childBefore, $childrenAfterClose[$key]);
+        }
+    }
+
     #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
@@ -1513,5 +1544,23 @@ class KeysChild extends Component
     public function render()
     {
         return '<div>Child: {{ $item }}</div>';
+    }
+}
+
+class KeysParentWithConditionalSiblingKey extends Component
+{
+    public bool $open = false;
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @if ($open)
+                <div wire:key="modal">Modal</div>
+            @endif
+
+            <livewire:keys-child item="child" />
+        </div>
+        HTML;
     }
 }

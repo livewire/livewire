@@ -171,10 +171,9 @@ class SupportCompiledWireKeys extends ComponentHook
         $loops = array_merge(static::$loopStack, [static::$currentLoop]);
 
         foreach ($loops as $loop) {
-            if (isset($loop['key']) || isset($loop['index'])) {
-                $finalKey .= isset($loop['key'])
-                    ? '-' . $loop['key']
-                    : '-' . $loop['index'];
+            // Only consume a wire:key when this frame is an active loop iteration (index is set).
+            if (isset($loop['index'])) {
+                $finalKey .= '-' . ($loop['key'] ?? $loop['index']);
             }
 
             if (isset($loop['count'])) {
