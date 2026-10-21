@@ -121,19 +121,19 @@ class FrontendAssets extends Mechanism
         $html = <<<HTML
         <!-- Livewire Styles -->
         <style {$nonce}>
-            [wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
+            [wire\:loading][wire\:loading]:not([data-livewire-loading-active]), [wire\:loading\.delay][wire\:loading\.delay]:not([data-livewire-loading-active]), [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {
                 display: none;
             }
 
-            [wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {
+            [wire\:loading\.delay\.none][wire\:loading\.delay\.none]:not([data-livewire-loading-active]), [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest]:not([data-livewire-loading-active]), [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter]:not([data-livewire-loading-active]), [wire\:loading\.delay\.short][wire\:loading\.delay\.short]:not([data-livewire-loading-active]), [wire\:loading\.delay\.default][wire\:loading\.delay\.default]:not([data-livewire-loading-active]), [wire\:loading\.delay\.long][wire\:loading\.delay\.long]:not([data-livewire-loading-active]), [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer]:not([data-livewire-loading-active]), [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest]:not([data-livewire-loading-active]) {
                 display: none;
             }
 
-            [wire\:offline][wire\:offline] {
+            [wire\:offline][wire\:offline]:not([data-livewire-offline-active]) {
                 display: none;
             }
 
-            [wire\:dirty]:not(textarea):not(input):not(select) {
+            [wire\:dirty]:not(textarea):not(input):not(select):not([data-livewire-dirty-active]) {
                 display: none;
             }
 

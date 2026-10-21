@@ -17,7 +17,7 @@ class CustomDisplayProperty extends BaseComponent
             <div>
                 <button wire:click="$refresh" dusk="refresh">Refresh</button>
 
-                <span wire:loading dusk="default">Inline-block</span>
+                <span wire:loading dusk="default">Existing display</span>
                 <span wire:loading.inline-block dusk="inline-block">Inline-block</span>
                 <span wire:loading.inline dusk="inline">Inline</span>
                 <span wire:loading.block dusk="block">Block</span>
