@@ -23,6 +23,9 @@ export function whenThisLinkIsPressed(el, callback) {
 
         // If it's a plain left click, we want to prevent "click" and let "mouseup" do its thing...
         e.preventDefault()
+
+        // Sortable items navigate on "click" instead of "mouseup" (see "mousedown" below)...
+        if (isSortableItem(el)) callback(whenReleased => whenReleased())
     })
 
     el.addEventListener('mousedown', e => {
@@ -30,6 +33,10 @@ export function whenThisLinkIsPressed(el, callback) {
         if (isNotPlainLeftClick(e)) return;
 
         if (linkShouldBeHandledNatively(el)) return;
+
+        // Preventing "mousedown" would stop the item from being dragged, and the
+        // browser won't fire "click" after a drag, so we'll navigate on that...
+        if (isSortableItem(el)) return;
 
         e.preventDefault()
 
@@ -58,6 +65,10 @@ export function whenThisLinkIsPressed(el, callback) {
 
         callback(whenReleased => whenReleased())
     })
+}
+
+function isSortableItem(el) {
+    return !! el.closest('[wire\\:sort\\:item], [x-sort\\:item]')
 }
 
 export function whenThisLinkIsHoveredOrFocusedFor(el, ms = 60, callback) {
