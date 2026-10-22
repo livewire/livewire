@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void useScriptTagAttributes($attributes)
  * @method static \Livewire\LivewireManager withUrlParams($params)
  * @method static \Livewire\LivewireManager withQueryParams($params)
- * @method static \Livewire\Features\SupportTesting\Testable test($name, $params = [])
+ * @method static ($name is class-string<TComponent>|TComponent ? \Livewire\Features\SupportTesting\Testable<TComponent> : \Livewire\Features\SupportTesting\Testable<\Livewire\Component>) test<TComponent of \Livewire\Component>(class-string<TComponent>|TComponent|string|array<array-key, \Livewire\Component> $name, array $params = [])
  * @method static \Livewire\LivewireManager actingAs($user, $driver = null)
  * @method static bool isRunningServerless()
  * @method static void addPersistentMiddleware($middleware)
