@@ -16,6 +16,10 @@ use BackedEnum;
  * @method $this assertSuccessful()
  * @method $this assertOk()
  * @method $this assertStatus(int $status)
+ * @method $this assertViewIs(string $value)
+ * @method $this assertViewHas(string|array $key, mixed $value = null)
+ * @method $this assertViewHasAll(array $bindings)
+ * @method $this assertViewMissing(string $key)
  *
  * @mixin \Illuminate\Testing\TestResponse
  */
