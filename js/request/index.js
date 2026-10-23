@@ -425,9 +425,14 @@ function sendMessages() {
 
                 let messageResponsePayloads = responseJson.components
 
+                let messages = Array.from(request.messages)
+
                 request.messages.forEach(message => {
-                    messageResponsePayloads.forEach(payload => {
+                    messageResponsePayloads.forEach((payload, index) => {
                         if (message.isCancelled()) return
+
+                        // Messages for the same component can share a request, so match each one to its own payload...
+                        if (messages[index] !== message) return
 
                         // Server skipped this child (unchanged reactive props)...
                         if (payload.skip) {
