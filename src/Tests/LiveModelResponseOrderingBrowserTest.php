@@ -49,4 +49,35 @@ class LiveModelResponseOrderingBrowserTest extends \Tests\BrowserTestCase
             ->assertValue('@query', 'jk')
             ->assertSeeIn('@server-query', 'jk');
     }
+
+    public function test_in_order_empty_updates_response_does_not_revert_typed_input()
+    {
+        Livewire::visit(new class extends Component {
+            public string $text = 'abc';
+
+            public function hydrate(): void
+            {
+                usleep(200 * 1000);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.live.debounce.5ms="text" dusk="text">
+                    <span dusk="server">{{ $text }}</span>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->keys('@text', 'x')
+            ->pause(25)
+            ->keys('@text', '{backspace}')
+            ->pause(25)
+            ->keys('@text', 'y')
+            ->pause(700)
+            ->assertValue('@text', 'abcy')
+            ->assertSeeIn('@server', 'abcy');
+    }
 }
