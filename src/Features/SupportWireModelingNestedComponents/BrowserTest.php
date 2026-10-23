@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Attributes\Async;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
@@ -306,13 +307,13 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    public function test_parallel_async_actions_resolve_with_their_own_return_values_when_component_has_modelable_child()
+    public function test_parallel_async_actions_resolve_with_their_own_return_values()
     {
         Livewire::visit([
             new class extends \Livewire\Component {
                 public $foo = '';
 
-                #[\Livewire\Attributes\Async]
+                #[Async]
                 public function echoBack($input)
                 {
                     return $input;
