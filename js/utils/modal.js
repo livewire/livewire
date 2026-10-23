@@ -10,7 +10,9 @@ export function showHtmlModal(html) {
     let modal = document.getElementById('livewire-error')
 
     if (typeof modal != 'undefined' && modal != null) {
-        // Modal already exists.
+        // Modal already exists and is open, because closing it removes it from the DOM.
+        // Only replace its content: moving an open modal dialog in the DOM takes it out
+        // of the top layer, leaving it open as a non-modal dialog below the page...
         modal.innerHTML = ''
     } else {
         modal = document.createElement('dialog')
@@ -21,6 +23,16 @@ export function showHtmlModal(html) {
         modal.style.borderRadius = '5px'
         modal.style.padding = '0px'
         // Background color is set on the ::backdrop in Livewire's styles...
+
+        // Close on click...
+        modal.addEventListener('click', () => hideHtmlModal(modal))
+
+        // Clean up on dialog close. This ensures that the modal dialog captures the escape
+        // event first, so that dialog elements below it do not capture the event, before
+        // we clean up and remove the modal from the DOM...
+        modal.addEventListener('close', () => cleanupModal(modal))
+
+        document.body.prepend(modal)
     }
 
     let iframe = document.createElement('iframe')
@@ -30,21 +42,14 @@ export function showHtmlModal(html) {
     iframe.style.height = '100%'
     modal.appendChild(iframe)
 
-    document.body.prepend(modal)
     document.body.style.overflow = 'hidden'
     iframe.contentWindow.document.open()
     iframe.contentWindow.document.write(page.outerHTML)
     iframe.contentWindow.document.close()
 
-    // Close on click...
-    modal.addEventListener('click', () => hideHtmlModal(modal))
+    if (modal.open) return
 
-    // Clean up on dialog close. This ensures that the modal dialog captures the escape
-    // event first, so that dialog elements below it do not capture the event, before
-    // we clean up and remove the modal from the DOM...
-    modal.addEventListener('close', () => cleanupModal(modal))
-
-    // Show the modal and focus it to ensure that the escape key works, otherwise it'll 
+    // Show the modal and focus it to ensure that the escape key works, otherwise it'll
     // be captured by the iframe, then blur so the modal focus ring isn't visible...
     modal.showModal()
     modal.focus()
