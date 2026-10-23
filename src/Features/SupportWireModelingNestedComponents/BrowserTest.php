@@ -306,6 +306,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_parallel_async_actions_resolve_with_their_own_return_values_when_component_has_modelable_child()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                #[\Livewire\Attributes\Async]
+                public function echoBack($input)
+                {
+                    return $input;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <livewire:child wire:model="foo" />
+                    <button x-on:click="$refs.output.textContent = (await Promise.all([$wire.echoBack('a'), $wire.echoBack('b'), $wire.echoBack('c')])).join(',')" dusk="run">run</button>
+                    <span x-ref="output" dusk="output"></span>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $value = '';
+
+                public function render() { return <<<'HTML'
+                <div>Child</div>
+                HTML; }
+            },
+        ])
+        ->click('@run')
+        ->waitForTextIn('@output', ',')
+        ->assertSeeIn('@output', 'a,b,c')
+        ;
+    }
+
     public function test_can_still_forward_wire_model_attribute()
     {
         Livewire::visit([
