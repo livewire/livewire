@@ -168,17 +168,23 @@ class SupportCompiledWireKeys extends ComponentHook
     {
         $finalKey = $deterministicBladeKey;
 
-        $loops = array_merge(static::$loopStack, [static::$currentLoop]);
-
-        foreach ($loops as $loop) {
-            // Only consume a wire:key when this frame is an active loop iteration (index is set).
+        // Frames on the stack are the loops this component is rendered inside of...
+        foreach (static::$loopStack as $loop) {
+            // A wire:key only identifies a loop iteration, so ignore it unless the frame is in one...
             if (isset($loop['index'])) {
                 $finalKey .= '-' . ($loop['key'] ?? $loop['index']);
             }
 
+            // The count is which child loop is open under this frame, so it scopes everything inside that loop...
             if (isset($loop['count'])) {
                 $finalKey .= '-' . $loop['count'];
             }
+        }
+
+        // The current frame only contributes its iteration identity. Its count describes loops
+        // that have already closed, so it must not leak into later siblings...
+        if (isset(static::$currentLoop['index'])) {
+            $finalKey .= '-' . (static::$currentLoop['key'] ?? static::$currentLoop['index']);
         }
 
         if (isset($key) && $key !== '') {

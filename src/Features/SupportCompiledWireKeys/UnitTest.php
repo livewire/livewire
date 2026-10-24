@@ -1108,6 +1108,40 @@ class UnitTest extends \Tests\TestCase
         }
     }
 
+    public function test_conditionally_rendered_loop_does_not_leak_into_later_child_auto_key()
+    {
+        app('livewire')->component('keys-parent-with-conditional-loop', KeysParentWithConditionalLoop::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $this->assertChildKeysSurviveToggle(Livewire::test(KeysParentWithConditionalLoop::class));
+    }
+
+    public function test_conditionally_rendered_nested_loop_does_not_leak_into_later_child_auto_key()
+    {
+        app('livewire')->component('keys-parent-with-conditional-nested-loop', KeysParentWithConditionalNestedLoop::class);
+        app('livewire')->component('keys-child', KeysChild::class);
+
+        $this->assertChildKeysSurviveToggle(Livewire::test(KeysParentWithConditionalNestedLoop::class));
+    }
+
+    public function test_a_closed_loop_does_not_affect_later_keys_but_still_scopes_keys_inside_it()
+    {
+        $before = SupportCompiledWireKeys::generateKey('test');
+
+        SupportCompiledWireKeys::openLoop();
+        SupportCompiledWireKeys::startLoopIteration();
+        SupportCompiledWireKeys::$currentLoop['key'] = 'a';
+        $inside = SupportCompiledWireKeys::generateKey('test');
+        SupportCompiledWireKeys::endLoop();
+        SupportCompiledWireKeys::closeLoop();
+
+        $after = SupportCompiledWireKeys::generateKey('test');
+
+        $this->assertEquals('test', $before);
+        $this->assertEquals('test-0-a', $inside);
+        $this->assertEquals('test', $after);
+    }
+
     #[DataProvider('elementsTestProvider')]
     public function test_we_can_correctly_find_wire_keys_on_elements_only_but_not_blade_or_livewire_components($occurrences, $template)
     {
@@ -1325,6 +1359,22 @@ class UnitTest extends \Tests\TestCase
             $pattern = str_replace('XXXXXXXX', '(\d{1,10})', $expectedKey);
 
             $this->assertTrue((bool) preg_match('/'.$pattern.'/', $keys[$i]), 'Key '.$keys[$i].' does not match expected pattern '.$expected[$i]);
+        }
+    }
+
+    protected function assertChildKeysSurviveToggle($component)
+    {
+        $before = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+        foreach ([true, false] as $open) {
+            $component->set('open', $open);
+
+            $after = invade($component)->lastState->getSnapshot()['memo']['children'];
+
+            $this->assertEquals(array_keys($before), array_keys($after));
+            foreach ($before as $key => $child) {
+                $this->assertEquals($child, $after[$key]);
+            }
         }
     }
 }
@@ -1560,6 +1610,55 @@ class KeysParentWithConditionalSiblingKey extends Component
             @endif
 
             <livewire:keys-child item="child" />
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithConditionalLoop extends Component
+{
+    public bool $open = false;
+    public $items = ['A', 'B'];
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @if ($open)
+                <div wire:key="modal">
+                    @foreach ($items as $item)
+                        <div wire:key="item-{{ $item }}">Item: {{ $item }}</div>
+                    @endforeach
+                </div>
+            @endif
+
+            <livewire:keys-child item="child" />
+        </div>
+        HTML;
+    }
+}
+
+class KeysParentWithConditionalNestedLoop extends Component
+{
+    public bool $open = false;
+    public $rows = ['A', 'B'];
+    public $items = ['x', 'y'];
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @foreach ($rows as $row)
+                <div wire:key="row-{{ $row }}">
+                    @if ($open)
+                        @foreach ($items as $item)
+                            <span wire:key="item-{{ $item }}">{{ $item }}</span>
+                        @endforeach
+                    @endif
+
+                    <livewire:keys-child :item="$row" />
+                </div>
+            @endforeach
         </div>
         HTML;
     }
