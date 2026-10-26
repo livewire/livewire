@@ -50,34 +50,44 @@ class LiveModelResponseOrderingBrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('@server-query', 'jk');
     }
 
-    public function test_in_order_empty_updates_response_does_not_revert_typed_input()
+    public function test_an_empty_updates_response_cannot_revert_typed_input()
     {
         Livewire::visit(new class extends Component {
-            public string $text = 'abc';
-
-            public function hydrate(): void
-            {
-                usleep(200 * 1000);
-            }
+            public string $query = 'abc';
 
             public function render()
             {
                 return <<<'HTML'
                 <div>
-                    <input type="text" wire:model.live.debounce.5ms="text" dusk="text">
-                    <span dusk="server">{{ $text }}</span>
+                    <input dusk="query" wire:model.live.debounce.1ms="query">
+
+                    <span dusk="server-query">{{ $query }}</span>
+
+                    @script
+                    <script>
+                        let originalFetch = window.fetch
+
+                        window.fetch = async (...args) => {
+                            let response = await originalFetch(...args)
+
+                            await new Promise(resolve => setTimeout(resolve, 300))
+
+                            return response
+                        }
+                    </script>
+                    @endscript
                 </div>
                 HTML;
             }
         })
             ->waitForLivewireToLoad()
-            ->keys('@text', 'x')
-            ->pause(25)
-            ->keys('@text', '{backspace}')
-            ->pause(25)
-            ->keys('@text', 'y')
+            ->keys('@query', 'x')
+            ->pause(50)
+            ->keys('@query', '{backspace}')
+            ->pause(50)
+            ->keys('@query', 'y')
             ->pause(700)
-            ->assertValue('@text', 'abcy')
-            ->assertSeeIn('@server', 'abcy');
+            ->assertValue('@query', 'abcy')
+            ->assertSeeIn('@server-query', 'abcy');
     }
 }
