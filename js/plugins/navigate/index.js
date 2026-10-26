@@ -1,4 +1,4 @@
-import { pushUrl, replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { pushUrl, replaceUrl, storeCurrentPageStatus, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, isSamePageFragment, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredOrFocusedFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
@@ -10,6 +10,7 @@ import { transitionPageSwap } from "./transition"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 import { startNavigation } from "./navigation"
+import { getNavigateInterceptors } from "./intercept"
 
 let enablePersist = true
 let showProgressBar = true
@@ -52,8 +53,8 @@ export default function (Alpine) {
 
             if (linkShouldBeHandledNatively(el, destination) || isSamePageFragment(destination)) return
 
-            prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            prefetchHtml(destination, (html, finalDestination, response) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, response)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -62,8 +63,8 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination, response) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, response)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -103,7 +104,19 @@ export default function (Alpine) {
 
         showProgressBar && showAndStartProgressBar()
 
-        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+        // A back or forward button press has already changed the URL by the time
+        // we get here, so there's no current page left to keep. Only navigations
+        // that push a new history entry can be intercepted...
+        let interceptors = shouldPushToHistoryState ? getNavigateInterceptors(destination) : null
+
+        // However the navigation ends (swapped in, kept from swapping, failed,
+        // or superseded by a newer one), its interceptors hear about it...
+        if (interceptors) {
+            navigation.onFinished(() => interceptors.finish())
+            navigation.onCancelled(() => interceptors.finish())
+        }
+
+        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination, response) => {
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
             if (! isSameOrigin(finalDestination)) {
@@ -112,6 +125,25 @@ export default function (Alpine) {
 
                 return visitNatively(finalDestination)
             }
+
+            // An interceptor may keep the user on the current page instead of
+            // swapping in the page the server redirected to, or an error page,
+            // to handle it some other way...
+            if (
+                interceptors?.redirectWasPrevented({ url: finalDestination, response, body: html })
+                || interceptors?.errorWasPrevented({ response, body: html })
+            ) {
+                navigation.cancel()
+
+                showProgressBar && finishAndHideProgressBar()
+
+                return
+            }
+
+            // Stored now rather than when the response arrives: a prefetch may
+            // never be shown, and the back button reads this as the status of
+            // the page that is on screen...
+            storeCurrentPageStatus(response.status)
 
             navigation.ready()
 
@@ -171,6 +203,10 @@ export default function (Alpine) {
                 })
             })
         }, (error) => {
+            // Asked before the navigation is cancelled, so an interceptor hears
+            // about the failure before it hears that the navigation finished...
+            let failureWasPrevented = ! requestWasCancelled(error) && interceptors?.failureWasPrevented({ error })
+
             navigation.cancel()
 
             showProgressBar && finishAndHideProgressBar()
@@ -179,6 +215,9 @@ export default function (Alpine) {
             // way somewhere else. Sending them to a destination they abandoned
             // would be worse than doing nothing...
             if (requestWasCancelled(error)) return
+
+            // An interceptor handles the failure itself, so the user stays put...
+            if (failureWasPrevented) return
 
             // A rejected fetch doesn't always mean the network is gone — following a
             // redirect to another origin fails the same way, and we deliberately stay
