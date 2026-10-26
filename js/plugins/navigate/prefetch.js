@@ -1,6 +1,5 @@
 import { performFetch } from "@/plugins/navigate/fetch";
 import { getUriStringFromUrlObject } from "./links";
-import { storeCurrentPageStatus } from "./history";
 
 // Warning: this could cause some memory leaks
 let prefetches = {}
@@ -16,9 +15,7 @@ export function prefetchHtml(destination, callback, errorCallback) {
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
 
     performFetch(uri, (html, routedUri, status) => {
-        storeCurrentPageStatus(status)
-
-        callback(html, routedUri)
+        callback(html, routedUri, status)
     }, () => {
         let whenFailed = prefetches[uri].whenFailed
 
@@ -31,11 +28,12 @@ export function prefetchHtml(destination, callback, errorCallback) {
     })
 }
 
-export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination) {
+export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status) {
     let state = prefetches[getUriStringFromUrlObject(destination)]
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination
+    state.status = status
     state.whenFinished()
 }
 
@@ -47,18 +45,20 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     if (prefetches[uri].finished) {
         let html = prefetches[uri].html
         let finalDestination = prefetches[uri].finalDestination
+        let status = prefetches[uri].status
 
         delete prefetches[uri]
 
-        return receive(html, finalDestination)
+        return receive(html, finalDestination, status)
     } else {
         prefetches[uri].whenFinished = () => {
             let html = prefetches[uri].html
             let finalDestination = prefetches[uri].finalDestination
+            let status = prefetches[uri].status
 
             delete prefetches[uri]
 
-            receive(html, finalDestination)
+            receive(html, finalDestination, status)
         }
 
         // Someone is waiting on this in-flight prefetch. If it fails, they're
