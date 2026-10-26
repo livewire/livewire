@@ -329,13 +329,31 @@ $wire.interceptRequest(({ request, onSend, onCancel, onSuccess, onError, onFailu
 Navigation interceptors fire for each page navigation triggered by `wire:navigate`.
 
 ```js
-Livewire.interceptNavigate(({ url, onError }) => {
-    onError(({ error }) => {
-        preventDefault() // Prevent navigation
+Livewire.interceptNavigate(({ url, onRedirect, onError, onFailure, onFinish }) => {
+    // url - URL object of the destination
 
+    onRedirect(({ url, response, body, preventDefault }) => {
+        // The server redirected to another page on this site; url is where to
+        preventDefault() // Stay on the current page
+    })
+
+    onError(({ response, body, preventDefault }) => {
+        // The response isn't a 2xx
+        preventDefault() // Stay on the current page
+    })
+
+    onFailure(({ error, preventDefault }) => {
+        // The request failed, such as a network error
+        preventDefault() // Stay on the current page, even when offline
+    })
+
+    onFinish(() => {
+        // Always runs last
     })
 })
 ```
+
+See [Intercepting navigations](/docs/4.x/navigate#intercepting-navigations) for when each runs and what isn't intercepted.
 
 ### Examples
 

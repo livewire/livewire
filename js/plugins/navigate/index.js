@@ -109,6 +109,13 @@ export default function (Alpine) {
         // that push a new history entry can be intercepted...
         let interceptors = shouldPushToHistoryState ? getNavigateInterceptors(destination) : null
 
+        // However the navigation ends (swapped in, kept from swapping, failed,
+        // or superseded by a newer one), its interceptors hear about it...
+        if (interceptors) {
+            navigation.onFinished(() => interceptors.finish())
+            navigation.onCancelled(() => interceptors.finish())
+        }
+
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination, response) => {
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
@@ -120,8 +127,12 @@ export default function (Alpine) {
             }
 
             // An interceptor may keep the user on the current page instead of
-            // swapping in an error page, to handle the error some other way...
-            if (interceptors?.errorWasPrevented({ response, body: html })) {
+            // swapping in the page the server redirected to, or an error page,
+            // to handle it some other way...
+            if (
+                interceptors?.redirectWasPrevented({ url: finalDestination, response, body: html })
+                || interceptors?.errorWasPrevented({ response, body: html })
+            ) {
                 navigation.cancel()
 
                 showProgressBar && finishAndHideProgressBar()
@@ -192,6 +203,10 @@ export default function (Alpine) {
                 })
             })
         }, (error) => {
+            // Asked before the navigation is cancelled, so an interceptor hears
+            // about the failure before it hears that the navigation finished...
+            let failureWasPrevented = ! requestWasCancelled(error) && interceptors?.failureWasPrevented({ error })
+
             navigation.cancel()
 
             showProgressBar && finishAndHideProgressBar()
@@ -200,6 +215,9 @@ export default function (Alpine) {
             // way somewhere else. Sending them to a destination they abandoned
             // would be worse than doing nothing...
             if (requestWasCancelled(error)) return
+
+            // An interceptor handles the failure itself, so the user stays put...
+            if (failureWasPrevented) return
 
             // A rejected fetch doesn't always mean the network is gone — following a
             // redirect to another origin fails the same way, and we deliberately stay

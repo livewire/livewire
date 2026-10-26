@@ -265,17 +265,43 @@ document.addEventListener('livewire:navigated', () => {
 > }, { once: true })
 > ```
 
-## Handling error responses
+## Intercepting navigations
 
-When a navigation answers with an error, such as a 403 or a 404, Livewire swaps in the error page like any other. To handle the error some other way, register a navigation interceptor and call `preventDefault()`. The user stays on the current page: the URL, the history and the DOM are left as they were.
+A navigation interceptor lets you handle what happens to a page navigation before Livewire swaps the new page in. Register one with `Livewire.interceptNavigate()`:
 
 ```js
-Livewire.interceptNavigate(({ url, onError }) => {
+Livewire.interceptNavigate(({ url, onRedirect, onError, onFailure, onFinish }) => {
     // Runs once per navigation, as it starts. `url` is a URL object of the destination...
 
-    onError(({ response, body, preventDefault }) => {
-        // Runs when the response isn't a 2xx, before the page is swapped...
+    onRedirect(({ url, response, body, preventDefault }) => {
+        // Runs when the server redirected the navigation to another page on this site.
+        // `url` is where it was redirected to...
+    })
 
+    onError(({ response, body, preventDefault }) => {
+        // Runs when the response isn't a 2xx, such as a 403 or a 404...
+    })
+
+    onFailure(({ error, preventDefault }) => {
+        // Runs when the request itself failed, such as when the network is down...
+    })
+
+    onFinish(() => {
+        // Runs last, however the navigation ended: the new page shown, kept from
+        // showing, failed, or superseded by a newer navigation...
+    })
+})
+```
+
+`response` is the `fetch()` Response, whose body has already been read into `body`. `Livewire.interceptNavigate()` returns a function that removes the interceptor again.
+
+### Keeping the current page
+
+Calling `preventDefault()` in `onRedirect` or `onError` keeps the user on the current page: the URL, the history and the DOM are left as they were. For example, to show your own message instead of a 403 page:
+
+```js
+Livewire.interceptNavigate(({ onError }) => {
+    onError(({ response, preventDefault }) => {
         if (response.status === 403) {
             preventDefault()
 
@@ -285,11 +311,29 @@ Livewire.interceptNavigate(({ url, onError }) => {
 })
 ```
 
-`response` is the `fetch()` Response, whose body has already been read into `body`. A link prefetched on hover or press runs the interceptor when the user actually navigates, not when the prefetch arrives.
+Or to ask a user whose session expired to sign in again, rather than swapping in the login page the server redirected to:
+
+```js
+Livewire.interceptNavigate(({ onRedirect }) => {
+    onRedirect(({ url, preventDefault }) => {
+        if (url.pathname === '/login') {
+            preventDefault()
+
+            showSignInDialog()
+        }
+    })
+})
+```
+
+The browser follows redirects on its own, so `onRedirect` learns where the navigation ended up, not the redirect's status code. A redirect to another site is not intercepted: Livewire hands it to the browser as a full page visit.
+
+When a request fails while the browser is offline, Livewire hands the navigation to the browser, which then shows its own offline page. Calling `preventDefault()` in `onFailure` keeps the user on the current page instead, so you can show a message of your own. Online, a failed request already leaves the user where they are.
+
+### What isn't intercepted
+
+A link prefetched on hover or press runs the interceptor when the user actually navigates, not when the prefetch arrives.
 
 Back and forward button presses are not intercepted: the browser has already changed the URL by the time the page is fetched, so there is no current page left to keep.
-
-`Livewire.interceptNavigate()` returns a function that removes the interceptor again.
 
 ## Manually visiting a new page
 
