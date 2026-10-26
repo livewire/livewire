@@ -1082,30 +1082,7 @@ class UnitTest extends \Tests\TestCase
         app('livewire')->component('keys-parent-with-conditional-sibling-key', KeysParentWithConditionalSiblingKey::class);
         app('livewire')->component('keys-child', KeysChild::class);
 
-        $component = Livewire::test(KeysParentWithConditionalSiblingKey::class);
-
-        $childrenBefore = invade($component)->lastState->getSnapshot()['memo']['children'];
-        $keysBefore = array_keys($childrenBefore);
-
-        $this->assertEquals(1, count($keysBefore));
-
-        $component->set('open', true);
-
-        $childrenAfterOpen = invade($component)->lastState->getSnapshot()['memo']['children'];
-
-        $this->assertEquals($keysBefore, array_keys($childrenAfterOpen));
-        foreach ($childrenBefore as $key => $childBefore) {
-            $this->assertEquals($childBefore, $childrenAfterOpen[$key]);
-        }
-
-        $component->set('open', false);
-
-        $childrenAfterClose = invade($component)->lastState->getSnapshot()['memo']['children'];
-
-        $this->assertEquals($keysBefore, array_keys($childrenAfterClose));
-        foreach ($childrenBefore as $key => $childBefore) {
-            $this->assertEquals($childBefore, $childrenAfterClose[$key]);
-        }
+        $this->assertChildKeysSurviveToggle(Livewire::test(KeysParentWithConditionalSiblingKey::class));
     }
 
     public function test_conditionally_rendered_loop_does_not_leak_into_later_child_auto_key()
