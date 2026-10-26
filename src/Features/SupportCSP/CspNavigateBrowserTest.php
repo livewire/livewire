@@ -70,6 +70,29 @@ class CspNavigateBrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_forward_after_back_does_not_trigger_csp_violations()
+    {
+        // Going back restores a snapshot taken from freshly fetched HTML, but going
+        // forward again restores one taken by serializing the live DOM, where the
+        // page's own inline scripts were re-run by Livewire on the previous swap...
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/csp-first')
+                ->assertSee('On CSP first')
+                ->click('@link.to.second')
+                ->waitForText('On CSP second')
+                ->back()
+                ->waitForText('On CSP first')
+                ->assertConsoleLogHasNoErrors()
+                ->forward()
+                ->waitForText('On CSP second')
+                ->assertConsoleLogHasNoErrors()
+                // Initial load, forward, back, forward: the inline script ran every time...
+                ->assertScript('window.__cspInlineScriptRuns', 4)
+            ;
+        });
+    }
+
     public function test_lazy_loaded_assets_do_not_trigger_csp_violations()
     {
         $this->browse(function ($browser) {
