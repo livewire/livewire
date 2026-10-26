@@ -69,6 +69,46 @@ class ComponentCanBeFilledUnitTest extends \Tests\TestCase
             ->assertSetStrict('dotProperty.foo', 'bar')
             ->assertSetStrict('dotProperty.bob', 'lob');
     }
+
+    public function test_can_fill_with_property_aliases_from_array()
+    {
+        Livewire::test(ComponentWithAliasedFillableProperties::class)
+            ->assertSetStrict('category', null)
+            ->assertSetStrict('title', null)
+            ->call('callFill', [
+                'category_id' => 5,
+                'post_title' => 'Hello World',
+            ], [
+                'category_id' => 'category',
+                'post_title' => 'title',
+            ])
+            ->assertSetStrict('category', 5)
+            ->assertSetStrict('title', 'Hello World');
+    }
+
+    public function test_can_fill_with_property_aliases_from_eloquent_model()
+    {
+        Livewire::test(ComponentWithAliasedFillableProperties::class)
+            ->assertSetStrict('category', null)
+            ->assertSetStrict('title', null)
+            ->call('callFill', PostWithCategoryModel::first(), [
+                'category_id' => 'category',
+            ])
+            ->assertSetStrict('category', 10)
+            ->assertSetStrict('title', 'Aliased Title'); // unaliased key still works
+    }
+
+    public function test_can_fill_with_dot_notation_aliases()
+    {
+        Livewire::test(ComponentWithAliasedFillableProperties::class)
+            ->assertSetStrict('meta', [])
+            ->call('callFill', [
+                'meta_foo' => 'bar',
+            ], [
+                'meta_foo' => 'meta.foo',
+            ])
+            ->assertSetStrict('meta.foo', 'bar');
+    }
 }
 
 class User {
@@ -126,5 +166,34 @@ class ComponentWithFillableProperties extends Component
                 'privateProperty' => $this->privateProperty,
             ]
         );
+    }
+}
+
+class PostWithCategoryModel extends Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        [
+            'category_id' => 10,
+            'title' => 'Aliased Title',
+        ],
+    ];
+}
+
+class ComponentWithAliasedFillableProperties extends Component
+{
+    public ?int $category = null;
+    public ?string $title = null;
+    public array $meta = [];
+
+    public function callFill($values, array $aliases = [])
+    {
+        $this->fill($values, $aliases);
+    }
+
+    public function render()
+    {
+        return '<div></div>';
     }
 }
