@@ -51,6 +51,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('script-component', ScriptComponent::class);
             Livewire::component('page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class);
             Livewire::component('page-with-hover-link-to-an-error-page', PageWithHoverLinkToAnErrorPage::class);
+            Livewire::component('page-with-intercepted-links', PageWithInterceptedLinks::class);
             Livewire::component('page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class);
             Livewire::component('page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class);
 
@@ -129,6 +130,8 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->middleware('web')->name('no-javascript');
             Route::get('/page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class)->middleware('web');
             Route::get('/page-with-hover-link-to-an-error-page', PageWithHoverLinkToAnErrorPage::class)->middleware('web');
+            Route::get('/page-with-intercepted-links', PageWithInterceptedLinks::class)->middleware('web');
+            Route::get('/forbidden-page', fn () => abort(403))->middleware('web');
         };
     }
 
@@ -1823,6 +1826,83 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_an_interceptor_can_keep_the_current_page_when_a_navigation_answers_an_error()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-intercepted-links')
+                ->tap(fn ($b) => $b->script('window.historyLengthBefore = history.length'))
+                ->click('@link.to.forbidden.page')
+                ->waitUntil('window.interceptedStatuses.length === 1')
+                ->assertScript('return window.interceptedStatuses[0]', 403)
+                ->assertScript('return window.interceptedUrl', '/forbidden-page')
+                ->assertScript('return window.interceptedBodyIsHtml', true)
+                ->assertPathIs('/page-with-intercepted-links')
+                ->assertSee('Link to a forbidden page')
+                ->assertScript('return history.length === window.historyLengthBefore', true)
+                ->waitUntilMissing('#nprogress')
+            ;
+        });
+    }
+
+    public function test_an_interceptor_that_does_not_prevent_the_error_leaves_the_error_page_to_show()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-intercepted-links')
+                ->tap(fn ($b) => $b->script('window.preventErrors = false'))
+                ->click('@link.to.forbidden.page')
+                ->waitForText('403')
+                ->assertPathIs('/forbidden-page')
+                ->assertScript('return window.interceptedStatuses[0]', 403)
+            ;
+        });
+    }
+
+    public function test_a_successful_navigation_does_not_run_the_error_interceptor()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-intercepted-links')
+                ->waitForNavigate()->click('@link.to.first')
+                ->assertSee('On first')
+                ->assertScript('return window.interceptedStatuses.length', 0)
+            ;
+        });
+    }
+
+    public function test_hovering_a_link_does_not_run_the_error_interceptor_until_it_is_clicked()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/page-with-intercepted-links')
+                ->mouseover('@hover.link.to.forbidden.page')
+                ->pause(500)
+                ->assertScript('return window.interceptedStatuses.length', 0)
+                ->click('@hover.link.to.forbidden.page')
+                ->waitUntil('window.interceptedStatuses.length === 1')
+                ->assertPathIs('/page-with-intercepted-links')
+            ;
+        });
+    }
+
+    public function test_a_prevented_error_does_not_force_a_full_reload_on_the_next_back_button_press()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->tap(fn ($b) => $b->script("Livewire.navigate('/page-with-intercepted-links')"))
+                ->assertSee('Link to a forbidden page')
+                ->tap(fn ($b) => $b->script('window.pageWasNotReloaded = true'))
+                ->click('@link.to.forbidden.page')
+                ->waitUntil('window.interceptedStatuses.length === 1')
+                ->waitForNavigate()->back()
+                ->assertPathIs('/first')
+                ->assertScript('return window.pageWasNotReloaded', true)
+            ;
+        });
+    }
+
     public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
     {
         $this->browse(function (Browser $browser) {
@@ -2694,6 +2774,42 @@ class PageWithHoverLinkToAnErrorPage extends Component
                 Hover link to page that does not exist
             </a>
         </div>
+        HTML;
+    }
+}
+
+class PageWithInterceptedLinks extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a wire:navigate dusk="link.to.forbidden.page" href="/forbidden-page">Link to a forbidden page</a>
+            <a wire:navigate.hover dusk="hover.link.to.forbidden.page" href="/forbidden-page?hover">Hover link to a forbidden page</a>
+            <a wire:navigate dusk="link.to.first" href="/first">Link to first page</a>
+        </div>
+
+        @script
+        <script>
+            window.interceptedStatuses ??= []
+            window.preventErrors ??= true
+
+            if (! window.navigateInterceptorRegistered) {
+                window.navigateInterceptorRegistered = true
+
+                Livewire.interceptNavigate(({ url, onError }) => {
+                    onError(({ response, body, preventDefault }) => {
+                        window.interceptedStatuses.push(response.status)
+                        window.interceptedUrl = url.pathname
+                        window.interceptedBodyIsHtml = body.includes('<html')
+
+                        if (window.preventErrors) preventDefault()
+                    })
+                })
+            }
+        </script>
+        @endscript
         HTML;
     }
 }

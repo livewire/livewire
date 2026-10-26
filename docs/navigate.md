@@ -265,6 +265,32 @@ document.addEventListener('livewire:navigated', () => {
 > }, { once: true })
 > ```
 
+## Handling error responses
+
+When a navigation answers with an error, such as a 403 or a 404, Livewire swaps in the error page like any other. To handle the error some other way, register a navigation interceptor and call `preventDefault()`. The user stays on the current page: the URL, the history and the DOM are left as they were.
+
+```js
+Livewire.interceptNavigate(({ url, onError }) => {
+    // Runs once per navigation, as it starts. `url` is a URL object of the destination...
+
+    onError(({ response, body, preventDefault }) => {
+        // Runs when the response isn't a 2xx, before the page is swapped...
+
+        if (response.status === 403) {
+            preventDefault()
+
+            alert('You do not have access to this page.')
+        }
+    })
+})
+```
+
+`response` is the `fetch()` Response, whose body has already been read into `body`. A link prefetched on hover or press runs the interceptor when the user actually navigates, not when the prefetch arrives.
+
+Back and forward button presses are not intercepted: the browser has already changed the URL by the time the page is fetched, so there is no current page left to keep.
+
+`Livewire.interceptNavigate()` returns a function that removes the interceptor again.
+
 ## Manually visiting a new page
 
 In addition to `wire:navigate`, you can manually call the `Livewire.navigate()` method to trigger a visit to a new page using JavaScript:

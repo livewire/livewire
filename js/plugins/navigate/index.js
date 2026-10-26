@@ -10,6 +10,7 @@ import { transitionPageSwap } from "./transition"
 import { swapCurrentPageWithNewHtml } from "./page"
 import { fetchHtml } from "./fetch"
 import { startNavigation } from "./navigation"
+import { getNavigateInterceptors } from "./intercept"
 
 let enablePersist = true
 let showProgressBar = true
@@ -52,8 +53,8 @@ export default function (Alpine) {
 
             if (linkShouldBeHandledNatively(el, destination) || isSamePageFragment(destination)) return
 
-            prefetchHtml(destination, (html, finalDestination, status) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status)
+            prefetchHtml(destination, (html, finalDestination, response) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, response)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -62,8 +63,8 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination, status) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status)
+            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination, response) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, response)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -103,7 +104,12 @@ export default function (Alpine) {
 
         showProgressBar && showAndStartProgressBar()
 
-        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination, status) => {
+        // A back or forward button press has already changed the URL by the time
+        // we get here, so there's no current page left to keep. Only navigations
+        // that push a new history entry can be intercepted...
+        let interceptors = shouldPushToHistoryState ? getNavigateInterceptors(destination) : null
+
+        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination, response) => {
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
             if (! isSameOrigin(finalDestination)) {
@@ -113,10 +119,20 @@ export default function (Alpine) {
                 return visitNatively(finalDestination)
             }
 
+            // An interceptor may keep the user on the current page instead of
+            // swapping in an error page, to handle the error some other way...
+            if (interceptors?.errorWasPrevented({ response, body: html })) {
+                navigation.cancel()
+
+                showProgressBar && finishAndHideProgressBar()
+
+                return
+            }
+
             // Stored now rather than when the response arrives: a prefetch may
             // never be shown, and the back button reads this as the status of
             // the page that is on screen...
-            storeCurrentPageStatus(status)
+            storeCurrentPageStatus(response.status)
 
             navigation.ready()
 

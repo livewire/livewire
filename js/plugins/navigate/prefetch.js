@@ -14,8 +14,8 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
     prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
 
-    performFetch(uri, (html, routedUri, status) => {
-        callback(html, routedUri, status)
+    performFetch(uri, (html, routedUri, response) => {
+        callback(html, routedUri, response)
     }, () => {
         let whenFailed = prefetches[uri].whenFailed
 
@@ -28,12 +28,12 @@ export function prefetchHtml(destination, callback, errorCallback) {
     })
 }
 
-export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status) {
+export function storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, response) {
     let state = prefetches[getUriStringFromUrlObject(destination)]
     state.html = html
     state.finished = true
     state.finalDestination = finalDestination
-    state.status = status
+    state.response = response
     state.whenFinished()
 }
 
@@ -45,20 +45,20 @@ export function getPretchedHtmlOr(destination, receive, ifNoPrefetchExists) {
     if (prefetches[uri].finished) {
         let html = prefetches[uri].html
         let finalDestination = prefetches[uri].finalDestination
-        let status = prefetches[uri].status
+        let response = prefetches[uri].response
 
         delete prefetches[uri]
 
-        return receive(html, finalDestination, status)
+        return receive(html, finalDestination, response)
     } else {
         prefetches[uri].whenFinished = () => {
             let html = prefetches[uri].html
             let finalDestination = prefetches[uri].finalDestination
-            let status = prefetches[uri].status
+            let response = prefetches[uri].response
 
             delete prefetches[uri]
 
-            receive(html, finalDestination, status)
+            receive(html, finalDestination, response)
         }
 
         // Someone is waiting on this in-flight prefetch. If it fails, they're

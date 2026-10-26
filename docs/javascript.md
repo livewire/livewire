@@ -165,6 +165,10 @@ Livewire.interceptMessage(callback)           // Global (all components)
 $wire.interceptRequest(callback)              // Requests involving this component
 $wire.interceptRequest('save', callback)      // Only when request contains 'save'
 Livewire.interceptRequest(callback)           // Global (all requests)
+
+// Navigate interceptors - fire for each page navigation
+Livewire.interceptNavigate(callback)           // Global (all navigations)
+
 ```
 
 All interceptors return an unsubscribe function:
@@ -317,6 +321,19 @@ $wire.interceptRequest(({ request, onSend, onCancel, onSuccess, onError, onFailu
     })
 
     onFinish(() => {})
+})
+```
+
+### Navigation interceptors
+
+Navigation interceptors fire for each page navigation triggered by `wire:navigate`.
+
+```js
+Livewire.interceptNavigate(({ url, onError }) => {
+    onError(({ error }) => {
+        preventDefault() // Prevent navigation
+
+    })
 })
 ```
 
