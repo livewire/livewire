@@ -1,4 +1,4 @@
-import { pushUrl, replaceUrl, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
+import { pushUrl, replaceUrl, storeCurrentPageStatus, updateCurrentPageHtmlInHistoryStateForLaterBackButtonClicks, updateCurrentPageHtmlInSnapshotCacheForLaterBackButtonClicks, updateUrlAndStoreLatestHtmlForFutureBackButtons, whenTheBackOrForwardButtonIsClicked } from "./history"
 import { getPretchedHtmlOr, prefetchHtml, storeThePrefetchedHtmlForWhenALinkIsClicked } from "./prefetch"
 import { createUrlObjectFromString, extractDestinationFromLink, isSameOrigin, isSamePageFragment, linkShouldBeHandledNatively, visitNatively, whenThisLinkIsHoveredOrFocusedFor, whenThisLinkIsPressed } from "./links"
 import { isTeleportTarget, packUpPersistedTeleports, removeAnyLeftOverStaleTeleportTargets, unPackPersistedTeleports } from "./teleport"
@@ -52,8 +52,8 @@ export default function (Alpine) {
 
             if (linkShouldBeHandledNatively(el, destination) || isSamePageFragment(destination)) return
 
-            prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            prefetchHtml(destination, (html, finalDestination, status) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -62,8 +62,8 @@ export default function (Alpine) {
         whenThisLinkIsPressed(el, (whenItIsReleased) => {
             let destination = extractDestinationFromLink(el)
 
-            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination) => {
-                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination)
+            if (! isSamePageFragment(destination)) prefetchHtml(destination, (html, finalDestination, status) => {
+                storeThePrefetchedHtmlForWhenALinkIsClicked(html, destination, finalDestination, status)
             }, () => {
                 showProgressBar && finishAndHideProgressBar()
             })
@@ -103,7 +103,7 @@ export default function (Alpine) {
 
         showProgressBar && showAndStartProgressBar()
 
-        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+        fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination, status) => {
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
             if (! isSameOrigin(finalDestination)) {
@@ -112,6 +112,11 @@ export default function (Alpine) {
 
                 return visitNatively(finalDestination)
             }
+
+            // Stored now rather than when the response arrives: a prefetch may
+            // never be shown, and the back button reads this as the status of
+            // the page that is on screen...
+            storeCurrentPageStatus(status)
 
             navigation.ready()
 
