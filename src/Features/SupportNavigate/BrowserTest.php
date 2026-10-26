@@ -1803,6 +1803,49 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_a_navigation_superseded_by_a_newer_one_does_not_swap_its_page_in_when_it_arrives_late()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                // Hold back the first navigation's response, so it arrives after the second's...
+                ->tap(fn ($b) => $b->script(
+                    'let originalFetch = window.fetch; window.fetch = (uri, options) => originalFetch(uri, options).then(response => String(uri).includes("/second") ? new Promise(resolve => setTimeout(() => resolve(response), 1000)) : response)'
+                ))
+                ->tap(fn ($b) => $b->script("Livewire.navigate('/second'); Livewire.navigate('/fourth')"))
+                ->waitForText('On fourth')
+                // Long enough for the held-back response to land...
+                ->pause(1500)
+                ->assertSee('On fourth')
+                ->assertDontSee('On second page')
+                ->assertPathIs('/fourth')
+            ;
+        });
+    }
+
+    public function test_a_navigation_superseded_by_a_newer_one_does_not_fall_back_to_its_destination_when_it_fails_offline()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->assertSee('On first')
+                ->tap(fn ($b) => $b->script([
+                    'window._lw_dusk_test = true',
+                    'Object.defineProperty(navigator, "onLine", { get: () => false, configurable: true })',
+                    // The first navigation fails, but only after the second has started...
+                    'let originalFetch = window.fetch; window.fetch = (uri, options) => String(uri).includes("/second") ? new Promise((resolve, reject) => setTimeout(() => reject(new TypeError("Failed to fetch")), 1000)) : originalFetch(uri, options)',
+                ]))
+                ->tap(fn ($b) => $b->script("Livewire.navigate('/second'); Livewire.navigate('/fourth')"))
+                ->waitForText('On fourth')
+                ->pause(1500)
+                ->assertPathIs('/fourth')
+                // A hard visit to the abandoned page would have cleared the marker...
+                ->assertScript('return window._lw_dusk_test', true)
+            ;
+        });
+    }
+
     public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
     {
         $this->browse(function (Browser $browser) {
