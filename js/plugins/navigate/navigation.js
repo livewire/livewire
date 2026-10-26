@@ -124,6 +124,10 @@ class Navigation {
         }
     }
 
+    isCancelled() {
+        return this.state === 'cancelled'
+    }
+
     ready() {
         if (this.state !== 'fetching') return
 
