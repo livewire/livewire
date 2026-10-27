@@ -231,10 +231,9 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
 
     public function test_model_attribute_cast_to_an_object_does_not_break_validation()
     {
-        Livewire::test(ComponentWithObjectCastedModelAttribute::class)
-            ->set('product.name', '')
+        Livewire::test(ComponentWithCastedModelAttributes::class)
             ->call('save')
-            ->assertHasErrors(['product.name' => 'required']);
+            ->assertHasNoErrors();
     }
 }
 
@@ -404,12 +403,13 @@ class ContactWithCasts extends Model
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'phone' => null, 'age' => 40],
+        ['id' => 1, 'phone' => null, 'age' => 40, 'price' => 1500],
     ];
 
     protected $casts = [
         'phone' => 'encrypted',
         'age' => 'integer',
+        'price' => ObjectCast::class,
     ];
 }
 
@@ -445,57 +445,15 @@ class ComponentWithCastedModelAttributes extends Component
     }
 }
 
-class Price
-{
-    public function __construct(public int $cents) {}
-}
-
-class PriceCast implements CastsAttributes
+class ObjectCast implements CastsAttributes
 {
     public function get($model, string $key, mixed $value, array $attributes): mixed
     {
-        return new Price((int) $value);
+        return (object) ['value' => $value];
     }
 
     public function set($model, string $key, mixed $value, array $attributes): mixed
     {
-        return $value instanceof Price ? $value->cents : $value;
-    }
-}
-
-class ProductWithObjectCast extends Model
-{
-    use Sushi;
-
-    protected $rows = [
-        ['id' => 1, 'name' => 'Widget', 'price' => 1500],
-    ];
-
-    protected $casts = [
-        'price' => PriceCast::class,
-    ];
-}
-
-class ComponentWithObjectCastedModelAttribute extends Component
-{
-    public ProductWithObjectCast $product;
-
-    protected $rules = [
-        'product.name' => 'required',
-    ];
-
-    public function mount()
-    {
-        $this->product = ProductWithObjectCast::first();
-    }
-
-    public function save()
-    {
-        $this->validate();
-    }
-
-    public function render()
-    {
-        return \view('dump-errors');
+        return $value->value ?? $value;
     }
 }
