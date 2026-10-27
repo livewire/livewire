@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportFileUploads;
 
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Renderless;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 
@@ -74,26 +75,45 @@ trait WithFileUploads
         $this->dispatch('upload:errored', name: $name)->self();
 
         if (! is_null($errorsInJson)) {
-            $errorsInJson = $isMultiple
-                ? str_ireplace('files', $name, $errorsInJson)
-                : str_ireplace('files.0', $name, $errorsInJson);
-
             $errors = json_decode($errorsInJson, true)['errors'] ?? null;
 
             if ($errors) {
-                throw ValidationException::withMessages($errors);
+                $messages = [];
+
+                // The upload endpoint validates the files as "files.0", "files.1"...
+                // so we point each error, and the attribute in its message, at the property.
+                foreach ($errors as $key => $keyMessages) {
+                    $property = $isMultiple ? str_ireplace('files', $name, $key) : $name;
+                    $attribute = $this->uploadValidationAttribute($property);
+
+                    $messages[$property] = array_map(function ($message) use ($key, $attribute) {
+                        $message = str_replace([ucfirst($key), strtoupper($key)], [ucfirst($attribute), strtoupper($attribute)], $message);
+
+                        return str_ireplace($key, $attribute, $message);
+                    }, (array) $keyMessages);
+                }
+
+                throw ValidationException::withMessages($messages);
             }
         }
 
-        $translator = app()->make('translator');
-
-        $attribute = $translator->get("validation.attributes.{$name}");
-        if ($attribute === "validation.attributes.{$name}") $attribute = $name;
+        $attribute = $this->uploadValidationAttribute($name);
 
         $message = trans('validation.uploaded', ['attribute' => $attribute]);
         if ($message === 'validation.uploaded') $message = "The {$name} failed to upload.";
 
         throw ValidationException::withMessages([$name => $message]);
+    }
+
+    protected function uploadValidationAttribute($property)
+    {
+        foreach ($this->getValidationAttributes() as $key => $attribute) {
+            if (Str::is($key, $property)) return $attribute;
+        }
+
+        $attribute = app()->make('translator')->get("validation.attributes.{$property}");
+
+        return $attribute === "validation.attributes.{$property}" ? $property : $attribute;
     }
 
     function _removeUpload($name, $tmpFilename)
