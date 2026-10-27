@@ -6,6 +6,7 @@ use Sushi\Sushi;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class EloquentModelValidationUnitTest extends \Tests\TestCase
 {
@@ -227,6 +228,14 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->call('saveAge', '32.5')
             ->assertHasErrors(['contact.age' => 'integer']);
     }
+
+    public function test_model_attribute_cast_to_an_object_does_not_break_validation()
+    {
+        Livewire::test(ComponentWithObjectCastedModelAttribute::class)
+            ->set('product.name', '')
+            ->call('save')
+            ->assertHasErrors(['product.name' => 'required']);
+    }
 }
 
 class Foo extends Model
@@ -427,6 +436,61 @@ class ComponentWithCastedModelAttributes extends Component
     {
         $this->contact->age = $age;
 
+        $this->validate();
+    }
+
+    public function render()
+    {
+        return \view('dump-errors');
+    }
+}
+
+class Price
+{
+    public function __construct(public int $cents) {}
+}
+
+class PriceCast implements CastsAttributes
+{
+    public function get($model, string $key, mixed $value, array $attributes): mixed
+    {
+        return new Price((int) $value);
+    }
+
+    public function set($model, string $key, mixed $value, array $attributes): mixed
+    {
+        return $value instanceof Price ? $value->cents : $value;
+    }
+}
+
+class ProductWithObjectCast extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'name' => 'Widget', 'price' => 1500],
+    ];
+
+    protected $casts = [
+        'price' => PriceCast::class,
+    ];
+}
+
+class ComponentWithObjectCastedModelAttribute extends Component
+{
+    public ProductWithObjectCast $product;
+
+    protected $rules = [
+        'product.name' => 'required',
+    ];
+
+    public function mount()
+    {
+        $this->product = ProductWithObjectCast::first();
+    }
+
+    public function save()
+    {
         $this->validate();
     }
 
