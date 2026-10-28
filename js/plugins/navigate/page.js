@@ -104,7 +104,7 @@ function mergeNewHead(newHead) {
 
             if (! headChildrenHtmlLookup.includes(childHtml)) {
                 if (isTracked(child)) {
-                    if (ifTheQueryStringChangedSinceLastRequest(child, children)) {
+                    if (ifTheQueryStringChangedSinceLastRequest(child, children) || ifTheVersionChangedSinceLastRequest(child, children)) {
                         setTimeout(() => window.location.reload())
                     }
                 }
@@ -190,6 +190,28 @@ function ifTheQueryStringChangedSinceLastRequest(el, currentHeadChildren) {
         // Only consider a data-navigate-track element changed if the query string has changed (not the URI)...
         if (currentUri === uri && queryString !== currentQueryString) return true
     })
+}
+
+function ifTheVersionChangedSinceLastRequest(el, currentHeadChildren) {
+    let version = extractVersion(el)
+
+    if (! version) return false
+
+    return currentHeadChildren.some(child => {
+        if (! isTracked(child)) return false
+
+        let currentVersion = extractVersion(child)
+
+        return currentVersion && currentVersion !== version
+    })
+}
+
+function extractVersion(el) {
+    let version = el.getAttribute('data-navigate-track')
+
+    if (['', 'reload', 'true'].includes(version)) return null
+
+    return version
 }
 
 function extractUriAndQueryString(el) {

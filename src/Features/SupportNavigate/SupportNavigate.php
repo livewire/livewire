@@ -22,12 +22,17 @@ class SupportNavigate extends ComponentHook
             'data-navigate-once' => true,
         ]);
 
-        Vite::useScriptTagAttributes([
-            'data-navigate-track' => 'reload',
+        Vite::useScriptTagAttributes(fn ($src, $url, $chunk, $manifest) => [
+            'data-navigate-track' => static::buildVersion($manifest),
         ]);
 
-        Vite::useStyleTagAttributes([
-            'data-navigate-track' => 'reload',
+        Vite::useStyleTagAttributes(fn ($src, $url, $chunk, $manifest) => [
+            'data-navigate-track' => static::buildVersion($manifest),
         ]);
+    }
+
+    static function buildVersion($manifest)
+    {
+        return $manifest ? md5(json_encode($manifest)) : 'reload';
     }
 }
