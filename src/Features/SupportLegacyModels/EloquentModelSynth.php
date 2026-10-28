@@ -104,7 +104,7 @@ class EloquentModelSynth extends Synth implements ArrayShapedSynth
 
             $casted = $values[$key];
 
-            if (! is_scalar($attribute) || $attribute == $casted) continue;
+            if (! is_scalar($attribute) || ! is_scalar($casted) || $attribute == $casted) continue;
 
             // Integer and float casts coerce the raw input (e.g. "32.5" becomes 32), so validate the raw
             // input instead. Other casts, like "encrypted", should be validated using the cast value...
