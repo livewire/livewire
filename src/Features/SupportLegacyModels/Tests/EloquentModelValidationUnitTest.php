@@ -403,13 +403,13 @@ class ContactWithCasts extends Model
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'phone' => null, 'age' => 40, 'price' => 1500],
+        ['id' => 1, 'phone' => null, 'age' => 40, 'loyalty_points' => 1500],
     ];
 
     protected $casts = [
         'phone' => 'encrypted',
         'age' => 'integer',
-        'price' => ObjectCast::class,
+        'loyalty_points' => ObjectCast::class,
     ];
 }
 
