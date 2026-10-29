@@ -434,6 +434,8 @@ function sendMessages() {
                             if (payload.id === message.component.id) {
                                 if (discardIfSuperseded(message)) return
 
+                                if (discardIfDestroyed(message)) return
+
                                 // A skipped payload still counts as a response landing and can supersede older overlaps...
                                 supersedeOlderMessages(message)
 
