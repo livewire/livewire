@@ -1298,6 +1298,46 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('other', 'keep')
         ;
     }
+
+    public function test_reset_except_with_mixed_top_level_and_nested_form_properties()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public $other = 'keep';
+
+            public function resetExceptMixed()
+            {
+                $this->resetExcept('other', 'form.title');
+            }
+        })
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->call('resetExceptMixed')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'changed')
+        ;
+    }
+
+    public function test_reset_except_with_whole_form_and_nested_property_leaves_the_form_untouched()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public function resetExceptWholeForm()
+            {
+                $this->resetExcept('form', 'form.title');
+            }
+        })
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetExceptWholeForm')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+        ;
+    }
 }
 
 class PostFormStub extends Form
