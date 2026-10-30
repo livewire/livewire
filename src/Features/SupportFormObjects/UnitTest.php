@@ -1276,6 +1276,28 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
             ->assertSetStrict('form.content.1', false);
     }
+
+    public function test_reset_except_with_nested_form_property_does_not_reset_the_excepted_field()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithDefaults $form;
+
+            public $other = 'keep';
+
+            public function resetExceptFormTitle()
+            {
+                $this->resetExcept('form.title');
+            }
+        })
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->call('resetExceptFormTitle')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'keep')
+        ;
+    }
 }
 
 class PostFormStub extends Form

@@ -111,7 +111,25 @@ trait InteractsWithProperties
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
-        if($keysToReset === []) {
+        foreach ($properties as $property) {
+            if (! str_contains($property, '.')) continue;
+
+            $objectName = str($property)->before('.');
+            $propertyName = str($property)->after('.');
+
+            if (isset($this->{$objectName}) && is_subclass_of($this->{$objectName}, Form::class)) {
+                // Remove `form` key to prevent full-form reset
+                $keysToReset = array_diff($keysToReset, [(string) $objectName]);
+
+                foreach (array_keys($this->{$objectName}->all()) as $formKey) {
+                    if ($formKey !== (string) $propertyName) {
+                        $keysToReset[] = $objectName . '.' . $formKey;
+                    }
+                }
+            }
+        }
+
+        if ($keysToReset === []) {
             return;
         }
 
