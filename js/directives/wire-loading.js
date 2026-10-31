@@ -107,7 +107,7 @@ function applyDelay(directive) {
 }
 
 function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLoading, endLoading ]) {
-    return interceptMessage(({ message, onSend, onSuccess, onFinish }) => {
+    return interceptMessage(({ message, onSend, onCancel, onError, onFailure, onSuccess, onFinish }) => {
         if (component !== message.component) return
 
         // When explicit targets are set via wire:target, skip island scope filtering
@@ -169,14 +169,20 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
             })
         })
 
-        // Clear loading on cancel/error/failure (onFinish fires immediately on these paths)
-        onFinish(() => {
+        let finishLoadingUnlessNavigating = () => {
             stopWaitingForNavigation()
 
             if (navigationWasStarted) return
 
             finishLoading()
-        })
+        }
+
+        // Clear loading on cancel/error/failure before onFinish, so the form lock is released after it...
+        onCancel(finishLoadingUnlessNavigating)
+        onError(finishLoadingUnlessNavigating)
+        onFailure(finishLoadingUnlessNavigating)
+
+        onFinish(finishLoadingUnlessNavigating)
     })
 }
 
