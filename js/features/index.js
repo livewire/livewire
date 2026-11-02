@@ -6,6 +6,7 @@ import './supportScriptsAndAssets';
 import './supportJsEvaluation';
 import './supportIslands';
 import './supportMorphDom';
+import './supportSubtreeHashes';
 import './supportDispatches';
 
 /**

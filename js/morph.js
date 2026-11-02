@@ -63,6 +63,9 @@ export async function morph(component, el, html) {
 
     await transitionDomMutation(el, to, () => {
         Alpine.morph(el, to, getMorphConfig(component))
+
+        // Synchronously, before Alpine's mutation observer sees what moved...
+        trigger('morph.finished', { el, component })
     }, transitionOptions)
 
     trigger('morphed', { el, component })
@@ -92,7 +95,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
         parentProviderWrapper.__livewire = parentComponent
     }
 
-    trigger('island.morph', { startNode, endNode, component })
+    trigger('island.morph', { startNode, endNode, component, toEl: toContainer })
 
     let transitionOptions = {}
 
@@ -118,6 +121,8 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 
     await transitionDomMutation(fromEl, toContainer, () => {
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+        trigger('morph.finished', { el: startNode.parentElement, component })
     }, transitionOptions)
 
     trigger('island.morphed', { startNode, endNode, component })
@@ -190,7 +195,7 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            trigger('morph.added', { el })
+            trigger('morph.added', { el, component })
         },
 
         key: (el) => {

@@ -74,6 +74,71 @@ When Livewire processes the component update, it _morphs_ the original DOM into 
 
 As you can see, Livewire walks both HTML trees simultaneously. As it encounters each element in both trees, it compares them for changes, additions, and removals. If it detects one, it surgically makes the appropriate change.
 
+## Skipping unchanged elements
+
+On large pages, most of an update's time can go into sending and morphing markup that hasn't changed: refreshing one row of a long table still re-renders, transfers, and walks every other row.
+
+Livewire can skip that work for keyed elements. Enable it in your `config/livewire.php` file:
+
+```php
+'skip_unchanged' => [
+    'enabled' => true,
+    'min_size' => 1024,
+],
+```
+
+Once enabled, Livewire remembers the markup it rendered for every element with a `wire:key` whose markup is at least `min_size` bytes. On the next update, the browser tells the server which of those elements it still holds, and the server sends an empty placeholder for each one that rendered exactly the same. Morphing then leaves those elements untouched, along with their Alpine state, event listeners, and focus.
+
+For example, in the following component, marking one task as done only sends and morphs that task's row, as long as each row renders at least `min_size` bytes of markup:
+
+```php
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+use App\Models\TodoList;
+
+class ShowTodoList extends Component
+{
+    public TodoList $todoList;
+
+    #[Computed]
+    public function tasks()
+    {
+        return $this->todoList->tasks()->get();
+    }
+
+    public function handleComplete($id)
+    {
+        $this->todoList->tasks()->findOrFail($id)->update(['done' => true]);
+    }
+}
+```
+
+```blade
+<ul>
+    @foreach ($this->tasks as $task)
+        <li wire:key="{{ $task->id }}">
+            {{ $task->title }}
+
+            <button wire:click="handleComplete({{ $task->id }})">Done</button>
+        </li>
+    @endforeach
+</ul>
+```
+
+Skipping only helps when the same keyed elements render the same markup again, such as refreshing, editing a row, or opening a modal next to a long list. Sorting and paginating bring in different elements, so those updates are sent and morphed as usual.
+
+### Changing markup outside of Livewire
+
+Livewire assumes the elements it remembers still contain the markup it rendered. If your own JavaScript (or a package) replaces part of a component's server-rendered markup, call `Livewire.markChanged()` with the changed element afterwards:
+
+```js
+el.innerHTML = html
+
+Livewire.markChanged(el)
+```
+
+Livewire then stops treating that element, and every keyed element around it, as unchanged, so the next update sends their markup again. Changes made by Alpine, such as toggling classes or showing and hiding elements, don't need this: Livewire compares what the server renders, not what's currently in the page.
+
 ## Morphing shortcomings
 
 The following are scenarios where morphing algorithms fail to correctly identify the change in HTML trees and therefore cause problems in your application.

@@ -472,6 +472,14 @@ Livewire.hook('component.init', ({ component, cleanup }) => {
 
 More information about Livewire's JavaScript hooks can be [found below](#javascript-hooks).
 
+### Reporting markup changed outside of Livewire
+
+When [skipping unchanged elements](/docs/4.x/morph#skipping-unchanged-elements) is enabled, code that replaces a component's server-rendered markup outside of Livewire should report it, so the next update sends that markup again:
+
+```js
+Livewire.markChanged(el)
+```
+
 ### Registering custom directives
 
 Livewire allows you to register custom directives using `Livewire.directive()`.
