@@ -18,10 +18,8 @@ directive('dirty', ({ el, directive, component }) => {
 
     let oldIsDirty = false
 
-    let initialDisplay = el.style.display
-
     let refreshDirtyState = (isDirty) => {
-        toggleBooleanStateDirective(el, directive, isDirty, initialDisplay)
+        toggleBooleanStateDirective(el, directive, isDirty)
 
         oldIsDirty = isDirty
     }
