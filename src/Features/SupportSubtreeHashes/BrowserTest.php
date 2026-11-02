@@ -296,4 +296,148 @@ class BrowserTest extends BrowserTestCase
             ->assertScript('window.__same.at(-1)', 0)
             ->assertSeeIn('@text', 'Server');
     }
+
+    public function test_content_streamed_to_a_ref_is_never_kept_by_a_skip()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function send() { $this->stream('Streaming', replace: true, ref: 'out'); }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="send" dusk="send">Send</button>
+
+                    <div wire:key="panel">
+                        <p wire:ref="out" dusk="out">Server</p>
+                        <span hidden>{{ str_repeat('p', 1100) }}</span>
+                    </div>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            // The final render matches what the panel had before the stream...
+            ->waitForLivewire()->click('@send')
+            ->waitForTextIn('@out', 'Server');
+    }
+
+    public function test_content_appended_to_an_island_is_never_kept_by_a_skip()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="$set('count', 1)" wire:island.append="feed" dusk="append">Append</button>
+                    <button type="button" wire:click="$set('count', 0)" dusk="reset">Reset</button>
+
+                    <section wire:key="around" dusk="around">
+                        @island(name: 'feed', always: true)<p>Item {{ $count }}</p>@endisland
+                        <span hidden>{{ str_repeat('o', 1100) }}</span>
+                    </section>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            ->waitForLivewire()->click('@append')
+            ->assertSeeIn('@around', 'Item 1')
+            // Back to the markup "around" had at first, so only a stale hash would let it be skipped...
+            ->waitForLivewire()->click('@reset')
+            ->assertDontSeeIn('@around', 'Item 1')
+            ->assertSeeIn('@around', 'Item 0');
+    }
+
+    public function test_an_island_that_cannot_be_resolved_renders_itself_again()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function slow() { usleep(400_000); }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @island
+                        <button type="button" wire:click="slow" dusk="slow">Slow</button>
+
+                        <div wire:key="row">
+                            <p dusk="row">Server</p>
+                            <span hidden>{{ str_repeat('r', 1100) }}</span>
+                        </div>
+                    @endisland
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            // Changed (and reported) while the island's request is in flight, after its hash went out...
+            ->tap(fn ($b) => $b->script('document.querySelector("[dusk=slow]").click(); setTimeout(() => { let row = document.querySelector("[dusk=row]"); row.textContent = "Changed"; Livewire.markChanged(row) }, 150)'))
+            ->waitForTextIn('@row', 'Changed')
+            // The response can't claim the row any more, so the island asks for a full render of itself...
+            ->waitUntil('window.__same.length === 2')
+            ->assertScript('window.__requests', 2)
+            ->assertSeeIn('@row', 'Server');
+    }
+
+    public function test_an_event_listener_named_same_is_not_a_placeholder()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$set('count', {{ $count + 1 }})" dusk="bump">Bump</button>
+
+                    <div wire:same="$refresh" dusk="listener">Count: {{ $count }}</div>
+                </div>
+            HTML; }
+        })
+            ->waitForLivewire()->click('@bump')
+            ->assertSeeIn('@listener', 'Count: 1');
+    }
+
+    public function test_a_package_morph_run_from_a_livewire_morph_hook_is_reported()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public $count = 0;
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$set('count', {{ $count + 1 }})" dusk="bump">Bump</button>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <div wire:key="first">
+                        <p dusk="count">{{ $count }}</p>
+                        <span hidden>{{ str_repeat('a', 1100) }}</span>
+                    </div>
+
+                    <div wire:key="second">
+                        <p dusk="text">Server</p>
+                        <span hidden>{{ str_repeat('b', 1100) }}</span>
+                    </div>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            // Like a package that reacts to a Livewire morph by morphing something of its own...
+            ->tap(fn ($b) => $b->script('Livewire.hook("morph.updated", ({ el }) => { if (window.__done || el.getAttribute?.("dusk") !== "count") return; window.__done = true; let text = document.querySelector("[dusk=text]"); let to = text.cloneNode(); to.textContent = "Package"; Alpine.morph(text, to) })'))
+            ->waitForLivewire()->click('@bump')
+            ->waitForLivewire()->click('@refresh')
+            ->waitForTextIn('@text', 'Server');
+    }
+
+    public function test_a_package_morph_that_replaces_the_element_is_reported()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <div wire:key="panel">
+                        <div wire:key="inner" dusk="inner">Server<span hidden>{{ str_repeat('i', 1100) }}</span></div>
+                    </div>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            // A different tag makes Alpine swap the element out, here for markup copied with its old hash...
+            ->tap(fn ($b) => $b->script('let el = document.querySelector("[dusk=inner]"); Alpine.morph(el, `<section wire:key="inner" wire:hash="${el.getAttribute("wire:hash")}" dusk="inner">Package</section>`)'))
+            ->assertSeeIn('@inner', 'Package')
+            ->waitForLivewire()->click('@refresh')
+            ->assertSeeIn('@inner', 'Server');
+    }
 }

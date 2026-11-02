@@ -64,7 +64,12 @@ class SupportSubtreeHashes extends ComponentHook
     // (e.g. partials a package morphs itself) never see one, since nothing there would skip it...
     function dehydrate($context)
     {
-        if (! static::enabled() || ! $this->updating) return;
+        if (! static::enabled()) return;
+
+        // Lets the browser skip all of its bookkeeping for components (and apps) without this...
+        $context->addMemo('hashes', true);
+
+        if (! $this->updating) return;
 
         $known = static::$known[$this->component->getId()] ?? [];
 

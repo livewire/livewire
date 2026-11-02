@@ -6,7 +6,7 @@ import Alpine from 'alpinejs'
 import { evaluateActionExpression } from '../evaluator'
 
 on('directive.init', ({ el, directive, cleanup, component }) => {
-    if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'target', 'dirty', 'sort'].includes(directive.value)) return
+    if (['snapshot', 'effects', 'model', 'init', 'loading', 'poll', 'ignore', 'id', 'data', 'key', 'hash', 'target', 'dirty', 'sort'].includes(directive.value)) return
     if (customDirectiveHasBeenRegistered(directive.value)) return
 
     let attribute = directive.rawName.replace('wire:', 'x-on:')

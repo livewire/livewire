@@ -88,6 +88,58 @@ class UnitTest extends \Tests\TestCase
         $this->assertStringContainsString('<p wire:hash="', $output);
     }
 
+    public function test_a_double_quote_in_a_single_quoted_key_is_escaped_in_the_placeholder()
+    {
+        $markup = '<p wire:key=\'a"b\'>x</p>';
+
+        $output = (new SubtreeHasher(minimumBytes: 0))->process('<div>'.$markup.'</div>', [SubtreeHasher::hash($markup) => 0]);
+
+        $this->assertSame('<div><p wire:key="a&quot;b" wire:hash="'.SubtreeHasher::hash($markup).'" wire:same></p></div>', $output);
+    }
+
+    public function test_elements_closed_implicitly_are_never_tracked()
+    {
+        $html = '<div><ul wire:key="list"><li wire:key="a">A<li wire:key="b">B</ul></div>';
+
+        $output = (new SubtreeHasher(minimumBytes: 0))->process($html);
+
+        $this->assertStringContainsString('<li wire:key="a">A<li wire:key="b">B', $output);
+        $this->assertStringContainsString('<ul wire:hash="', $output);
+    }
+
+    public function test_raw_text_only_ends_at_its_own_end_tag()
+    {
+        $html = '<div><script>let s = "</scripture><p wire:key=\'nope\'>"</script><p wire:key="after">ok</p></div>';
+
+        $output = (new SubtreeHasher(minimumBytes: 0))->process($html);
+
+        $this->assertStringContainsString("<p wire:key='nope'>", $output);
+        $this->assertStringContainsString('<p wire:hash="', $output);
+    }
+
+    public function test_replaced_regions_and_what_holds_them_are_never_tracked()
+    {
+        $html = '<div><section wire:key="outer"><div wire:key="widget" wire:replace>x</div></section><p wire:key="other">y</p></div>';
+
+        $output = (new SubtreeHasher(minimumBytes: 0))->process($html);
+
+        $this->assertStringContainsString('<section wire:key="outer"><div wire:key="widget" wire:replace>x</div></section>', $output);
+        $this->assertStringContainsString('<p wire:hash="', $output);
+    }
+
+    public function test_the_snapshot_says_whether_hashes_are_in_use()
+    {
+        $render = fn () => \Livewire\Livewire::test(new class extends \Livewire\Component {
+            public function render() { return '<div></div>'; }
+        })->snapshot['memo'];
+
+        $this->assertTrue($render()['hashes'] ?? false);
+
+        config(['livewire.skip_unchanged.enabled' => false]);
+
+        $this->assertArrayNotHasKey('hashes', $render());
+    }
+
     public function test_small_elements_are_not_hashed()
     {
         $html = '<div><p wire:key="small">x</p><p wire:key="large">'.str_repeat('y', 1100).'</p></div>';

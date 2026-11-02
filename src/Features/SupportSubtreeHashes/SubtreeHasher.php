@@ -68,7 +68,8 @@ class SubtreeHasher
             $output .= substr($html, $cursor, $element['start'] - $cursor);
 
             if (isset($known[$hash])) {
-                $output .= '<'.$element['name'].' wire:key="'.$element['key'].'" wire:hash="'.$hash.'" wire:same>';
+                // The key may come from a single-quoted attribute, so it can hold a double quote...
+                $output .= '<'.$element['name'].' wire:key="'.str_replace('"', '&quot;', $element['key']).'" wire:hash="'.$hash.'" wire:same>';
 
                 if (! isset(static::$voidTags[$element['name']])) $output .= '</'.$element['name'].'>';
 
@@ -106,7 +107,9 @@ class SubtreeHasher
 
                 $name = strtolower(rtrim(substr($html, $position + 2, strcspn($html, " \t\n\r>", $position + 2))));
 
-                // Pop until the matching open tag, treating anything in between as implicitly closed...
+                // Pop until the matching open tag. Anything in between was closed implicitly, and where
+                // (an `<li>` closes at the next `<li>`, not here) depends on HTML's parsing rules, so
+                // those are never tracked...
                 for ($k = count($stack) - 1; $k >= 0; $k--) {
                     if ($stack[$k]['name'] === $name) break;
                 }
@@ -114,10 +117,9 @@ class SubtreeHasher
                 if ($k >= 0) {
                     while (count($stack) > $k) {
                         $open = array_pop($stack);
-                        $closesHere = count($stack) === $k;
 
-                        if ($open['index'] !== null) {
-                            $elements[$open['index']]['end'] = $closesHere ? $end + 1 : $position;
+                        if ($open['index'] !== null && count($stack) === $k) {
+                            $elements[$open['index']]['end'] = $end + 1;
                         }
                     }
                 }
@@ -178,8 +180,9 @@ class SubtreeHasher
             }
 
             if (isset(static::$rawTextTags[$name])) {
-                $end = stripos($html, '</'.$name, $cursor);
-                if ($end === false) break;
+                // `</scripture>` doesn't end a `<script>`, so the name must end where the tag does...
+                if (! preg_match('#</'.$name.'[\s/>]#i', $html, $match, PREG_OFFSET_CAPTURE, $cursor)) break;
+                $end = $match[0][1];
                 $close = strpos($html, '>', $end);
                 if ($close === false) break;
                 if ($index !== null) $elements[$index]['end'] = $close + 1;
@@ -191,9 +194,18 @@ class SubtreeHasher
             $position = $cursor + 1;
         }
 
-        // Elements that never closed can't be safely replaced, and small ones aren't worth it...
+        // Elements that never closed can't be safely replaced, and small ones aren't worth it. Neither
+        // can anything holding `wire:replace`: it replaces its markup on every render, by design...
         return array_values(array_filter($elements, fn ($element) => $element['end'] !== null
             && $element['end'] - $element['start'] >= $this->minimumBytes
+            && ! $this->contains($html, 'wire:replace', $element['start'], $element['end'])
         ));
+    }
+
+    protected function contains(string $html, string $needle, int $start, int $end): bool
+    {
+        $found = strpos($html, $needle, $start);
+
+        return $found !== false && $found < $end;
     }
 }

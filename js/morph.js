@@ -3,23 +3,7 @@ import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 import { transitionDomMutation } from "./directives/wire-transition"
-
-// Counts the morphs Livewire itself is running, as opposed to ones other code runs through Alpine...
-let ownMorphs = 0
-
-export function isMorphing() {
-    return ownMorphs > 0
-}
-
-function own(callback) {
-    ownMorphs++
-
-    try {
-        callback()
-    } finally {
-        ownMorphs--
-    }
-}
+import { rememberLivewireMorph } from "./features/supportSubtreeHashes"
 
 export async function morph(component, el, html) {
     let wrapperTag = getTagName(el.parentElement)
@@ -79,9 +63,12 @@ export async function morph(component, el, html) {
     }
 
     await transitionDomMutation(el, to, () => {
-        own(() => Alpine.morph(el, to, getMorphConfig(component)))
+        // Both synchronous with the morph itself, so nothing else can run in between...
+        trigger('morph.starting', { el, toEl: to, component })
 
-        // Synchronously, before Alpine's mutation observer sees what moved...
+        Alpine.morph(el, to, getMorphConfig(component))
+
+        // ...and before Alpine's mutation observer sees what moved...
         trigger('morph.finished', { el, component })
     }, transitionOptions)
 
@@ -112,7 +99,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
         parentProviderWrapper.__livewire = parentComponent
     }
 
-    trigger('island.morph', { startNode, endNode, component, toEl: toContainer })
+    trigger('island.morph', { startNode, endNode, component })
 
     let transitionOptions = {}
 
@@ -137,7 +124,11 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromEl = islandHasTransition ? fromContainer : document.createElement('div')
 
     await transitionDomMutation(fromEl, toContainer, () => {
-        own(() => Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component)))
+        let island = extractFragmentMetadataFromMarkerNode(startNode).name
+
+        trigger('morph.starting', { el: startNode.parentElement, toEl: toContainer, component, island })
+
+        Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
 
         trigger('morph.finished', { el: startNode.parentElement, component })
     }, transitionOptions)
@@ -146,7 +137,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
 }
 
 function getMorphConfig(component) {
-    return {
+    let config = {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             // Skip fragments...
             if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
@@ -228,6 +219,8 @@ function getMorphConfig(component) {
 
         lookahead: false,
     }
+
+    return rememberLivewireMorph(config)
 }
 
 function isntElement(el) {
