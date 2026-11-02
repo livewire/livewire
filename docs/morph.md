@@ -129,7 +129,9 @@ Skipping only helps when the same keyed elements render the same markup again, s
 
 ### Changing markup outside of Livewire
 
-Livewire assumes the elements it remembers still contain the markup it rendered. If your own JavaScript (or a package) replaces part of a component's server-rendered markup, call `Livewire.markChanged()` with the changed element afterwards:
+Livewire assumes the elements it remembers still contain the markup it rendered. Morphs that other code runs through `Alpine.morph()` or `Alpine.morphBetween()`, such as packages morphing their own partials, are detected automatically.
+
+If your own JavaScript (or a package) replaces part of a component's server-rendered markup in any other way, call `Livewire.markChanged()` with the changed element afterwards:
 
 ```js
 el.innerHTML = html

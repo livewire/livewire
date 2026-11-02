@@ -474,7 +474,7 @@ More information about Livewire's JavaScript hooks can be [found below](#javascr
 
 ### Reporting markup changed outside of Livewire
 
-When [skipping unchanged elements](/docs/4.x/morph#skipping-unchanged-elements) is enabled, code that replaces a component's server-rendered markup outside of Livewire should report it, so the next update sends that markup again:
+When [skipping unchanged elements](/docs/4.x/morph#skipping-unchanged-elements) is enabled, code that replaces a component's server-rendered markup outside of Livewire, other than through `Alpine.morph()`, should report it, so the next update sends that markup again:
 
 ```js
 Livewire.markChanged(el)

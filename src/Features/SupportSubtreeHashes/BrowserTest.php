@@ -230,6 +230,51 @@ class BrowserTest extends BrowserTestCase
             ->assertSeeIn('@item-b', 'touched');
     }
 
+    public function test_markup_morphed_by_a_package_is_never_skipped()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <div wire:key="panel">
+                        <p dusk="text">Server</p>
+                        <span hidden>{{ str_repeat('p', 1100) }}</span>
+                    </div>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            // Like a package morphing its own partial, without telling Livewire...
+            ->tap(fn ($b) => $b->script('let el = document.querySelector("[dusk=text]"); let to = el.cloneNode(); to.textContent = "Package"; Alpine.morph(el, to)'))
+            ->assertSeeIn('@text', 'Package')
+            ->waitForLivewire()->click('@refresh')
+            ->assertScript('window.__same.at(-1)', 0)
+            ->assertSeeIn('@text', 'Server');
+    }
+
+    public function test_markup_morphed_between_markers_by_a_package_is_never_skipped()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() { return <<<'HTML'
+                <div>
+                    <button wire:click="$refresh" dusk="refresh">Refresh</button>
+
+                    <div wire:key="panel" dusk="panel">
+                        <!--start--><p>Server</p><!--end-->
+                        <span hidden>{{ str_repeat('p', 1100) }}</span>
+                    </div>
+                </div>
+            HTML; }
+        })
+            ->tap(fn ($b) => $b->script($this->spy))
+            ->tap(fn ($b) => $b->script('let markers = [...document.querySelector("[dusk=panel]").childNodes].filter(n => n.nodeType === 8); Alpine.morphBetween(markers[0], markers[1], "<p>Package</p>")'))
+            ->assertSeeIn('@panel', 'Package')
+            ->waitForLivewire()->click('@refresh')
+            ->assertScript('window.__same.at(-1)', 0)
+            ->assertSeeIn('@panel', 'Server');
+    }
+
     public function test_markup_changed_outside_livewire_is_reported_with_mark_changed()
     {
         Livewire::visit(new class extends \Livewire\Component {

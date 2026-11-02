@@ -1,4 +1,5 @@
 import { on } from '@/hooks'
+import { isMorphing } from '@/morph'
 
 // Keyed elements carry a `wire:hash` of the markup the server rendered for them. Requests send
 // the hashes currently in the DOM, and the server answers with an empty `wire:same` placeholder
@@ -39,10 +40,46 @@ export function collectSubtreeHashes(component) {
 // package morphing its own partials, say) must report it, or the old markup would still
 // be claimed for that element and everything around it...
 export function markChanged(el) {
+    if (! el?.querySelectorAll) return
+
     el.querySelectorAll('[wire\\:hash]').forEach(i => i.removeAttribute('wire:hash'))
 
     for (let parent = el; parent && ! parent.hasAttribute('wire:id'); parent = parent.parentElement) {
         parent.removeAttribute('wire:hash')
+    }
+}
+
+// Packages often morph a component's markup themselves through Alpine (Filament's partials, for
+// one), so report those morphs for them. This overrides Alpine's own functions for now, until
+// Alpine's morph can report morphs it runs on behalf of other code itself...
+export function reportMorphsOutsideLivewire(Alpine) {
+    let { morph, morphBetween } = Alpine
+
+    Alpine.morph = (from, ...args) => {
+        if (isMorphing()) return morph(from, ...args)
+
+        markChanged(from)
+
+        let result = morph(from, ...args)
+
+        // ...and again, in case the new markup came from an earlier render...
+        markChanged(from)
+
+        return result
+    }
+
+    Alpine.morphBetween = (startMarker, ...args) => {
+        if (isMorphing()) return morphBetween(startMarker, ...args)
+
+        let container = startMarker.parentElement
+
+        markChanged(container)
+
+        let result = morphBetween(startMarker, ...args)
+
+        markChanged(container)
+
+        return result
     }
 }
 

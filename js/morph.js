@@ -4,6 +4,23 @@ import Alpine from 'alpinejs'
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 import { transitionDomMutation } from "./directives/wire-transition"
 
+// Counts the morphs Livewire itself is running, as opposed to ones other code runs through Alpine...
+let ownMorphs = 0
+
+export function isMorphing() {
+    return ownMorphs > 0
+}
+
+function own(callback) {
+    ownMorphs++
+
+    try {
+        callback()
+    } finally {
+        ownMorphs--
+    }
+}
+
 export async function morph(component, el, html) {
     let wrapperTag = getTagName(el.parentElement)
 
@@ -62,7 +79,7 @@ export async function morph(component, el, html) {
     }
 
     await transitionDomMutation(el, to, () => {
-        Alpine.morph(el, to, getMorphConfig(component))
+        own(() => Alpine.morph(el, to, getMorphConfig(component)))
 
         // Synchronously, before Alpine's mutation observer sees what moved...
         trigger('morph.finished', { el, component })
@@ -120,7 +137,7 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromEl = islandHasTransition ? fromContainer : document.createElement('div')
 
     await transitionDomMutation(fromEl, toContainer, () => {
-        Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+        own(() => Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component)))
 
         trigger('morph.finished', { el: startNode.parentElement, component })
     }, transitionOptions)
