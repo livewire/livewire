@@ -116,19 +116,19 @@ trait InteractsWithProperties
 
             $objectName = str($property)->before('.')->toString();
 
-            if (in_array($objectName, $properties, true)) continue;
+            if (! isset($this->{$objectName}) || ! is_subclass_of($this->{$objectName}, Form::class)) continue;
 
-            if (isset($this->{$objectName}) && is_subclass_of($this->{$objectName}, Form::class)) {
-                $propertyName = str($property)->after('.')->toString();
-
-                $formKeysToReset = array_diff(array_keys($this->{$objectName}->all()), [$propertyName]);
-
-                if ($formKeysToReset !== []) {
-                    $this->{$objectName}->reset($formKeysToReset);
-                }
-
+            // The first time we see this form, swap the full-form reset for its individual fields...
+            if (in_array($objectName, $keysToReset, true)) {
                 $keysToReset = array_diff($keysToReset, [$objectName]);
+
+                foreach (array_keys($this->{$objectName}->all()) as $formKey) {
+                    $keysToReset[] = $objectName . '.' . $formKey;
+                }
             }
+
+            // ...then drop the excepted field from that list.
+            $keysToReset = array_diff($keysToReset, [$property]);
         }
 
         if ($keysToReset === []) {
