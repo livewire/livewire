@@ -119,6 +119,19 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Base path prefix
+    |---------------------------------------------------------------------------
+    |
+    | This value determines the base path prefix for all Livewire endpoints.
+    | It is used to generate unique URLs for Livewire's JavaScript, file uploads,
+    | and other endpoints. You may change this if needed.
+    |
+    */
+
+    'custom_base_path' => null,
+
+    /*
+    |---------------------------------------------------------------------------
     | Temporary File Uploads
     |---------------------------------------------------------------------------
     |
