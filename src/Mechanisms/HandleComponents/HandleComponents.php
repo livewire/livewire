@@ -579,8 +579,8 @@ class HandleComponents extends Mechanism
 
             $methods = Utils::getPublicMethodsDefinedBySubClass($root);
 
-            // Also remove "render" from the list...
-            $methods =  array_values(array_diff($methods, ['render']));
+            // Also remove "render" and "with" from the list...
+            $methods =  array_values(array_diff($methods, ['render', 'with']));
 
             // @todo: put this in a better place:
             $methods[] = '__dispatch';
