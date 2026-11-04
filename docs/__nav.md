@@ -78,6 +78,7 @@ Blade Directives:
 Advanced:
     Morphing: { uri: /docs/4.x/morphing, file: /morph.md }
     Hydration: { uri: /docs/4.x/hydration, file: /hydration.md }
+    Release Tokens: { uri: /docs/4.x/release-tokens, file: /release-tokens.md }
     Nesting: { uri: /docs/4.x/understanding-nesting, file: /understanding-nesting.md }
     Troubleshooting: { uri: /docs/4.x/troubleshooting, file: /troubleshooting.md }
     Security: { uri: /docs/4.x/security, file: /security.md }
