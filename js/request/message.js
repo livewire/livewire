@@ -4,6 +4,7 @@ export default class Message {
     actions = new Set()
     snapshot = null
     updates = null
+    canonical = null
     calls = null
     payload = null
     responsePayload = null

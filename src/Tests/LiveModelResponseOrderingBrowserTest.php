@@ -49,4 +49,45 @@ class LiveModelResponseOrderingBrowserTest extends \Tests\BrowserTestCase
             ->assertValue('@query', 'jk')
             ->assertSeeIn('@server-query', 'jk');
     }
+
+    public function test_an_empty_updates_response_cannot_revert_typed_input()
+    {
+        Livewire::visit(new class extends Component {
+            public string $query = 'abc';
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <input dusk="query" wire:model.live.debounce.1ms="query">
+
+                    <span dusk="server-query">{{ $query }}</span>
+
+                    @script
+                    <script>
+                        let originalFetch = window.fetch
+
+                        window.fetch = async (...args) => {
+                            let response = await originalFetch(...args)
+
+                            await new Promise(resolve => setTimeout(resolve, 300))
+
+                            return response
+                        }
+                    </script>
+                    @endscript
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->keys('@query', 'x')
+            ->pause(50)
+            ->keys('@query', '{backspace}')
+            ->pause(50)
+            ->keys('@query', 'y')
+            ->pause(700)
+            ->assertValue('@query', 'abcy')
+            ->assertSeeIn('@server-query', 'abcy');
+    }
 }

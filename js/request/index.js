@@ -1,4 +1,4 @@
-import { arrayPull, getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri } from '@/utils'
+import { arrayPull, getCsrfToken, contentIsFromDump, splitDumpFromContent, getUpdateUri, deepClone } from '@/utils'
 import { coordinateNetworkInteractions } from './interactions.js'
 import { MessageRequest, PageRequest } from './request.js'
 import { InterceptorRegistry } from './interceptor.js'
@@ -267,6 +267,7 @@ function sendMessages() {
         request.messages.forEach(message => {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
+            message.canonical = deepClone(message.component.canonical)
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.name,
                 params: i.params,
@@ -466,7 +467,7 @@ function sendMessages() {
                             let morphed = false
 
                             Alpine.transaction(async () => {
-                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates, message.canonical)
 
                                 message.invokeOnSync()
                                 if (message.isCancelled()) return
