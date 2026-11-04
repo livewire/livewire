@@ -2,12 +2,21 @@
 
 namespace Livewire\Features\SupportWireSort;
 
+use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Component;
 use Livewire\Livewire;
 
 class BrowserTest extends BrowserTestCase
 {
+    public static function tweakApplicationHook()
+    {
+        return function () {
+            Route::get('/sortable-links', SortableLinksPage::class)->middleware('web');
+            Route::get('/sortable-links-destination', fn () => 'On destination')->middleware('web');
+        };
+    }
+
     public function test_wire_sort_id_is_passed_as_third_parameter_to_sort_handler()
     {
         Livewire::visit(new class extends Component {
@@ -295,5 +304,42 @@ class BrowserTest extends BrowserTestCase
         })
         ->waitForTextIn('@result', 'item:item-2,position:0')
         ->assertSeeIn('@result', 'item:item-2,position:0');
+    }
+
+    public function test_sortable_items_containing_wire_navigate_links_can_be_dragged_and_clicked()
+    {
+        $this->browse(function ($browser) {
+            $browser->visit('/sortable-links')
+                ->drag('@link-2', '@link-1')
+                ->waitForTextIn('@result', 'item:2,position:0')
+                ->assertPathIs('/sortable-links')
+                ->click('@link-1')
+                ->waitForText('On destination')
+                ->assertPathIs('/sortable-links-destination');
+        });
+    }
+}
+
+class SortableLinksPage extends Component
+{
+    public $result = '';
+
+    public function sort($item, $position)
+    {
+        $this->result = "item:{$item},position:{$position}";
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <ul wire:sort="sort">
+                <li wire:sort:item="1"><a href="/sortable-links-destination" wire:navigate dusk="link-1">One</a></li>
+                <li wire:sort:item="2"><a href="/sortable-links-destination" wire:navigate dusk="link-2">Two</a></li>
+            </ul>
+
+            <div dusk="result">{{ $result }}</div>
+        </div>
+        HTML;
     }
 }
