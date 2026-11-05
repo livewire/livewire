@@ -1,5 +1,5 @@
 import { on as hook } from '@/hooks'
-import { setNextActionOrigin } from '@/request'
+import { setNextActionOrigin, hasOutstandingActionOrigin } from '@/request'
 
 hook('effect', ({ component, effects }) => {
     let listeners = []
@@ -23,7 +23,7 @@ function registerListeners(component, listeners) {
             // the element that dispatched the event (for example, a global toast).
             // Preserve that element as the action origin so it receives data-loading
             // for the listener's request.
-            if (e.target instanceof Element) {
+            if (e.target instanceof Element && ! hasOutstandingActionOrigin()) {
                 setNextActionOrigin({ el: e.target })
             }
 
