@@ -13,4 +13,21 @@ describe('$wire proxy', () => {
         expect($wire.$id).toBe('abc')
         expect($wire.content).toBe('hello')
     })
+
+    it('resolves properties and aliases in browsers without Object.hasOwn', () => {
+        let hasOwn = Object.hasOwn
+
+        delete Object.hasOwn
+
+        try {
+            let $wire = generateWireObject({ id: 'abc' }, { content: 'hello' })
+
+            expect($wire.id).toBe('abc')
+            expect($wire.$id).toBe('abc')
+            expect($wire.content).toBe('hello')
+            expect(() => $wire.constructor).not.toThrow()
+        } finally {
+            Object.hasOwn = hasOwn
+        }
+    })
 })
