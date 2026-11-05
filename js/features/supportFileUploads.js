@@ -1,4 +1,5 @@
 import { getCsrfToken } from '@/utils';
+import { setNextActionOrigin } from '@/request'
 
 let uploadManagers = new WeakMap
 
@@ -14,7 +15,7 @@ function getUploadManager(component) {
     return uploadManagers.get(component)
 }
 
-export function handleFileUpload(el, property, component, cleanup) {
+export function handleFileUpload(el, property, component, cleanup, directive) {
     let manager = getUploadManager(component)
 
     let start = () => el.dispatchEvent(new CustomEvent('livewire-upload-start', { bubbles: true, detail: { id: component.id, property} }))
@@ -37,9 +38,9 @@ export function handleFileUpload(el, property, component, cleanup) {
         start()
 
         if (e.target.multiple) {
-            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel)
+            manager.uploadMultiple(property, e.target.files, finish, error, progress, cancel, true, { el, directive })
         } else {
-            manager.upload(property, e.target.files[0], finish, error, progress, cancel)
+            manager.upload(property, e.target.files[0], finish, error, progress, cancel, { el, directive })
         }
     }
 
@@ -106,7 +107,7 @@ class UploadManager {
         this.component.$wire.$on('upload:removed', ({ name, tmpFilename }) => this.removeBag.shift(name).finishCallback(tmpFilename))
     }
 
-    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback) {
+    upload(name, file, finishCallback, errorCallback, progressCallback, cancelledCallback, origin = null) {
         this.setUpload(name, {
             files: [file],
             multiple: false,
@@ -115,10 +116,11 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append: false,
+            origin,
         })
     }
 
-    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true) {
+    uploadMultiple(name, files, finishCallback, errorCallback, progressCallback, cancelledCallback, append = true, origin = null) {
         this.setUpload(name, {
             files: Array.from(files),
             multiple: true,
@@ -127,6 +129,7 @@ class UploadManager {
             progressCallback,
             cancelledCallback,
             append,
+            origin,
         })
     }
 
@@ -144,6 +147,16 @@ class UploadManager {
         if (this.uploadBag.get(name).length === 1) {
             this.startUpload(name, uploadObject)
         }
+    }
+
+    callUploadAction(name, method, ...params) {
+        let origin = this.uploadBag.first(name).origin
+
+        // Action origins are consumed once, so restore this upload's context
+        // for each action, including asynchronous completion and errors...
+        if (origin) setNextActionOrigin(origin)
+
+        return this.component.$wire.call(method, name, ...params)
     }
 
     handleSignedUrl(name, url) {
@@ -195,7 +208,7 @@ class UploadManager {
             if ((request.status+'')[0] === '2') {
                 let paths = retrievePaths(request.response && JSON.parse(request.response))
 
-                this.component.$wire.call('_finishUpload', name, paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
+                this.callUploadAction(name, '_finishUpload', paths, this.uploadBag.first(name).multiple, this.uploadBag.first(name).append)
 
                 return
             }
@@ -206,11 +219,11 @@ class UploadManager {
                 errors = request.response
             }
 
-            this.component.$wire.call('_uploadErrored', name, errors, this.uploadBag.first(name).multiple)
+            this.callUploadAction(name, '_uploadErrored', errors, this.uploadBag.first(name).multiple)
         })
 
         request.addEventListener('error', () => {
-            this.component.$wire.call('_uploadErrored', name, null, this.uploadBag.first(name).multiple)
+            this.callUploadAction(name, '_uploadErrored', null, this.uploadBag.first(name).multiple)
         })
 
         this.uploadBag.first(name).request = request
@@ -223,7 +236,7 @@ class UploadManager {
             return { name: file.name, size: file.size, type: file.type }
         })
 
-        this.component.$wire.call('_startUpload', name, fileInfos, uploadObject.multiple);
+        this.callUploadAction(name, '_startUpload', fileInfos, uploadObject.multiple)
 
         setUploadLoading(this.component, name)
     }

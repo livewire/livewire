@@ -20,6 +20,91 @@ use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
 {
+    public function test_island_upload_initialization_remains_renderless()
+    {
+        $component = Livewire::test($this->fileUploadIslandComponent());
+
+        $component->update(calls: [[
+            'method' => '_startUpload',
+            'params' => ['file', [['name' => 'document.txt', 'size' => 100, 'type' => 'text/plain']], false],
+            'metadata' => ['island' => ['name' => 'file-upload', 'mode' => 'morph']],
+        ]])->assertHasNoErrors()->assertDispatched('upload:generatedSignedUrl');
+
+        $this->assertArrayNotHasKey('html', $component->effects);
+        $this->assertArrayNotHasKey('islandFragments', $component->effects);
+    }
+
+    public function test_island_upload_completion_only_renders_the_island_and_can_store_the_file()
+    {
+        Storage::fake('tmp-for-tests');
+        Storage::fake('public');
+        $this->travelTo(Carbon::parse('2026-10-12 12:00:00'));
+        $file = UploadedFile::fake()->create('document.txt', 100, 'text/plain');
+        $paths = (new FileUploadController)->validateAndStore([$file], FileUploadConfiguration::disk());
+        $component = Livewire::test($this->fileUploadIslandComponent());
+        $this->travel(1)->seconds();
+
+        $component->update(calls: [[
+            'method' => '_finishUpload',
+            'params' => ['file', $paths, false],
+            'metadata' => ['island' => ['name' => 'file-upload', 'mode' => 'morph']],
+        ]])->assertHasNoErrors();
+
+        $this->assertArrayNotHasKey('html', $component->effects);
+        $html = implode('', $component->effects['islandFragments']);
+        $this->assertStringContainsString('Island now: 2026-10-12 12:00:01', $html);
+        $this->assertStringNotContainsString('Base now:', $html);
+        $this->assertSame('document.txt', $component->get('file')->getClientOriginalName());
+        Storage::disk('tmp-for-tests')->assertExists(FileUploadConfiguration::path($component->get('file')->getFilename()));
+
+        $component->call('upload')->assertHasNoErrors();
+        Storage::disk('public')->assertExists($component->get('storedPath'));
+    }
+
+    public function test_island_upload_errors_only_render_inside_the_island()
+    {
+        $component = Livewire::test($this->fileUploadIslandComponent());
+
+        $component->update(calls: [[
+            'method' => '_uploadErrored',
+            'params' => ['file', json_encode(['errors' => ['files.0' => ['Upload rejected.']]]), false],
+            'metadata' => ['island' => ['name' => 'file-upload', 'mode' => 'morph']],
+        ]])->assertHasErrors('file')->assertSet('file', null);
+
+        $this->assertArrayNotHasKey('html', $component->effects);
+        $html = implode('', $component->effects['islandFragments']);
+        $this->assertStringContainsString('Upload rejected.', $html);
+        $this->assertStringNotContainsString('Base now:', $html);
+    }
+
+    protected function fileUploadIslandComponent()
+    {
+        return new class extends \Livewire\Component {
+            use WithFileUploads;
+
+            public $file;
+            public $storedPath;
+
+            public function upload()
+            {
+                $this->validate(['file' => 'required|file|max:10240']);
+                $this->storedPath = $this->file->store('uploads', 'public');
+                $this->reset('file');
+            }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <p>Base now: {{ now() }}</p>
+                @island(name: 'file-upload')
+                    <p>Island now: {{ now() }}</p>
+                    <input type="file" wire:model="file">
+                    @error('file') <p>{{ $message }}</p> @enderror
+                @endisland
+            </div>
+            HTML; }
+        };
+    }
+
     public function test_component_must_have_file_uploads_trait_to_accept_file_uploads()
     {
         $this->expectException(MissingFileUploadsTraitException::class);

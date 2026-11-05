@@ -25,7 +25,7 @@ directive('model', ({ el, directive, component, cleanup }) => {
 
     // Handle file uploads differently...
     if (el.type && el.type.toLowerCase() === 'file') {
-        return handleFileUpload(el, expression, component, cleanup)
+        return handleFileUpload(el, expression, component, cleanup, directive)
     }
 
     // Split modifiers at .live boundary
