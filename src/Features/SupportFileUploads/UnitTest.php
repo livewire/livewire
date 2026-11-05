@@ -6,6 +6,7 @@ use App\Livewire\UploadFile;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\Validate;
 use Livewire\Livewire;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
@@ -362,6 +363,33 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors(['file']);
 
         $this->assertEquals('The file failed to upload.', $test->errors()->get('file')[0]);
+    }
+
+    public function test_upload_errors_use_the_component_validation_attributes()
+    {
+        Storage::fake('avatars');
+
+        config()->set('livewire.temporary_file_upload.rules', 'file|max:50');
+
+        $single = Livewire::test(FileUploadWithValidationAttributesComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg')->size(100))
+            ->assertHasErrors(['photo']);
+
+        $multiple = Livewire::test(FileUploadWithValidationAttributesComponent::class)
+            ->set('photos', [UploadedFile::fake()->image('avatar.jpg')->size(100)])
+            ->assertHasErrors(['photos.0']);
+
+        $this->assertEquals('The profile picture field must not be greater than 50 kilobytes.', $single->errors()->get('photo')[0]);
+        $this->assertEquals('The gallery image field must not be greater than 50 kilobytes.', $multiple->errors()->get('photos.0')[0]);
+    }
+
+    public function test_upload_errors_without_details_use_the_component_validation_attributes()
+    {
+        $test = Livewire::test(FileUploadWithValidationAttributesComponent::class)
+            ->call('_uploadErrored', 'photo', null, false)
+            ->assertHasErrors(['photo']);
+
+        $this->assertEquals('The profile picture failed to upload.', $test->errors()->get('photo')[0]);
     }
 
     public function test_image_dimensions_can_be_validated()
@@ -1316,5 +1344,20 @@ class UseProvidedMimeTypeDuringTestingComponent extends FileUploadComponent
         $this->validate([
             'photo' => 'mimetypes:image/png',
         ]);
+    }
+}
+
+class FileUploadWithValidationAttributesComponent extends TestComponent
+{
+    use WithFileUploads;
+
+    #[Validate(as: 'profile picture')]
+    public $photo;
+
+    public $photos = [];
+
+    public function validationAttributes()
+    {
+        return ['photos.*' => 'gallery image'];
     }
 }
