@@ -26,6 +26,12 @@ class SupportIslands extends ComponentHook
         Blade::directive('island', function ($expression) {
             return "<?php if (isset(\$__livewire)) echo \$__livewire->renderIslandDirective({$expression}); ?>";
         });
+
+        foreach (['islandPart', 'endislandPart'] as $directive) {
+            Blade::directive($directive, function () {
+                throw new \InvalidArgumentException('@islandPart must be declared inside an @island with a matching @endislandPart.');
+            });
+        }
     }
 
     public static function registerInlineIslandPrecompiler()
@@ -86,6 +92,10 @@ class SupportIslands extends ComponentHook
 
         if ($this->component->hasRenderedIslandFragments()) {
             $context->addEffect('islandFragments', $this->component->getRenderedIslandFragments());
+        }
+
+        if ($parts = $this->component->getRenderedIslandParts()) {
+            $context->addEffect('islandParts', $parts);
         }
     }
 

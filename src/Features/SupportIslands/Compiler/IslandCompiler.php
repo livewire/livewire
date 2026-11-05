@@ -12,6 +12,8 @@ class IslandCompiler
 
     protected ?string $imports;
 
+    protected ?IslandPartCompiler $parts = null;
+
     public function __construct(
         public string $pathSignature,
         public string $contents,
@@ -32,6 +34,11 @@ class IslandCompiler
 
     public function process(): string
     {
+        if (str_contains($this->mutableContents, '@islandPart')) {
+            $this->parts = new IslandPartCompiler;
+            $this->mutableContents = $this->parts->prepare($this->mutableContents);
+        }
+
         $compiler = $this->getHackedBladeCompiler();
 
         $currentNestingLevel = 1;
@@ -94,6 +101,23 @@ class IslandCompiler
         $token = $hash . '-' . $occurrence;
         $cachedPath = self::getCachedPathFromToken($token);
 
+        $parts = [];
+
+        if ($this->parts) {
+            $innerContent = $this->parts->extract($innerContent, function ($id, $body) use (&$parts, $token) {
+                $name = $this->parts->names[$id];
+                if (isset($parts[$name])) throw new \InvalidArgumentException("Duplicate @islandPart name [{$name}] in one island.");
+                $partToken = $token . '-part-' . $id;
+                $parts[$name] = $partToken;
+                $path = self::getCachedPathFromToken($partToken);
+                File::ensureDirectoryExists(dirname($path), 0777);
+                file_put_contents($path, ($this->imports ? $this->imports . "\n\n" : '') . $body);
+                app('livewire.compiler')->cacheManager->prepareGeneratedFileForCompilation($path);
+
+                return $body;
+            });
+        }
+
         // Build the output directive for the island...
         $output = '@island';
 
@@ -101,6 +125,10 @@ class IslandCompiler
             $output .= '(token: \'' . $token . '\')';
         } else {
             $output .= '(' . $expression . ', token: \'' . $token . '\')';
+        }
+
+        if ($parts) {
+            $output = substr($output, 0, -1) . ', parts: ' . var_export($parts, true) . ')';
         }
 
         // Inject scope provider code at the top of the island view...
