@@ -293,6 +293,19 @@ describe('diffAndConsolidate', () => {
         })
     })
 
+    it('handles arrays with string keys that start with a digit', () => {
+        let leftArr = []
+        let rightArr = []
+        rightArr['0abc'] = 'foo'
+
+        expect(diffAndConsolidate(
+            { answers: leftArr },
+            { answers: rightArr }
+        )).toEqual({
+            'answers.0abc': 'foo'
+        })
+    })
+
     it('does not consolidate single property changes', () => {
         // Single property changes should remain granular for wire:target to work
         // e.g., wire:target="form.text" needs "form.text" not "form"
