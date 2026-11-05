@@ -3,6 +3,7 @@ import { findComponentByEl } from "@/store"
 import Alpine from 'alpinejs'
 import { extractFragmentMetadataFromMarkerNode, isEndFragmentMarker, isStartFragmentMarker } from "./fragment"
 import { transitionDomMutation } from "./directives/wire-transition"
+import { rememberLivewireMorph } from "./features/supportSubtreeHashes"
 
 export async function morph(component, el, html) {
     let wrapperTag = getTagName(el.parentElement)
@@ -62,7 +63,13 @@ export async function morph(component, el, html) {
     }
 
     await transitionDomMutation(el, to, () => {
+        // Both synchronous with the morph itself, so nothing else can run in between...
+        trigger('morph.starting', { el, toEl: to, component })
+
         Alpine.morph(el, to, getMorphConfig(component))
+
+        // ...and before Alpine's mutation observer sees what moved...
+        trigger('morph.finished', { el, component })
     }, transitionOptions)
 
     trigger('morphed', { el, component })
@@ -117,14 +124,20 @@ export async function morphFragment(component, startNode, endNode, toHTML) {
     let fromEl = islandHasTransition ? fromContainer : document.createElement('div')
 
     await transitionDomMutation(fromEl, toContainer, () => {
+        let island = extractFragmentMetadataFromMarkerNode(startNode).name
+
+        trigger('morph.starting', { el: startNode.parentElement, toEl: toContainer, component, island })
+
         Alpine.morphBetween(startNode, endNode, toContainer, getMorphConfig(component))
+
+        trigger('morph.finished', { el: startNode.parentElement, component })
     }, transitionOptions)
 
     trigger('island.morphed', { startNode, endNode, component })
 }
 
 function getMorphConfig(component) {
-    return {
+    let config = {
         updating: (el, toEl, childrenOnly, skip, skipChildren, skipUntil) => {
             // Skip fragments...
             if (isStartFragmentMarker(el) && isStartFragmentMarker(toEl)) {
@@ -190,7 +203,7 @@ function getMorphConfig(component) {
         added: (el) => {
             if (isntElement(el)) return
 
-            trigger('morph.added', { el })
+            trigger('morph.added', { el, component })
         },
 
         key: (el) => {
@@ -206,6 +219,8 @@ function getMorphConfig(component) {
 
         lookahead: false,
     }
+
+    return rememberLivewireMorph(config)
 }
 
 function isntElement(el) {

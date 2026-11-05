@@ -225,6 +225,22 @@ return [
 
     /*
     |---------------------------------------------------------------------------
+    | Skip Unchanged Elements
+    |---------------------------------------------------------------------------
+    |
+    | When enabled, Livewire remembers the markup of large keyed elements, and
+    | updates leave out (and morphing skips) the ones that haven't changed.
+    | Elements whose markup is smaller than "min_size" bytes aren't tracked.
+    |
+    */
+
+    'skip_unchanged' => [
+        'enabled' => false,
+        'min_size' => 1024,
+    ],
+
+    /*
+    |---------------------------------------------------------------------------
     | Pagination Theme
     |---------------------------------------------------------------------------
     |
