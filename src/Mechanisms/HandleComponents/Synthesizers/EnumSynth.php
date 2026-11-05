@@ -16,6 +16,8 @@ class EnumSynth extends Synth {
     static function hydrateFromType($type, $value) {
         if ($value === null || $value === '') return null;
 
+        if (is_array($value)) return $value;
+
         return $type::from($value);
     }
 
@@ -28,6 +30,8 @@ class EnumSynth extends Synth {
 
     function hydrate($value, $meta) {
         if ($value === null || $value === '') return null;
+
+        if (is_array($value)) return $value;
 
         $class = $meta['class'] ?? null;
 

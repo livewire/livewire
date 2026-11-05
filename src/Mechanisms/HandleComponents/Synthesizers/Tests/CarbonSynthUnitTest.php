@@ -78,6 +78,26 @@ class CarbonSynthUnitTest extends \Tests\TestCase
         $this->expectException(\Exception::class);
         $testable->updateProperty('date', 'Bad Date');
     }
+
+    public function test_setting_a_date_property_to_an_array_aborts_with_419()
+    {
+        config()->set('app.debug', false);
+
+        Livewire::test(ComponentWithNullablePublicCarbonCaster::class)
+            ->set('date', [])
+            ->assertStatus(419);
+
+        Livewire::test(new class extends TestComponent {
+            public Carbon $date;
+
+            public function mount()
+            {
+                $this->date = Carbon::parse('2026-01-01');
+            }
+        })
+            ->set('date', [])
+            ->assertStatus(419);
+    }
 }
 
 class ComponentWithPublicCarbonCaster extends TestComponent
