@@ -1358,6 +1358,49 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_replace_url_change_in_the_same_request_as_a_push_does_not_overwrite_the_previous_history_entry()
+    {
+        Livewire::visit([
+            new class extends Component {
+                #[BaseUrl(history: true)]
+                public $q = '';
+
+                #[BaseUrl]
+                public $filter = '';
+
+                public function search($q)
+                {
+                    $this->q = $q;
+                    $this->filter = '';
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <button dusk="search-a" wire:click="search('a')">Search a</button>
+                    <button dusk="search-b" wire:click="search('b')">Search b</button>
+                    <button dusk="filter" wire:click="$set('filter', 'x')">Filter x</button>
+                </div>
+                HTML; }
+            },
+        ])
+        ->waitForLivewire()->click('@search-a')
+        ->assertQueryStringHas('q', 'a')
+
+        ->waitForLivewire()->click('@filter')
+        ->assertQueryStringHas('filter', 'x')
+
+        ->waitForLivewire()->click('@search-b')
+        ->assertQueryStringHas('q', 'b')
+        ->assertQueryStringMissing('filter')
+
+        // Back should return to the entry from before "Search b", with its filter intact...
+        ->back()
+        ->pause(100)
+        ->assertQueryStringHas('q', 'a')
+        ->assertQueryStringHas('filter', 'x')
+        ;
+    }
+
     public function test_url_history_push_mode_multiple_back_forward_navigations()
     {
         Livewire::visit([

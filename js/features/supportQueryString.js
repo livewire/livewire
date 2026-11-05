@@ -3,6 +3,27 @@ import { dataGet } from '@/utils'
 import Alpine from 'alpinejs'
 import { track } from '@/plugins/history'
 
+// Replace-type URL updates made while a commit is in flight are held back until
+// after its push-type updates, so they land on the entry the commit creates
+// instead of overwriting the previous one...
+let deferredReplaces = new WeakMap()
+
+on('commit', ({ component, succeed, fail }) => {
+    if (! deferredReplaces.has(component)) deferredReplaces.set(component, new Map)
+
+    let flush = () => {
+        let replaces = deferredReplaces.get(component)
+
+        deferredReplaces.delete(component)
+
+        replaces && replaces.forEach(replace => replace())
+    }
+
+    // Wait for every other succeed callback (including the pushes) to run first...
+    succeed(() => queueMicrotask(flush))
+    fail(flush)
+})
+
 on('effect', ({ component, effects, cleanup }) => {
     let queryString
 
@@ -23,7 +44,15 @@ on('effect', ({ component, effects, cleanup }) => {
 
         if (use === 'replace') {
             let effectReference = Alpine.effect(() => {
-                replace(dataGet(component.reactive, name))
+                let value = dataGet(component.reactive, name)
+
+                let deferred = deferredReplaces.get(component)
+
+                if (deferred) {
+                    deferred.set(name, () => replace(value))
+                } else {
+                    replace(value)
+                }
             })
 
             cleanup(() => Alpine.release(effectReference))
