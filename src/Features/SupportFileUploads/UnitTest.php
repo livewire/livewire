@@ -934,6 +934,47 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(1, $disk->readStreamCalls);
     }
 
+    public function test_local_office_uploads_are_detected_when_their_directory_is_beyond_the_sample()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 'tmp-for-tests');
+        $disk = Storage::fake('tmp-for-tests');
+        $disk->put('livewire-tmp/spreadsheet.xls', file_get_contents(__DIR__.'/test_spreadsheet.xls'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('spreadsheet.xls');
+
+        $this->assertSame('application/vnd.ms-excel', $file->getMimeType());
+        $this->assertTrue(validator(['file' => $file], ['file' => 'mimes:xls|mimetypes:application/vnd.ms-excel'])->passes());
+    }
+
+    public function test_local_office_uploads_are_not_identified_by_their_filename()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 'tmp-for-tests');
+        $disk = Storage::fake('tmp-for-tests');
+        $disk->put('livewire-tmp/spreadsheet.doc', file_get_contents(__DIR__.'/test_spreadsheet.xls'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('spreadsheet.doc');
+
+        $this->assertSame('application/vnd.ms-excel', $file->getMimeType());
+        $this->assertFalse(validator(['file' => $file], ['file' => 'mimes:doc|mimetypes:application/msword'])->passes());
+    }
+
+    public function test_remote_office_uploads_still_read_only_the_sample()
+    {
+        if (! in_array('livewire.mime-read-counter', stream_get_filters())) {
+            stream_filter_register('livewire.mime-read-counter', TemporaryUploadReadCountingFilter::class);
+        }
+
+        $disk = $this->useS3LikeTemporaryUploadDisk();
+        $disk->countReadBytes = true;
+        $disk->put('livewire-tmp/spreadsheet.xls', file_get_contents(__DIR__.'/test_spreadsheet.xls'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('spreadsheet.xls');
+
+        $this->assertSame('application/x-ole-storage', $file->getMimeType());
+        $this->assertSame(64 * 1024, $disk->readBytes);
+        $this->assertSame(1, $disk->readStreamCalls);
+    }
+
     public function test_temporary_upload_mime_type_does_not_fall_back_to_storage_metadata_for_empty_files()
     {
         $disk = $this->useS3LikeTemporaryUploadDisk();
@@ -1118,21 +1159,43 @@ class UnitTest extends \Tests\TestCase
             new \League\MimeTypeDetection\ExtensionMimeTypeDetector(),
         );
 
-        $disk = new class(new \League\Flysystem\Filesystem($adapter), $adapter, ['root' => $root]) extends FilesystemAdapter {
+        $disk = new class(new \League\Flysystem\Filesystem($adapter), \Mockery::mock(\League\Flysystem\FilesystemAdapter::class), ['root' => $root]) extends FilesystemAdapter {
             public $canRead = true;
             public $readStreamCalls = 0;
+            public $countReadBytes = false;
+            public $readBytes = 0;
 
             public function readStream($path)
             {
                 $this->readStreamCalls++;
 
-                return $this->canRead ? parent::readStream($path) : null;
+                $stream = $this->canRead ? parent::readStream($path) : null;
+
+                if ($this->countReadBytes && is_resource($stream)) {
+                    stream_filter_append($stream, 'livewire.mime-read-counter', STREAM_FILTER_READ, $this);
+                }
+
+                return $stream;
             }
         };
 
         Storage::set('tmp-for-tests', $disk);
 
         return $disk;
+    }
+}
+
+class TemporaryUploadReadCountingFilter extends \php_user_filter
+{
+    public function filter($in, $out, &$consumed, bool $closing): int
+    {
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            $consumed += $bucket->datalen;
+            $this->params->readBytes += $bucket->datalen;
+            stream_bucket_append($out, $bucket);
+        }
+
+        return PSFS_PASS_ON;
     }
 }
 
