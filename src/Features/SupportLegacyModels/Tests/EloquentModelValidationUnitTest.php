@@ -6,6 +6,7 @@ use Sushi\Sushi;
 use Livewire\Livewire;
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class EloquentModelValidationUnitTest extends \Tests\TestCase
 {
@@ -227,6 +228,13 @@ class EloquentModelValidationUnitTest extends \Tests\TestCase
             ->call('saveAge', '32.5')
             ->assertHasErrors(['contact.age' => 'integer']);
     }
+
+    public function test_model_attribute_cast_to_an_object_does_not_break_validation()
+    {
+        Livewire::test(ComponentWithCastedModelAttributes::class)
+            ->call('save')
+            ->assertHasNoErrors();
+    }
 }
 
 class Foo extends Model
@@ -395,12 +403,13 @@ class ContactWithCasts extends Model
     use Sushi;
 
     protected $rows = [
-        ['id' => 1, 'phone' => null, 'age' => 40],
+        ['id' => 1, 'phone' => null, 'age' => 40, 'loyalty_points' => 1500],
     ];
 
     protected $casts = [
         'phone' => 'encrypted',
         'age' => 'integer',
+        'loyalty_points' => ObjectCast::class,
     ];
 }
 
@@ -433,5 +442,18 @@ class ComponentWithCastedModelAttributes extends Component
     public function render()
     {
         return \view('dump-errors');
+    }
+}
+
+class ObjectCast implements CastsAttributes
+{
+    public function get($model, string $key, mixed $value, array $attributes): mixed
+    {
+        return (object) ['value' => $value];
+    }
+
+    public function set($model, string $key, mixed $value, array $attributes): mixed
+    {
+        return $value->value ?? $value;
     }
 }
