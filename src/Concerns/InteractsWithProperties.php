@@ -109,9 +109,27 @@ trait InteractsWithProperties
             $properties = $properties[0];
         }
 
-        $keysToReset = array_diff(array_keys($this->all()), $properties);
+        $keysToReset = [];
 
-        if($keysToReset === []) {
+        foreach (array_keys($this->all()) as $key) {
+            if (in_array($key, $properties)) continue;
+
+            if (! isset($this->{$key}) || ! is_subclass_of($this->{$key}, Form::class)) {
+                $keysToReset[] = $key;
+
+                continue;
+            }
+
+            foreach (array_keys($this->{$key}->all()) as $field) {
+                $path = $key . '.' . $field;
+
+                if (in_array($path, $properties)) continue;
+
+                $keysToReset[] = $path;
+            }
+        }
+
+        if ($keysToReset === []) {
             return;
         }
 
