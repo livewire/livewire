@@ -4,6 +4,7 @@ namespace Livewire\Mechanisms\HandleComponents;
 
 use function Livewire\{on, trigger, wrap };
 use Livewire\Mechanisms\Mechanism;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Mechanisms\HandleSynths\HandleSynths;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -384,10 +385,14 @@ class HandleComponents extends Mechanism
     {
         array_push(static::$renderStack, $component);
 
+        $depth = app(ExtendBlade::class)->renderCleanupDepth();
+
         try {
             return $callback();
         } finally {
             array_pop(static::$renderStack);
+
+            app(ExtendBlade::class)->unwindRenderCleanups($depth);
         }
     }
 

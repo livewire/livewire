@@ -16,6 +16,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestComponent;
 
+use function Livewire\trigger;
+
 class UnitTest extends \Tests\TestCase
 {
     public function test_compilation_callbacks_use_the_currently_compiling_blade_path()
@@ -178,6 +180,76 @@ class UnitTest extends \Tests\TestCase
 
         View::make('render-component', ['component' => 'foo'])->render();
     }
+
+    public function test_render_state_is_restored_when_a_component_render_throws()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        try {
+            Livewire::test(NormalExceptionIsThrownInViewStub::class);
+        } catch (ErrorException) {}
+
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+        $this->assertStringContainsString('@foo', Blade::render('<div>@foo</div>'));
+    }
+
+    public function test_render_state_is_restored_when_a_nested_component_render_throws()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        $output = Blade::render('@livewire(\Livewire\Mechanisms\ExtendBlade\ParentRecoversFromChildRenderExceptionStub::class)');
+
+        // Views rendered after the failed child should still be bound to the parent...
+        $this->assertStringContainsString('Caleb', $output);
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+        $this->assertStringContainsString('@foo', Blade::render('<div>@foo</div>'));
+    }
+
+    public function test_render_state_is_restored_when_an_island_render_throws()
+    {
+        try {
+            Livewire::test(IslandThrowsWhileRenderingStub::class);
+        } catch (ErrorException) {}
+
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+    }
+
+    public function test_a_render_event_triggered_outside_of_livewire_still_applies_livewire_only_directives()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        $finish = trigger('render', Livewire::new(ExtendBladeTestComponent::class), view('null-view'), []);
+
+        $inside = Blade::render('<div>@foo</div>');
+
+        $finish($inside);
+
+        $outside = Blade::render('<span>@foo</span>');
+
+        $this->assertEquals('<div>bar</div>', $inside);
+        $this->assertEquals('<span>@foo</span>', $outside);
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+    }
+
+    public function test_flushing_state_restores_a_render_that_never_finished()
+    {
+        Livewire::directive('foo', function ($expression) {
+            return 'bar';
+        });
+
+        trigger('render', Livewire::new(ExtendBladeTestComponent::class), view('null-view'), []);
+
+        app('livewire')->flushState();
+
+        $this->assertFalse(ExtendBlade::isRenderingLivewireComponent());
+        $this->assertStringContainsString('@foo', Blade::render('<div>@foo</div>'));
+    }
 }
 
 class ExtendBladeTestComponent extends Component
@@ -303,5 +375,42 @@ class AuthorizationExceptionIsThrownInComponentMountStub extends TestComponent
     public function mount()
     {
         throw new AuthorizationException();
+    }
+}
+
+class ParentRecoversFromChildRenderExceptionStub extends Component
+{
+    public $name = 'Caleb';
+
+    public function renderChild()
+    {
+        try {
+            return Livewire::mount(NormalExceptionIsThrownInViewStub::class);
+        } catch (ErrorException) {}
+    }
+
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            {!! $this->renderChild() !!}
+
+            @include('show-name-with-this')
+        </div>
+        HTML;
+    }
+}
+
+class IslandThrowsWhileRenderingStub extends Component
+{
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            @island
+                <div>{{ $undefined }}</div>
+            @endisland
+        </div>
+        HTML;
     }
 }
