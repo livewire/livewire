@@ -2,10 +2,10 @@ import { directive, getDirectives } from "@/directives"
 import { setNextActionMetadata, setNextActionOrigin, sessionIsExpired } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
-directive('poll', ({ el, directive, component }) => {
+directive('poll', ({ el, directive, component, cleanup }) => {
     let interval = extractDurationFrom(directive.modifiers, 2000)
 
-    let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    let { start, stop, pauseWhile, throttleWhile, stopWhen } = poll(() => {
         triggerComponentRequest(el, directive, component)
     }, interval)
 
@@ -17,6 +17,10 @@ directive('poll', ({ el, directive, component }) => {
     pauseWhile(() => livewireIsOffline())
     pauseWhile(() => sessionIsExpired())
     stopWhen(() => theElementIsDisconnected(el))
+
+    // A morph that changes the attribute (like "wire:poll.5s" to "wire:poll.30s")
+    // removes it and starts a new poll, so this one needs to be stopped...
+    cleanup(() => stop())
 })
 
 function triggerComponentRequest(el, directive, component) {
@@ -33,17 +37,24 @@ export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
+    let clear
+
+    let stop = () => {
+        clear?.()
+        clear = null
+    }
 
     return {
         start() {
-            let clear = syncronizedInterval(interval, () => {
-                if (stopConditions.some(i => i())) return clear()
+            clear = syncronizedInterval(interval, () => {
+                if (stopConditions.some(i => i())) return stop()
                 if (pauseConditions.some(i => i())) return
                 if (throttleConditions.some(i => i()) && Math.random() < .95) return
 
                 callback()
             })
         },
+        stop,
         pauseWhile(condition) {
             pauseConditions.push(condition)
         },
