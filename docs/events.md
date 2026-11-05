@@ -164,6 +164,12 @@ To dispatch the event only to the component where the script resides and not oth
 this.$dispatchSelf('post-created');
 ```
 
+To dispatch the event to every listener *except* those of the component where the script resides, you can use `dispatchOthers()`:
+
+```js
+this.$dispatchOthers('post-created');
+```
+
 You can pass any additional parameters to the event by passing an object as a second argument to `dispatch()`:
 
 ```html
@@ -330,6 +336,33 @@ new class extends Component {
 };
 ```
 
+## Dispatching an event to other components
+
+Using the `dispatch()->others()` modifier, you can dispatch an event to every listener *except* those of the component it was triggered from. This is useful when a component listens for an event it also dispatches: it can refresh itself within the same request, so only the other listeners need to be notified:
+
+```php
+<?php // resources/views/components/post/⚡list.blade.php
+
+use Livewire\Attributes\On;
+use Livewire\Component;
+
+new class extends Component {
+    public function save()
+    {
+        // Create post...
+
+        $this->refreshPosts();
+        $this->dispatch('post-created')->others();
+    }
+
+    #[On('post-created')]
+    public function refreshPosts()
+    {
+        // Refresh the posts...
+    }
+};
+```
+
 ## Dispatching events from Blade templates
 
 You can dispatch events directly from your Blade templates using the `$dispatch` JavaScript function. This is useful when you want to trigger an event from a user interaction, such as a button click:
@@ -351,6 +384,8 @@ If you want to dispatch an event directly to another component you can use the `
 ```
 
 In this example, when the button is clicked, the `show-post-modal` event will be dispatched directly to the `Posts` component.
+
+Similarly, `$dispatchSelf()` and `$dispatchOthers()` dispatch only to the current component's listeners, or to every listener except them.
 
 ## Testing dispatched events
 
