@@ -6,7 +6,6 @@ use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 use function Livewire\trigger;
