@@ -1889,6 +1889,90 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_a_response_landing_during_a_navigation_does_not_morph_the_page_that_was_navigated_away_from()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public function go()
+                {
+                    $this->dispatch('refresh-others');
+                    $this->dispatch('go-elsewhere');
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button type="button" wire:click="go" dusk="go">Go</button>
+
+                        <livewire:child />
+                    </div>
+
+                    @script
+                    <script>
+                        window.__morphedDetached = false
+                        window.__navigated = false
+
+                        document.addEventListener('livewire:navigated', () => window.__navigated = true)
+
+                        Livewire.hook('morph', ({ el }) => {
+                            if (! el.isConnected) window.__morphedDetached = true
+                        })
+
+                        Livewire.interceptMessage(({ onFinish }) => {
+                            onFinish(() => {
+                                if (window.__navigated) window.__heldResponseSettled = true
+                            })
+                        })
+
+                        // Hold the child's refresh response until the navigation has swapped the
+                        // page, so it gets processed against the components that were torn down...
+                        Livewire.hook('payload.intercept', () => new Promise(resolve => {
+                            if (! window.__holdNextResponse || window.__navigated) return resolve()
+
+                            window.__holdNextResponse = false
+
+                            document.addEventListener('livewire:navigated', () => setTimeout(resolve), { once: true })
+                        }))
+
+                        $wire.on('go-elsewhere', () => {
+                            window.__holdNextResponse = true
+
+                            Livewire.navigate('/second')
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                public $count = 0;
+
+                #[On('refresh-others')]
+                public function refresh()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div x-data="{ revealed: false }">
+                        <span x-text="revealed ? 'revealed' : 'hidden'"></span>
+
+                        <span>Refreshed {{ $count }} times</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForNavigate()->click('@go')
+            ->assertSee('On second')
+            ->waitUntil('window.__heldResponseSettled')
+            ->assertConsoleLogHasNoErrors()
+            ->assertScript('return window.__morphedDetached', false);
+    }
+
     protected function registerComponentTestRoutes($routes)
     {
         $registered = 0;

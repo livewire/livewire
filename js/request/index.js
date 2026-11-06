@@ -434,6 +434,8 @@ function sendMessages() {
                             if (payload.id === message.component.id) {
                                 if (discardIfSuperseded(message)) return
 
+                                if (discardIfDestroyed(message)) return
+
                                 // A skipped payload still counts as a response landing and can supersede older overlaps...
                                 supersedeOlderMessages(message)
 
@@ -452,6 +454,8 @@ function sendMessages() {
 
                         if (snapshot.memo.id === message.component.id) {
                             if (discardIfSuperseded(message)) return
+
+                            if (discardIfDestroyed(message)) return
 
                             // This response has landed, so any older response it overlapped must not land later...
                             supersedeOlderMessages(message)
@@ -519,6 +523,19 @@ function discardIfSuperseded(message) {
 
     // A newer overlapping model.live response has already landed. Settle the
     // action and loading-state lifecycle without applying this older payload...
+    message.resolveActionPromises([], [])
+    message.invokeOnFinish()
+
+    return true
+}
+
+function discardIfDestroyed(message) {
+    // Destroying a component unlinks it from its element. If that happened while this
+    // request was in flight (wire:navigate swapping the page, for example), the element
+    // is detached and its Alpine scopes are gone, so morphing it would evaluate every
+    // expression without them. Settle the lifecycle without applying the payload...
+    if (message.component.el.__livewire === message.component) return false
+
     message.resolveActionPromises([], [])
     message.invokeOnFinish()
 
