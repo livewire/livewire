@@ -6,7 +6,6 @@ use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use Livewire\Features\SupportStreaming\SupportStreaming;
 use Livewire\Features\SupportIslands\Compiler\IslandCompiler;
 use Livewire\Drawer\Utils;
-use Illuminate\Support\Str;
 
 use function Livewire\trigger;
 
@@ -277,9 +276,9 @@ trait HandlesIslands
     {
         // Islands in an @include'd partial are only compiled with that partial,
         // so find the partial whose path hash matches the token and compile it...
-        $hash = Str::before($token, '-');
         $finder = app('view')->getFinder();
         $cacheManager = app('livewire.compiler')->cacheManager;
+        $compiler = app('blade.compiler');
 
         $paths = collect($finder->getPaths())
             ->merge(collect($finder->getHints())->flatten())
@@ -295,9 +294,11 @@ trait HandlesIslands
             ->contains('@island');
 
         foreach ($candidates as $file) {
-            if ($cacheManager->getHash($file->getPathname()) !== $hash) continue;
+            $path = $file->getPathname();
 
-            app('blade.compiler')->compile($file->getPathname());
+            if ($cacheManager->getHash($path) !== (string) str($token)->before('-')) continue;
+
+            $compiler->compile($path);
 
             return;
         }
