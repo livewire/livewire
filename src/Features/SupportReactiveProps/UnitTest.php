@@ -59,15 +59,16 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(SupportReactiveProps::valuesMatch(42, 42));
         $this->assertTrue(SupportReactiveProps::valuesMatch(true, true));
         $this->assertTrue(SupportReactiveProps::valuesMatch(null, null));
-        $this->assertTrue(SupportReactiveProps::valuesMatch([1, 2, 3], [1, 2, 3]));
-        $this->assertTrue(SupportReactiveProps::valuesMatch(['a' => 1, 'b' => 2], ['a' => 1, 'b' => 2]));
+        $this->assertTrue(SupportReactiveProps::valuesMatch([[1, 2, 3], ['s' => 'arr']], [1, 2, 3], new ValuesMatchParent));
+        $this->assertTrue(SupportReactiveProps::valuesMatch([['a' => 1, 'b' => 2], ['s' => 'arr']], ['a' => 1, 'b' => 2], new ValuesMatchParent));
+        $this->assertTrue(SupportReactiveProps::valuesMatch([['ids' => [[1, 2], ['s' => 'arr']]], ['s' => 'arr']], ['ids' => [1, 2]], new ValuesMatchParent));
     }
 
     public function test_values_match_returns_false_for_different_scalars_and_arrays()
     {
         $this->assertFalse(SupportReactiveProps::valuesMatch('hello', 'world'));
         $this->assertFalse(SupportReactiveProps::valuesMatch(42, 43));
-        $this->assertFalse(SupportReactiveProps::valuesMatch([1, 2, 3], [1, 2, 4]));
+        $this->assertFalse(SupportReactiveProps::valuesMatch([[1, 2, 3], ['s' => 'arr']], [1, 2, 4], new ValuesMatchParent));
         $this->assertFalse(SupportReactiveProps::valuesMatch('5', 5));
     }
 
@@ -301,4 +302,9 @@ class Article extends \Illuminate\Database\Eloquent\Model
     {
         return $this->belongsTo(Author::class);
     }
+}
+
+class ValuesMatchParent extends Component
+{
+    public function render() { return '<div></div>'; }
 }
