@@ -61,6 +61,50 @@ new class extends Component {
 
 Because `$post->only(...)` returns an associative array of model attributes and values based on the names you pass into it, the `$title` and `$description` properties will be initially set to the `title` and `description` of the `$post` model from the database without having to set each one individually.
 
+### Property aliases
+
+When the property names in your component don't match the keys in the data you're filling from, you can pass a second argument to `fill()` to define aliases.
+
+The alias array maps each source key to the property it should be assigned to:
+
+```php
+$this->fill($post, [
+    'category_id' => 'category',
+    'content' => 'delta',
+    'allow_comments' => 'allowComments',
+]);
+```
+
+In this example, the `category_id`, `content`, and `allow_comments` attributes from the `$post` model will be assigned to the `$category`, `$delta`, and `$allowComments` properties respectively.
+
+This is especially useful when your model attributes use database-oriented names while your component properties use names that are more convenient for your UI:
+
+```php
+<?php // resources/views/components/post/⚡edit.blade.php
+
+use Livewire\Component;
+use App\Models\Post;
+
+new class extends Component {
+    public ?int $category = null;
+
+    public string $delta = '';
+
+    public bool $allowComments = false;
+
+    public function mount(Post $post)
+    {
+        $this->fill($post, [
+            'category_id' => 'category',
+            'content' => 'delta',
+            'allow_comments' => 'allowComments',
+        ]);
+    }
+
+    // ...
+};
+```
+
 ## Data binding
 
 Livewire supports two-way data binding through the `wire:model` HTML attribute. This allows you to easily synchronize data between component properties and HTML inputs, keeping your user interface and component state in sync.
