@@ -50,6 +50,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('child-component', ChildComponent::class);
             Livewire::component('script-component', ScriptComponent::class);
             Livewire::component('page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class);
+            Livewire::component('page-with-hover-link-to-an-error-page', PageWithHoverLinkToAnErrorPage::class);
             Livewire::component('page-with-redirect-to-external-page', PageWithRedirectToExternalPage::class);
             Livewire::component('page-with-redirect-to-internal-which-has-external-link', PageWithRedirectToInternalWhichHasExternalLinkPage::class);
 
@@ -127,6 +128,7 @@ class BrowserTest extends \Tests\BrowserTestCase
             Route::get('/no-javascript', fn () => '<div dusk="no-javascript-side">No javascript side triggered.</div>')
                 ->middleware('web')->name('no-javascript');
             Route::get('/page-with-link-to-an-error-page', PageWithLinkToAnErrorPage::class)->middleware('web');
+            Route::get('/page-with-hover-link-to-an-error-page', PageWithHoverLinkToAnErrorPage::class)->middleware('web');
         };
     }
 
@@ -1803,6 +1805,24 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_prefetching_an_error_page_without_visiting_it_does_not_force_a_full_page_refresh_when_the_back_button_is_pressed()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first')
+                ->waitForNavigate()->tap(fn ($b) => $b->script("Livewire.navigate('/page-with-hover-link-to-an-error-page')"))
+                ->assertSee('Hover link to page that does not exist')
+                ->tap(fn ($b) => $b->script('window.pageWasNotReloaded = true'))
+                ->mouseover('@hover.link.to.an.error.page')
+                // There's no hook for a finished prefetch, so give it time to land...
+                ->pause(500)
+                ->waitForNavigate()->back()
+                ->assertPathIs('/first')
+                ->assertScript('return window.pageWasNotReloaded', true)
+            ;
+        });
+    }
+
     public function test_an_error_with_fetch_such_as_a_backend_redirect_to_an_external_site_does_not_break_livewire_and_progress_bar_is_removed()
     {
         $this->browse(function (Browser $browser) {
@@ -2659,6 +2679,21 @@ class PageWithLinkToAnErrorPage extends Component
             })
         </script>
         @endscript
+        HTML;
+    }
+}
+
+class PageWithHoverLinkToAnErrorPage extends Component
+{
+    #[Layout('test-views::layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            <a wire:navigate.hover dusk="hover.link.to.an.error.page" href="/page-that-does-not-exist">
+                Hover link to page that does not exist
+            </a>
+        </div>
         HTML;
     }
 }
