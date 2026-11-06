@@ -282,20 +282,25 @@ trait HandlesIslands
         $finder = app('view')->getFinder();
         $cacheManager = app('livewire.compiler')->cacheManager;
 
-        foreach (array_merge($finder->getPaths(), ...array_values($finder->getHints())) as $directory) {
-            if (! is_dir($directory)) continue;
+        $paths = collect($finder->getPaths())
+            ->merge(...array_values($finder->getHints()))
+            ->filter(fn ($path) => is_dir($path))
+            ->unique()
+            ->values()
+            ->all();
 
-            foreach (File::allFiles($directory) as $file) {
-                $path = $file->getPathname();
+        $candidates = \Symfony\Component\Finder\Finder::create()
+            ->files()
+            ->in($paths)
+            ->name('*.blade.php')
+            ->contains('@island');
 
-                if (! str_ends_with($path, '.blade.php')) continue;
+        foreach ($candidates as $file) {
+            if ($cacheManager->getHash($file->getPathname()) !== $hash) continue;
 
-                if ($cacheManager->getHash($path) !== $hash) continue;
+            app('blade.compiler')->compile($file->getPathname());
 
-                app('blade.compiler')->compile($path);
-
-                return;
-            }
+            return;
         }
     }
 
