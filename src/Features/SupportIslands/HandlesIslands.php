@@ -282,7 +282,7 @@ trait HandlesIslands
         $cacheManager = app('livewire.compiler')->cacheManager;
 
         $paths = collect($finder->getPaths())
-            ->merge(...array_values($finder->getHints()))
+            ->merge(collect($finder->getHints())->flatten())
             ->filter(fn ($path) => is_dir($path))
             ->unique()
             ->values()
