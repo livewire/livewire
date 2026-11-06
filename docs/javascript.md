@@ -165,6 +165,10 @@ Livewire.interceptMessage(callback)           // Global (all components)
 $wire.interceptRequest(callback)              // Requests involving this component
 $wire.interceptRequest('save', callback)      // Only when request contains 'save'
 Livewire.interceptRequest(callback)           // Global (all requests)
+
+// Navigate interceptors - fire for each page navigation
+Livewire.interceptNavigate(callback)           // Global (all navigations)
+
 ```
 
 All interceptors return an unsubscribe function:
@@ -319,6 +323,37 @@ $wire.interceptRequest(({ request, onSend, onCancel, onSuccess, onError, onFailu
     onFinish(() => {})
 })
 ```
+
+### Navigation interceptors
+
+Navigation interceptors fire for each page navigation triggered by `wire:navigate`.
+
+```js
+Livewire.interceptNavigate(({ url, onRedirect, onError, onFailure, onFinish }) => {
+    // url - URL object of the destination
+
+    onRedirect(({ url, response, body, preventDefault }) => {
+        // The server redirected to another page on this site; url is where to
+        preventDefault() // Stay on the current page
+    })
+
+    onError(({ response, body, preventDefault }) => {
+        // The response isn't a 2xx
+        preventDefault() // Stay on the current page
+    })
+
+    onFailure(({ error, preventDefault }) => {
+        // The request failed, such as a network error
+        preventDefault() // Stay on the current page, even when offline
+    })
+
+    onFinish(() => {
+        // Always runs last
+    })
+})
+```
+
+See [Intercepting navigations](/docs/4.x/navigate#intercepting-navigations) for when each runs and what isn't intercepted.
 
 ### Examples
 
