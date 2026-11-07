@@ -59,23 +59,34 @@ export function interceptPartition(callback) {
 
 // Component-scoped interceptors...
 
+// A component-scoped interceptor goes when its component does: it is registered as one of the
+// component's cleanups, and removing it by hand takes that cleanup off again...
+function removedWithComponent(component, unsubscribe) {
+    let forget = component.addCleanup(unsubscribe)
+
+    return () => {
+        forget()
+        unsubscribe()
+    }
+}
+
 export function interceptComponentAction(component, actionNameOrCallback, maybeCallback) {
     let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
     let callback = actionName ? maybeCallback : actionNameOrCallback
 
-    return interceptAction(({ action, ...rest }) => {
+    return removedWithComponent(component, interceptAction(({ action, ...rest }) => {
         if (action.component !== component) return
         if (actionName && action.name !== actionName) return
 
         callback({ action, ...rest })
-    })
+    }))
 }
 
 export function interceptComponentMessage(component, actionNameOrCallback, maybeCallback) {
     let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
     let callback = actionName ? maybeCallback : actionNameOrCallback
 
-    return interceptors.addInterceptor(component, ({ message, ...rest }) => {
+    return removedWithComponent(component, interceptors.addInterceptor(component, ({ message, ...rest }) => {
         if (actionName) {
             let hasAction = Array.from(message.actions).some(a => a.name === actionName)
 
@@ -83,14 +94,14 @@ export function interceptComponentMessage(component, actionNameOrCallback, maybe
         }
 
         callback({ message, ...rest })
-    })
+    }))
 }
 
 export function interceptComponentRequest(component, actionNameOrCallback, maybeCallback) {
     let actionName = typeof actionNameOrCallback === 'string' ? actionNameOrCallback : null
     let callback = actionName ? maybeCallback : actionNameOrCallback
 
-    return interceptRequest(({ request, ...rest }) => {
+    return removedWithComponent(component, interceptRequest(({ request, ...rest }) => {
         let matchingMessages = Array.from(request.messages).filter(m => {
             if (m.component !== component) return false
 
@@ -104,7 +115,7 @@ export function interceptComponentRequest(component, actionNameOrCallback, maybe
         if (matchingMessages.length === 0) return
 
         callback({ request, ...rest })
-    })
+    }))
 }
 
 interceptMessage(({ message, onFinish }) => {
