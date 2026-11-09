@@ -1,7 +1,7 @@
 import { on } from '@/hooks'
 import Alpine from 'alpinejs'
 import { evaluateExpression } from '../evaluator'
-import { replaceNoncesInHtml, cloneScriptTag } from '../utils'
+import { replaceNoncesInHtml, cloneScriptTag, getNonce } from '../utils'
 
 let executedScripts = new WeakMap
 
@@ -42,6 +42,16 @@ function evaluateScripts(component, effects) {
             onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, () => {
                 let scriptContent = extractScriptTagContent(content)
 
+                // The CSP evaluator parses a single expression, and a @script body is a
+                // statement list, so it can never go through it. A real script element
+                // carrying the page's nonce is allowed by a nonce-based policy though,
+                // so in the CSP build we run the body that way instead...
+                if (typeof IS_CSP_BUILD !== 'undefined' && IS_CSP_BUILD) {
+                    runScriptAsNoncedElement(component, scriptContent)
+
+                    return
+                }
+
                 // Always wrap @script content in an IIFE since it's multi-statement code.
                 // Alpine's evaluator tries to detect let/const at the start, but doesn't
                 // account for leading comments which causes syntax errors.
@@ -61,6 +71,41 @@ function evaluateScripts(component, effects) {
             })
         })
     }
+}
+
+function runScriptAsNoncedElement(component, scriptContent) {
+    let script = document.createElement('script')
+
+    let nonce = getNonce()
+
+    if (nonce) script.setAttribute('nonce', nonce)
+
+    // A classic script has one way to reach its own element while it runs:
+    // `document.currentScript`. Hang the scope on the element so the body
+    // receives `$wire` and `$js` the same way the evaluator would give them,
+    // with `this` bound to `$wire` as before...
+    script.__livewireScriptScope = {
+        '$wire': component.$wire,
+        '$js': component.$wire.js,
+    }
+
+    let wrapper = scriptContent.includes('await') ? 'async function' : 'function'
+
+    script.textContent = `
+        (${wrapper} ($wire, $js) {
+            ${scriptContent}
+        }).call(
+            document.currentScript.__livewireScriptScope.$wire,
+            document.currentScript.__livewireScriptScope.$wire,
+            document.currentScript.__livewireScriptScope.$js,
+        )
+    `
+
+    // Inserting a classic script element executes it synchronously, after
+    // which the element has done its job...
+    document.head.appendChild(script)
+
+    script.remove()
 }
 
 function onlyIfScriptHasntBeenRunAlreadyForThisComponent(component, key, callback) {
