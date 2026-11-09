@@ -3,7 +3,13 @@ import { dispatchSelf } from '@/events'
 
 on('request', ({ options }) => {
     if (window.Echo) {
-        options.headers['X-Socket-ID'] = window.Echo.socketId()
+        let socketId = window.Echo.socketId()
+
+        if (socketId) {
+            options.headers['X-Socket-ID'] = socketId
+        } else {
+            delete options.headers['X-Socket-ID']
+        }
     }
 })
 
