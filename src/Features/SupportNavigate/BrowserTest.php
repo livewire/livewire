@@ -1171,6 +1171,91 @@ class BrowserTest extends \Tests\BrowserTestCase
         });
     }
 
+    public function test_a_field_that_syncs_on_blur_is_saved_when_a_navigate_link_is_clicked()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public $saved = '';
+
+                public function render()
+                {
+                    // The update may land just after navigation starts, so keep checking...
+                    $this->saved = $this->saved ?: cache()->pull('navigate-blur-title', '');
+
+                    return <<<'HTML'
+                    <div wire:poll.100ms>
+                        On second page
+
+                        <span dusk="saved">saved:{{ $saved }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $title = '';
+
+            public function updatedTitle()
+            {
+                cache()->put('navigate-blur-title', $this->title);
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <input type="text" wire:model.blur.live="title" dusk="title">
+
+                    <a href="/second" wire:navigate dusk="link">Go to second page</a>
+                </div>
+            HTML; }
+        })
+        ->type('@title', 'Draft')
+        ->click('@link')
+        ->waitForText('On second page')
+        ->waitForTextIn('@saved', 'saved:Draft')
+        ;
+    }
+
+    public function test_a_wire_sort_item_that_is_a_navigate_link_can_be_dragged_without_navigating()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render() { return <<<'HTML'
+                    <div>On second page</div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            public function handleSort($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <div wire:sort="handleSort">
+                        <a href="/second" wire:navigate wire:key="item-1" wire:sort:item="1" dusk="item-1">Item 1</a>
+                        <a href="/second" wire:navigate wire:key="item-2" wire:sort:item="2" dusk="item-2">Item 2</a>
+                    </div>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+            HTML; }
+        })
+        ->drag('@item-2', '@item-1')
+        ->waitForTextIn('@result', 'item:2,position:0')
+        // Releasing the mouse over the dragged link later must not navigate either...
+        ->clickAndHold('@result')
+        ->mouseover('@item-2')
+        ->releaseMouse()
+        ->pause(500) // Let navigate run if it was going to (it should not)
+        ->assertDontSee('On second page')
+        ;
+    }
+
     public function test_events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {

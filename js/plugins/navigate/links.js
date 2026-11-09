@@ -31,20 +31,30 @@ export function whenThisLinkIsPressed(el, callback) {
 
         if (linkShouldBeHandledNatively(el)) return;
 
-        e.preventDefault()
+        // We don't cancel "mousedown" here. Cancelling it would keep focus in the previously
+        // focused field (so its blur/change never fires), suppress :active styles, and
+        // stop native drags from starting (like dragging a wire:sort item that's a link)...
 
         callback((whenReleased) => {
+            let cleanup = () => {
+                el.removeEventListener('mouseup', handler)
+                document.removeEventListener('dragstart', cleanup, true)
+            }
+
             let handler = e => {
                 e.preventDefault()
+
+                cleanup()
 
                 requestAnimationFrame(() => {
                     whenReleased()
                 })
-
-                el.removeEventListener('mouseup', handler)
             }
 
             el.addEventListener('mouseup', handler)
+
+            // If the press turns into a drag (of this link or of a draggable ancestor), it isn't a click, so don't navigate...
+            document.addEventListener('dragstart', cleanup, true)
         })
     })
 
