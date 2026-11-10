@@ -164,13 +164,21 @@ wireProperty('$js', (component) => {
         fn[name] = jsActions[name]
     })
 
-    return new Proxy(fn, {
+    let handler = {
         set(target, property, value) {
             component.addJsAction(property, value)
 
             return true
         },
         get(target, property) {
+            // The CSP build's evaluator binds any function value it resolves
+            // before reading members off it, and bind() returns a plain
+            // function without these action properties. Re-wrap the bound
+            // copy so `$js.foo()` and `$wire.$js.foo()` keep working...
+            if (property === 'bind' && ! component.hasJsAction('bind')) {
+                return (...params) => wrap(target.bind(...params))
+            }
+
             // Scripts in view-based components are imported dynamically,
             // which means they run asynchronously. This causes issues with
             // things like wire:text="$js.foo()" not being available on page load.
@@ -192,9 +200,19 @@ wireProperty('$js', (component) => {
                 }
             }
 
+            // A bound copy doesn't carry the action properties, so look
+            // missing members up on the component itself...
+            if (target[property] === undefined && component.hasJsAction(property)) {
+                return component.getJsAction(property)
+            }
+
             return target[property]
         }
-    })
+    }
+
+    let wrap = (target) => new Proxy(target, handler)
+
+    return wrap(fn)
 })
 
 wireProperty('$set', (component) => (property, value, live = true) => {
