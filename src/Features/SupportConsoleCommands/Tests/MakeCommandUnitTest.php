@@ -1001,4 +1001,16 @@ class MakeCommandUnitTest extends \Tests\TestCase
         // Ensure view is created in correct location
         $this->assertTrue(File::exists(resource_path('views/admin/dashboard.blade.php')));
     }
+
+    public function test_multi_file_component_with_all_flag_creates_js_css_and_test()
+    {
+        Artisan::call('make:livewire', ['name' => 'foo', '--mfc' => true, '--all' => true]);
+
+        $this->assertTrue(File::isDirectory($this->livewireComponentsPath('⚡foo')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.blade.php')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.js')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.css')));
+        $this->assertTrue(File::exists($this->livewireComponentsPath('⚡foo/foo.test.php')));
+    }
 }
