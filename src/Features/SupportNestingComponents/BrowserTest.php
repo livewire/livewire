@@ -426,6 +426,73 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertSeeIn('[dusk="key-1"]', '1')
         ;
     }
+
+    public function test_child_component_inside_slot_preserves_state_when_parent_re_renders()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public int $renders = 0;
+
+                public function render()
+                {
+                    $this->renders++;
+
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="$refresh()" dusk="rerender">
+                            Re-render parent ({{ $renders }})
+                        </button>
+
+                        <livewire:wizard wire:key="owner">
+                            <livewire:counter name="in-slot" wire:key="in-slot" />
+                        </livewire:wizard>
+
+                        <livewire:counter name="outside-slot" wire:key="outside-slot" />
+                    </div>
+                    HTML;
+                }
+            },
+            'wizard' => new class extends Component {
+                public function render()
+                {
+                    return '<div>{{ $slot }}</div>';
+                }
+            },
+            'counter' => new class extends Component {
+                public string $name = '';
+                public int $count = 0;
+
+                public function increment()
+                {
+                    $this->count++;
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="increment" dusk="increment-{{ $name }}">
+                            Count: <span dusk="count-{{ $name }}">{{ $count }}</span>
+                        </button>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->assertSeeIn('@count-in-slot', '0')
+            ->assertSeeIn('@count-outside-slot', '0')
+
+            ->waitForLivewire()->click('@increment-in-slot')
+            ->assertSeeIn('@count-in-slot', '1')
+
+            ->waitForLivewire()->click('@increment-outside-slot')
+            ->assertSeeIn('@count-outside-slot', '1')
+
+            ->waitForLivewire()->click('@rerender')
+
+            ->assertSeeIn('@count-in-slot', '1')
+            ->assertSeeIn('@count-outside-slot', '1');
+    }
 }
 
 class Page extends Component
