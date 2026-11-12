@@ -1256,6 +1256,128 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_pressing_a_navigate_link_and_releasing_elsewhere_does_not_navigate_on_a_later_release()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render() { return <<<'HTML'
+                    <div>On second page</div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public function render() { return <<<'HTML'
+                <div>
+                    <!-- draggable="false" so the press doesn't turn into a native drag (which would clean up on its own)... -->
+                    <a href="/second" wire:navigate draggable="false" dusk="link">Go to second page</a>
+
+                    <div dusk="elsewhere" style="margin-top: 100px">Elsewhere</div>
+                </div>
+            HTML; }
+        })
+        // Press the link and release somewhere else (not a click)...
+        ->clickAndHold('@link')
+        ->mouseover('@elsewhere')
+        ->releaseMouse()
+        // Then press somewhere else and release over the link (not a click either)...
+        ->clickAndHold('@elsewhere')
+        ->mouseover('@link')
+        ->releaseMouse()
+        ->pause(500) // Let navigate run if it was going to (it should not)
+        ->assertDontSee('On second page')
+        ;
+    }
+
+    public function test_a_wire_sort_item_that_is_a_navigate_link_can_be_dragged_with_force_fallback_without_navigating()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render() { return <<<'HTML'
+                    <div>On second page</div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            public function handleSort($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <div wire:sort="handleSort" wire:sort:config="{ forceFallback: true }">
+                        <a href="/second" wire:navigate wire:key="item-1" wire:sort:item="1" dusk="item-1">Item 1</a>
+                        <a href="/second" wire:navigate wire:key="item-2" wire:sort:item="2" dusk="item-2">Item 2</a>
+                    </div>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+            HTML; }
+        })
+        // SortableJS's fallback drag needs a few pointer moves to pick a drop target, so do one in steps instead of ->drag()...
+        ->tap(fn ($browser) => $this->dragInSteps($browser, '@item-2', '@item-1'))
+        ->waitForTextIn('@result', 'item:2,position:0')
+        ->pause(500) // Let navigate run if it was going to (it should not)
+        ->assertDontSee('On second page')
+        ;
+    }
+
+    public function test_a_force_fallback_drag_of_a_non_draggable_navigate_link_does_not_navigate_on_drop()
+    {
+        $this->registerComponentTestRoutes([
+            '/second' => new class extends Component {
+                public function render() { return <<<'HTML'
+                    <div>On second page</div>
+                HTML; }
+            },
+        ]);
+
+        Livewire::visit(new class extends Component {
+            public $result = '';
+
+            public function handleSort($item, $position)
+            {
+                $this->result = "item:{$item},position:{$position}";
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    <!-- draggable="false" means no "dragstart" fires, so only the pointer movement tells this drag apart from a click... -->
+                    <div wire:sort="handleSort" wire:sort:config="{ forceFallback: true }">
+                        <a href="/second" wire:navigate draggable="false" wire:key="item-1" wire:sort:item="1" dusk="item-1">Item 1</a>
+                        <a href="/second" wire:navigate draggable="false" wire:key="item-2" wire:sort:item="2" dusk="item-2">Item 2</a>
+                    </div>
+
+                    <div dusk="result">{{ $result }}</div>
+                </div>
+            HTML; }
+        })
+        // SortableJS's fallback drag needs a few pointer moves to pick a drop target, so do one in steps instead of ->drag()...
+        ->tap(fn ($browser) => $this->dragInSteps($browser, '@item-2', '@item-1'))
+        ->waitForTextIn('@result', 'item:2,position:0')
+        ->pause(500) // Let navigate run if it was going to (it should not)
+        ->assertDontSee('On second page')
+        ;
+    }
+
+    protected function dragInSteps($browser, $from, $to)
+    {
+        // SortableJS's fallback drag checks the drop target on a timer, so give it time between moves...
+        $browser
+            ->clickAndHold($from)
+            ->moveMouse(0, -3)
+            ->moveMouse(0, -6)
+            ->pause(100)
+            ->mouseover($to)
+            ->moveMouse(0, -2)
+            ->pause(200)
+            ->releaseMouse();
+    }
+
     public function test_events_from_child_components_still_function_after_navigation()
     {
         $this->browse(function (Browser $browser) {
