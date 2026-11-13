@@ -32,6 +32,7 @@ class CspNavigateBrowserTest extends BrowserTestCase
             Route::get('/csp-first', CspFirstPage::class)->middleware('web');
             Route::get('/csp-second', CspSecondPage::class)->middleware('web');
             Route::get('/csp-lazy', CspLazyPage::class)->middleware('web');
+            Route::get('/csp-strict-styles', CspFirstPage::class)->middleware('web');
 
             Route::get('/csp-test-asset.js', function () {
                 return response('window.__cspLazyAssetLoaded = true;', 200, ['Content-Type' => 'application/javascript']);
@@ -70,6 +71,20 @@ class CspNavigateBrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_wire_navigate_does_not_trigger_csp_violations_for_nonced_styles()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/csp-strict-styles')
+                ->assertSee('On CSP first')
+                ->assertConsoleLogHasNoErrors()
+                ->click('@link.to.second')
+                ->waitForText('On CSP second')
+                ->assertConsoleLogHasNoErrors()
+            ;
+        });
+    }
+
     public function test_lazy_loaded_assets_do_not_trigger_csp_violations()
     {
         $this->browse(function ($browser) {
@@ -93,7 +108,7 @@ class CspMiddleware
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",
             "script-src 'nonce-{$nonce}'",
-            "style-src 'unsafe-inline' 'self'",
+            $request->is('csp-strict-styles') ? "style-src 'nonce-{$nonce}' 'self'" : "style-src 'unsafe-inline' 'self'",
             "connect-src 'self'",
         ]));
 
