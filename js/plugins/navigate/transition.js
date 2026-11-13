@@ -1,4 +1,5 @@
 import { clearTransitionNames, setTransitionNames, skipTransitionWhenTopLayerOpens, startViewTransition } from '@/directives/wire-transition'
+import { replaceNoncesInHtml } from '@/utils'
 
 let type = 'navigate'
 let attribute = 'wire:transition.navigate'
@@ -6,7 +7,8 @@ let navigateTransitionSelector = '[wire\\:transition\\.navigate]'
 let defaultName = 'livewire-navigate'
 
 export function transitionPageSwap(html, update) {
-    let newDocument = new DOMParser().parseFromString(html, 'text/html')
+    // Parsing inherits the page's CSP, so swap in its nonce first or inline styles are reported...
+    let newDocument = new DOMParser().parseFromString(replaceNoncesInHtml(html), 'text/html')
     let currentDocumentTransitions = findNavigateTransitions(document)
     let newDocumentTransitions = findNavigateTransitions(newDocument)
 
