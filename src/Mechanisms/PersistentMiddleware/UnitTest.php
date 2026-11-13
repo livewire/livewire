@@ -2,6 +2,8 @@
 
 namespace Livewire\Mechanisms\PersistentMiddleware;
 
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
@@ -193,6 +195,32 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             'persistent-middleware-b',
             'persistent-middleware-a',
         ], RecordPersistentMiddlewareRoute::$paths);
+    }
+
+    public function test_framework_guest_middleware_is_reapplied_to_subsequent_livewire_requests()
+    {
+        Route::get('/guest-only', fn () => 'guest')
+            ->middleware(RedirectIfAuthenticated::class);
+
+        $snapshot = Livewire::test(EmptyComponent::class)->snapshot;
+
+        $snapshot['memo']['path'] = 'guest-only';
+        $snapshot['memo']['method'] = 'GET';
+        unset($snapshot['checksum']);
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        $this->actingAs(new User);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), [
+                'components' => [[
+                    'calls' => [],
+                    'updates' => [],
+                    'snapshot' => json_encode($snapshot),
+                ]],
+            ]);
+
+        $response->assertRedirect();
     }
 
 }
