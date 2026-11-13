@@ -86,6 +86,9 @@ class SupportLifecycleHooks extends ComponentHook
         $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
 
         return function () use ($fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
+            // If real-time validation (#[Validate]) rejected this update, "updated" hooks shouldn't run...
+            if ($this->storeFind('validationFailed', $fullPath, false)) return;
+
             $this->callHook('updated', [$fullPath, $newValue]);
             $this->callTraitHook('updated', [$fullPath, $newValue]);
 

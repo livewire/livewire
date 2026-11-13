@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportValidation;
 
 use Attribute;
+use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportAttributes\Attribute as LivewireAttribute;
 
 use function Livewire\wrap;
@@ -100,8 +101,16 @@ class BaseValidate extends LivewireAttribute
 
             // Here we have to run the form object validator from the context
             // of the base "wrapped" component so that validation works...
-            wrap($this->component)->tap(function () use ($target, $name) {
-                $target->validateOnly($name);
+            wrap($this->component)->tap(function () use ($fullPath, $target, $name) {
+                try {
+                    $target->validateOnly($name);
+                } catch (ValidationException $e) {
+                    // The wrapper turns this exception into error bag entries and swallows it,
+                    // so remember the failure to keep "updated" hooks from running...
+                    $this->storePush('validationFailed', true, $fullPath);
+
+                    throw $e;
+                }
             });
         };
     }

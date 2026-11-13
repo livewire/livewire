@@ -1364,6 +1364,78 @@ class UnitTest extends \Tests\TestCase
             ->assertHasErrors('sections.1.lines.0.product')
             ->assertHasNoErrors(['sections.0.lines.0.product', 'sections.0.lines.1.product', 'sections.1.lines.1.product']);
     }
+
+    public function test_updated_hooks_are_not_called_when_realtime_validation_fails()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required|min:3')]
+            public $foo = '';
+
+            public $updatedFooCalls = [];
+
+            public $updatedCalls = [];
+
+            public function updatedFoo($value)
+            {
+                $this->updatedFooCalls[] = $value;
+            }
+
+            public function updated($property, $value)
+            {
+                $this->updatedCalls[] = [$property => $value];
+            }
+        })
+            ->set('foo', 'ab')
+            ->assertHasErrors(['foo' => 'min'])
+            ->assertSetStrict('updatedFooCalls', [])
+            ->assertSetStrict('updatedCalls', [])
+            ->set('foo', 'abc')
+            ->assertHasNoErrors()
+            ->assertSetStrict('updatedFooCalls', ['abc'])
+            ->assertSetStrict('updatedCalls', [['foo' => 'abc']]);
+    }
+
+    public function test_nested_updated_hooks_are_not_called_when_realtime_validation_fails()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate([
+                'items' => ['array'],
+                'items.*' => ['required', 'min:3'],
+            ])]
+            public array $items = [];
+
+            public $updatedItemsCalls = [];
+
+            public function updatedItems($value, $key)
+            {
+                $this->updatedItemsCalls[] = $key;
+            }
+        })
+            ->set('items.0', 'ab')
+            ->assertHasErrors(['items.0' => 'min'])
+            ->assertCount('updatedItemsCalls', 0)
+            ->set('items.0', 'abc')
+            ->assertHasNoErrors()
+            ->assertCount('updatedItemsCalls', 1);
+    }
+
+    public function test_updated_hooks_are_still_called_when_realtime_validation_is_opted_out_of()
+    {
+        Livewire::test(new class extends TestComponent {
+            #[Validate('required|min:3', onUpdate: false)]
+            public $foo = '';
+
+            public $updatedFooCalls = [];
+
+            public function updatedFoo($value)
+            {
+                $this->updatedFooCalls[] = $value;
+            }
+        })
+            ->set('foo', 'ab')
+            ->assertHasNoErrors()
+            ->assertSetStrict('updatedFooCalls', ['ab']);
+    }
 }
 
 class ValidationUnwrappingSpyCollection extends Collection
