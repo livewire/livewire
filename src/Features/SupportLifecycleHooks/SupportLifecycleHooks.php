@@ -86,6 +86,10 @@ class SupportLifecycleHooks extends ComponentHook
         $this->callHook($beforeNestedMethod, [$newValue, $keyAfterLastDot]);
 
         return function () use ($fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
+            if (method_exists($this->component, 'getErrorBag') && $this->component->getErrorBag()->has($fullPath)) {
+                return;
+            }
+
             $this->callHook('updated', [$fullPath, $newValue]);
             $this->callTraitHook('updated', [$fullPath, $newValue]);
 
