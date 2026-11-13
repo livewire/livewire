@@ -19,6 +19,7 @@ class PersistentMiddleware extends Mechanism
         \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \App\Http\Middleware\RedirectIfAuthenticated::class,
+        \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
         \Illuminate\Auth\Middleware\Authenticate::class,
         \Illuminate\Auth\Middleware\Authorize::class,
         \App\Http\Middleware\Authenticate::class,

@@ -313,6 +313,7 @@ By default, Livewire persists the following middleware across network requests:
 \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
 \Illuminate\Routing\Middleware\SubstituteBindings::class,
 \App\Http\Middleware\RedirectIfAuthenticated::class,
+\Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
 \Illuminate\Auth\Middleware\Authenticate::class,
 \Illuminate\Auth\Middleware\Authorize::class,
 ```
