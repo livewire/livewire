@@ -46,6 +46,58 @@ class UnitTest extends \Tests\TestCase
             ]);
     }
 
+    public function test_validate_attribute_prevents_updated_hooks_when_validation_fails()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            #[Validate('required|min:5')]
+            public $foo = '';
+
+            public $updatedFooCalled = false;
+            public $updatedCalled = false;
+
+            public function updatedFoo($value)
+            {
+                $this->updatedFooCalled = true;
+            }
+
+            public function updated($property, $value)
+            {
+                $this->updatedCalled = true;
+            }
+        });
+
+        $component->set('foo', '12');
+
+        $component->assertHasErrors(['foo' => 'min']);
+        $this->assertFalse($component->get('updatedFooCalled'));
+        $this->assertFalse($component->get('updatedCalled'));
+
+        $component->set('foo', '12345');
+
+        $component->assertHasNoErrors();
+        $this->assertTrue($component->get('updatedFooCalled'));
+        $this->assertTrue($component->get('updatedCalled'));
+    }
+
+    public function test_validate_attribute_prevents_form_object_updated_hooks_when_validation_fails()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public FormWithValidationAndUpdatedHooksStub $form;
+        });
+
+        $component->set('form.title', '12');
+
+        $component->assertHasErrors(['form.title' => 'min']);
+        $this->assertFalse($component->get('form')->updatedTitleCalled);
+        $this->assertFalse($component->get('form')->updatedCalled);
+
+        $component->set('form.title', '12345');
+
+        $component->assertHasNoErrors();
+        $this->assertTrue($component->get('form')->updatedTitleCalled);
+        $this->assertTrue($component->get('form')->updatedCalled);
+    }
+
     public function test_deprecated_rule_alias_can_be_used()
     {
         Livewire::test(new class extends TestComponent {
@@ -1920,5 +1972,24 @@ class NamedErrorBag extends Component
             </div>
         HTML;
 
+    }
+}
+
+class FormWithValidationAndUpdatedHooksStub extends \Livewire\Features\SupportFormObjects\Form
+{
+    #[\Livewire\Attributes\Validate('required|min:5')]
+    public $title = '';
+
+    public $updatedTitleCalled = false;
+    public $updatedCalled = false;
+
+    public function updatedTitle($value)
+    {
+        $this->updatedTitleCalled = true;
+    }
+
+    public function updated($property, $value)
+    {
+        $this->updatedCalled = true;
     }
 }
