@@ -23,6 +23,12 @@ class SupportEvents extends ComponentHook
 
             [$name, $params] = $params;
 
+            if (! is_array($params) || ! Utils::hasUnambiguousParameterKeys($params)) {
+                if (config('app.debug')) throw new \InvalidArgumentException('Invalid Livewire event parameters: expected a list or named parameters.');
+
+                abort(404);
+            }
+
             $names = static::getListenerEventNames($this->component);
 
             if (! in_array($name, $names)) {

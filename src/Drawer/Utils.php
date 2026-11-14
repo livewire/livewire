@@ -114,6 +114,13 @@ class Utils extends BaseUtils
         return sprintf('%s GMT', gmdate('D, d M Y H:i:s', $timestamp));
     }
 
+    // Params are spread positionally into the method but read by key when authorizing,
+    // so out-of-order or mixed integer keys would let those two disagree...
+    static function hasUnambiguousParameterKeys(array $params)
+    {
+        return array_is_list($params) || array_filter(array_keys($params), 'is_int') === [];
+    }
+
     static function containsDots($subject)
     {
         return str_contains($subject, '.');
