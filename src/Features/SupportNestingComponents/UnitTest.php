@@ -350,14 +350,6 @@ class ChildComponentForNestingStub extends Component
     }
 }
 
-class ParentComponentForSkipRenderWithCommentedChildStub extends ParentComponentForSkipRenderStub
-{
-    public function render()
-    {
-        return '<div><livewire:child /></div>';
-    }
-}
-
 class ChildComponentWithLeadingCommentForNestingStub extends Component
 {
     public function render()
@@ -387,5 +379,13 @@ class ParentComponentForSkipRenderStub extends Component
         return app('view')->make('show-child', [
             'child' => ['name' => 'foo'],
         ]);
+    }
+}
+
+class ParentComponentForSkipRenderWithCommentedChildStub extends ParentComponentForSkipRenderStub
+{
+    public function render()
+    {
+        return '<div><livewire:child /></div>';
     }
 }
