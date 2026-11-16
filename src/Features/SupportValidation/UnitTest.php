@@ -48,7 +48,7 @@ class UnitTest extends \Tests\TestCase
 
     public function test_validate_attribute_prevents_updated_hooks_when_validation_fails()
     {
-        $component = Livewire::test(new class extends TestComponent {
+        Livewire::test(new class extends TestComponent {
             #[Validate('required|min:5')]
             public $foo = '';
 
@@ -64,19 +64,15 @@ class UnitTest extends \Tests\TestCase
             {
                 $this->updatedCalled = true;
             }
-        });
-
-        $component->set('foo', '12');
-
-        $component->assertHasErrors(['foo' => 'min']);
-        $this->assertFalse($component->get('updatedFooCalled'));
-        $this->assertFalse($component->get('updatedCalled'));
-
-        $component->set('foo', '12345');
-
-        $component->assertHasNoErrors();
-        $this->assertTrue($component->get('updatedFooCalled'));
-        $this->assertTrue($component->get('updatedCalled'));
+        })
+            ->set('foo', '12')
+            ->assertHasErrors(['foo' => 'min'])
+            ->assertSetStrict('updatedFooCalled', false)
+            ->assertSetStrict('updatedCalled', false)
+            ->set('foo', '12345')
+            ->assertHasNoErrors()
+            ->assertSetStrict('updatedFooCalled', true)
+            ->assertSetStrict('updatedCalled', true);
     }
 
     public function test_validate_attribute_prevents_form_object_updated_hooks_when_validation_fails()

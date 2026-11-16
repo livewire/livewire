@@ -60,7 +60,7 @@ class SupportFormObjects extends ComponentHook
         $this->callFormHook($form, $beforeNestedMethod, [$newValue, $keyAfterLastDot]);
 
         return function () use ($form, $path, $fullPath, $afterMethod, $afterNestedMethod, $keyAfterFirstDot, $keyAfterLastDot, $newValue) {
-            if (method_exists($this->component, 'getErrorBag') && ($this->component->getErrorBag()->has($fullPath) || $this->component->getErrorBag()->has($path))) {
+            if (method_exists($this->component, 'getErrorBag') && $this->component->getErrorBag()->hasAny($fullPath, $path)) {
                 return;
             }
 
