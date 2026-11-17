@@ -804,6 +804,58 @@ class BrowserTest extends BrowserTestCase
         ->assertConsoleLogHasNoErrors();
     }
 
+    public function test_failed_lazy_load_request_does_not_log_console_errors()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <div style="height: 200vh"></div>
+                <livewire:child lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function placeholder() { return <<<'HTML'
+                <div id="loading">Loading...</div>
+                HTML; }
+
+            public function render() { return <<<'HTML'
+                <div id="child">Child!</div>
+                HTML; }
+        }])
+        ->assertPresent('#loading')
+        ->tap(fn ($browser) => $browser->script('window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))'))
+        ->scrollIntoView('#loading')
+        ->pause(500)
+        ->assertPresent('#loading')
+        ->assertNotPresent('#child')
+        ->assertConsoleLogHasNoErrors();
+    }
+
+    public function test_failed_deferred_load_request_does_not_log_console_errors()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <script>window.fetch = () => Promise.reject(new TypeError('Failed to fetch'))</script>
+
+                <livewire:child defer />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function placeholder() { return <<<'HTML'
+                <div id="loading">Loading...</div>
+                HTML; }
+
+            public function render() { return <<<'HTML'
+                <div id="child">Child!</div>
+                HTML; }
+        }])
+        ->pause(500)
+        ->assertPresent('#loading')
+        ->assertNotPresent('#child')
+        ->assertConsoleLogHasNoErrors();
+    }
+
     public function test_slot_content_is_preserved_on_lazy_component()
     {
         Livewire::visit([new class extends Component {

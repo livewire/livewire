@@ -381,4 +381,31 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Age: 30')
         ;
     }
+
+    public function test_failed_lazy_load_request_does_not_log_console_errors_with_csp()
+    {
+        Livewire::visit([new class extends Component {
+            public function render() { return <<<'HTML'
+            <div>
+                <div style="height: 200vh"></div>
+                <livewire:child lazy />
+            </div>
+            HTML; }
+        }, 'child' => new class extends Component {
+            public function placeholder() { return <<<'HTML'
+                <div id="loading">Loading...</div>
+                HTML; }
+
+            public function render() { return <<<'HTML'
+                <div id="child">Child!</div>
+                HTML; }
+        }])
+        ->assertPresent('#loading')
+        ->tap(fn ($browser) => $browser->script('window.fetch = () => Promise.reject(new TypeError("Failed to fetch"))'))
+        ->scrollIntoView('#loading')
+        ->pause(500)
+        ->assertPresent('#loading')
+        ->assertNotPresent('#child')
+        ->assertConsoleLogHasNoErrors();
+    }
 }
