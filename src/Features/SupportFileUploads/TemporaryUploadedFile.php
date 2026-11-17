@@ -141,6 +141,11 @@ class TemporaryUploadedFile extends UploadedFile
         return $this->extractOriginalNameFromMetaFileData() ?? $this->extractOriginalNameFromFilePath($this->path);
     }
 
+    public function getClientOriginalExtension(): string
+    {
+        return pathinfo($this->getClientOriginalName(), PATHINFO_EXTENSION);
+    }
+
     public function dimensions()
     {
         stream_copy_to_stream($this->storage->readStream($this->path), $tmpFile = tmpfile());
@@ -262,23 +267,17 @@ class TemporaryUploadedFile extends UploadedFile
 
     public static function generateHashName($file)
     {
-        $hash = str()->random(40);
-        $extension = '.'.$file->getClientOriginalExtension();
-
-        return $hash.$extension;
+        return str()->random(40).'.bin';
     }
 
     public static function generateHashNameWithOriginalNameEmbedded($file)
     {
         $originalName = is_string($file) ? $file : $file->getClientOriginalName();
-        $extension = is_string($file)
-            ? pathinfo($file, PATHINFO_EXTENSION)
-            : $file->getClientOriginalExtension();
 
         $hash = str()->random(30);
         $meta = str('-meta'.base64_encode($originalName).'-')->replace('/', '_');
 
-        return $hash.$meta.'.'.$extension;
+        return $hash.$meta.'.bin';
     }
 
     public function hashName($path = null)
