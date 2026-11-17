@@ -53,6 +53,34 @@ class EndpointResolverUnitTest extends TestCase
         $this->assertSame('/custom/livewire/css/{component}.global.css', EndpointResolver::componentGlobalCssPath());
     }
 
+    public function test_base_path_prefix_is_prepended_to_the_generated_base_path()
+    {
+        config()->set('livewire.base_path_prefix', '/app/');
+
+        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
+
+        $this->assertSame('/app/livewire-' . $hash, EndpointResolver::prefix());
+        $this->assertSame('/app/livewire-' . $hash . '/update', EndpointResolver::updatePath());
+    }
+
+    public function test_base_path_prefix_is_prepended_to_the_custom_base_path()
+    {
+        config()->set('livewire.base_path_prefix', 'app');
+        config()->set('livewire.custom_base_path', 'custom/livewire');
+
+        $this->assertSame('/app/custom/livewire', EndpointResolver::prefix());
+        $this->assertSame('/app/custom/livewire/livewire.js', EndpointResolver::scriptPath());
+    }
+
+    public function test_base_path_prefix_with_empty_custom_base_path()
+    {
+        config()->set('livewire.base_path_prefix', '/app');
+        config()->set('livewire.custom_base_path', '');
+
+        $this->assertSame('/app', EndpointResolver::prefix());
+        $this->assertSame('/app/update', EndpointResolver::updatePath());
+    }
+
     public function test_generates_unique_prefix_from_app_key()
     {
         $prefix = EndpointResolver::prefix();

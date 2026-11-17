@@ -119,15 +119,21 @@ return [
 
     /*
     |---------------------------------------------------------------------------
-    | Base path prefix
+    | Base Path
     |---------------------------------------------------------------------------
     |
-    | This value determines the base path prefix for all Livewire endpoints.
-    | It is used to generate unique URLs for Livewire's JavaScript, file uploads,
-    | and other endpoints. You may change this if needed.
+    | The prefix is prepended to the base path, which is useful when your app
+    | is served from a sub-directory or behind a proxy. For example, "/app"
+    | turns "/livewire-{hash}/update" into "/app/livewire-{hash}/update".
+    |
+    | These values determine the base path for all Livewire endpoints, such as
+    | the JavaScript asset, file uploads and component updates. When null, a
+    | unique "/livewire-{hash}" path is generated from your APP_KEY.
     |
     */
-
+    
+    'base_path_prefix' => null,
+    
     'custom_base_path' => null,
 
     /*
