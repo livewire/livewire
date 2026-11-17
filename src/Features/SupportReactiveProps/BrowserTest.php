@@ -891,6 +891,60 @@ class BrowserTest extends \Tests\BrowserTestCase
             ->assertMissing('#livewire-error')
         ;
     }
+
+    public function test_simultaneous_async_calls_on_a_parent_with_a_reactive_child_each_resolve_with_their_own_return_value()
+    {
+        // Async calls on the same component go out as separate messages. Bundling the reactive
+        // child's commit with each of them puts both parent messages in the same request, and
+        // every message used to take the response of the last one...
+        Livewire::visit([
+            new class extends Component {
+                public $count = 0;
+
+                #[\Livewire\Attributes\Async]
+                public function first() { return 'first'; }
+
+                #[\Livewire\Attributes\Async]
+                public function second() { return 'second'; }
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <button
+                            dusk="parent.call-both"
+                            x-on:click="Promise.all([$wire.first(), $wire.second()]).then(([first, second]) => {
+                                $refs.first.textContent = first
+                                $refs.second.textContent = second
+                            })"
+                        >call both</button>
+
+                        <span x-ref="first" dusk="parent.first"></span>
+                        <span x-ref="second" dusk="parent.second"></span>
+
+                        <livewire:child :count="$count" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[BaseReactive]
+                public $count;
+
+                public function render() { return <<<'HTML'
+                    <div>
+                        <span dusk="child.count">{{ $count }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+            ->waitForLivewireToLoad()
+            ->click('@parent.call-both')
+            ->waitForTextIn('@parent.second', 'second')
+            ->assertSeeIn('@parent.first', 'first')
+            ->assertSeeIn('@parent.second', 'second')
+            ->assertMissing('#livewire-error')
+        ;
+    }
 }
 
 class ReactivePropsBrowserTestPost extends Model
