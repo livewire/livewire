@@ -149,6 +149,21 @@ class BrowserTest extends BrowserTestCase
         });
     }
 
+    public function test_wire_current_ignores_fragment_only_links()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/wire-current-inside-component')
+                ->waitForText('Current Page')
+
+                ->assertAttributeMissing('@fragment', 'data-current')
+                ->assertAttributeDoesntContain('@fragment', 'class', 'active')
+                ->assertAttribute('@page-fragment', 'data-current', '')
+                ->assertHasClass('@page-fragment', 'active')
+                ;
+        });
+    }
+
     public function test_wire_current_works_inside_a_component_and_after_an_update()
     {
         $this->browse(function ($browser) {
@@ -226,6 +241,8 @@ class WireCurrentInsideComponentPage extends Component
         return <<<'HTML'
         <div>
             <a href="/wire-current-inside-component" wire:current="active" dusk="current">Current Page</a>
+            <a href="#details" class="toc-link" wire:current="active" dusk="fragment">Details</a>
+            <a href="/wire-current-inside-component#details" wire:current="active" dusk="page-fragment">Current Page Details</a>
             <button type="button" wire:click="$refresh" dusk="refresh">Refresh</button>
         </div>
         HTML;
