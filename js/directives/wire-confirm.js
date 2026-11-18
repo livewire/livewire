@@ -1,6 +1,6 @@
 import { directive } from "@/directives"
 
-directive('confirm', ({ el, directive }) => {
+directive('confirm', ({ el, directive, cleanup }) => {
     let message = directive.expression
     let shouldPrompt = directive.modifiers.includes('prompt')
 
@@ -9,7 +9,7 @@ directive('confirm', ({ el, directive }) => {
 
     if (message === '') message = 'Are you sure?'
 
-    el.__livewire_confirm = (action, instead) => {
+    let confirmAction = (action, instead) => {
         if (shouldPrompt) {
             let [question, expected] = message.split('|')
 
@@ -29,4 +29,10 @@ directive('confirm', ({ el, directive }) => {
             else instead()
         }
     }
+
+    el.__livewire_confirm = confirmAction
+
+    cleanup(() => {
+        if (el.__livewire_confirm === confirmAction) delete el.__livewire_confirm
+    })
 })
