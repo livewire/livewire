@@ -2,9 +2,11 @@
 
 namespace Livewire\Features\SupportWireLoading;
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\Form;
 use Livewire\Livewire;
+use Livewire\WithFileUploads;
 
 class BrowserTest extends \Tests\BrowserTestCase
 {
@@ -601,10 +603,10 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
-    /**
     function test_inverted_wire_target_hides_loading_for_file_upload()
     {
         Storage::persistentFake('tmp-for-tests');
+
         Livewire::visit(new class extends Component {
             use WithFileUploads;
 
@@ -616,32 +618,47 @@ class BrowserTest extends \Tests\BrowserTestCase
                     <div>
                         <input type="file" wire:model="file1" dusk="file1Input">
                         <input type="file" wire:model="file2" dusk="file2Input">
-                        <button wire:click="resetFunction" dusk="resetButton">Reset</button>
                         <div wire:loading wire:target.except="file1" dusk="loadingIndicator">
-                            Waiting to process...
+                            Uploading...
                         </div>
                     </div>
                 HTML;
             }
-
-            public function resetFunction()
-            {
-                usleep(500000); // Simulate reset time.
-            }
         })
-        ->pause(10000000)
-        ->press('@resetButton')
-        ->waitForText('Waiting to process...')
-        ->assertSee('Waiting to process...')
-        ->waitUntilMissingText('Waiting to process...')
-        ->attach('@file1Input', __DIR__ . '/browser_test_image.png')
-        ->assertDontSee('Waiting to process...')
-        ->attach('@file2Input', __DIR__ . '/browser_test_image.png')
-        ->waitForText('Waiting to process...')
-        ->assertSee('Waiting to process...')
+        ->waitForLivewireToLoad()
+        ->tap(fn ($browser) => $browser->script(<<<'JS'
+            window.uploadLoadingStates = {}
+
+            const isLoading = () => {
+                const indicator = document.querySelector('[dusk="loadingIndicator"]')
+                return getComputedStyle(indicator).display !== 'none'
+            }
+
+            window.addEventListener('livewire-upload-start', ({ detail }) => {
+                window.uploadLoadingStates[detail.property] = isLoading()
+            })
+
+            Livewire.interceptMessage(({ onSend }) => onSend(({ payload }) => {
+                payload.calls.forEach(({ method, params }) => {
+                    if (method === '_startUpload' || method === '_finishUpload') {
+                        window.uploadLoadingStates[params[0] + '-' + method] = isLoading()
+                    }
+                })
+            }))
+
+            window.addEventListener('livewire-upload-finish', ({ detail }) => {
+                window.uploadLoadingStates[detail.property + '-finished'] = true
+            })
+            JS))
+        ->attach('@file1Input', __DIR__.'/browser_test_image.png')
+        ->waitUntil('window.uploadLoadingStates["file1-finished"] === true')
+        ->assertScript('[window.uploadLoadingStates.file1, window.uploadLoadingStates["file1-_startUpload"], window.uploadLoadingStates["file1-_finishUpload"]]', [false, false, false])
+        ->attach('@file2Input', __DIR__.'/browser_test_image.png')
+        ->waitUntil('window.uploadLoadingStates["file2-finished"] === true')
+        ->assertScript('[window.uploadLoadingStates.file2, window.uploadLoadingStates["file2-_startUpload"], window.uploadLoadingStates["file2-_finishUpload"]]', [true, true, true])
+        ->waitUntilMissing('@loadingIndicator')
         ;
     }
-    */
 
 	function test_wire_loading_doesnt_error_when_class_contains_two_consecutive_spaces()
     {

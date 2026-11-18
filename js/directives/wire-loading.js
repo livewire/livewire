@@ -50,7 +50,7 @@ directive('loading', ({ el, directive, component, cleanup }) => {
         endLoading,
     ])
 
-    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, [
+    let cleanupB = whenTargetsArePartOfFileUpload(component, targets, inverted, [
         startLoading,
         endLoading,
     ])
@@ -180,12 +180,12 @@ function whenTargetsArePartOfRequest(component, el, targets, inverted, [ startLo
     })
 }
 
-function whenTargetsArePartOfFileUpload(component, targets, [ startLoading, endLoading ]) {
+function whenTargetsArePartOfFileUpload(component, targets, inverted, [ startLoading, endLoading ]) {
     let eventMismatch = e => {
         let { id, property } = e.detail
 
         if (id !== component.id) return true
-        if (targets.length > 0 && ! targets.map(i => i.target).includes(property)) return true
+        if (targets.length > 0 && targets.some(({ target }) => matchesProperty(property, target)) === inverted) return true
 
         return false
     }
@@ -226,21 +226,18 @@ function containsTargets(payload, targets) {
             })
         }
 
-        let hasMatchingUpdate = Object.keys(updates).some(property => {
-            // If the property is nested, like `foo.bar`, we need to check if the root `foo` is the target.
-            if (property.includes('.')) {
-                let propertyRoot = property.split('.')[0]
+        if (Object.keys(updates).some(property => matchesProperty(property, target))) return true
 
-                if (propertyRoot === target) return true
-            }
-
-            return property === target
-        })
-
-        if (hasMatchingUpdate) return true
-
-        if (calls.map(i => i.method).includes(target)) return true
+        return calls.some(({ method, params }) => method === target || (
+            uploadLifecycleMethods.includes(method) && matchesProperty(params[0], target)
+        ))
     })
+}
+
+const uploadLifecycleMethods = ['_startUpload', '_finishUpload', '_uploadErrored']
+
+function matchesProperty(property, target) {
+    return typeof property === 'string' && (property === target || property.split('.')[0] === target)
 }
 
 function getTargets(el) {
