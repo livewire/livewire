@@ -27,6 +27,9 @@ export function coordinateNetworkInteractions(messageBus) {
         // the second of two visible lazy island loads)...
         if (! message.hasActionForComponent()) return
 
+        // JSON-only messages skip the parent render, so there are no new props to pass down...
+        if (message.getActions().every(action => action.isJson())) return
+
         let component = message.component
 
         let bundledMessages = []
