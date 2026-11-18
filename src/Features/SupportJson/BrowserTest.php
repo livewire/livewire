@@ -6,6 +6,7 @@ use Tests\BrowserTestCase;
 use Livewire\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\Json;
+use Livewire\Attributes\Modelable;
 use Illuminate\Support\Facades\Validator;
 
 class BrowserTest extends BrowserTestCase
@@ -102,6 +103,65 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewire()->click('@call')
         ->assertSeeIn('@count', '0')
         ;
+    }
+
+    public function test_json_method_called_from_a_modelable_child_does_not_commit_the_child()
+    {
+        Livewire::visit([
+            new class extends Component {
+                public $value = 'initial';
+
+                #[Json]
+                public function getData()
+                {
+                    return 'loaded';
+                }
+
+                public function updateValue()
+                {
+                    $this->value = 'updated';
+                }
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click="updateValue" dusk="update">Update</button>
+                        <livewire:child wire:model="value" />
+                    </div>
+                    HTML;
+                }
+            },
+            'child' => new class extends Component {
+                #[Modelable]
+                public $value;
+
+                public function render()
+                {
+                    return <<<'HTML'
+                    <div x-data="{ result: '' }">
+                        <button dusk="call" x-on:click="$wire.$parent.getData().then(data => result = data)">Load</button>
+                        <span dusk="result" x-text="result"></span>
+                        <span dusk="child-value">{{ $value }}</span>
+                    </div>
+                    HTML;
+                }
+            },
+        ])
+        ->waitForLivewireToLoad()
+        ->tap(fn ($browser) => $browser->script(<<<'JS'
+            window.livewireRequestSizes = []
+
+            Livewire.interceptRequest(({ request, onSend }) => {
+                onSend(() => window.livewireRequestSizes.push(request.messages.size))
+            })
+            JS))
+        ->click('@call')
+        ->waitForTextIn('@result', 'loaded')
+        ->assertScript('window.livewireRequestSizes', [1])
+        ->waitForLivewire()->click('@update')
+        ->assertSeeIn('@child-value', 'updated')
+        ->assertScript('window.livewireRequestSizes', [1, 2]);
     }
 
     public function test_json_method_can_return_primitive_values()
