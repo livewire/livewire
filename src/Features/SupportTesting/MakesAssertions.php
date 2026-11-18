@@ -216,7 +216,7 @@ trait MakesAssertions
     {
         $data = $this->lastState->getSnapshotData();
 
-        if (is_callable($value)) {
+        if (! is_string($value) && is_callable($value)) {
             PHPUnit::assertTrue($value(data_get($data, $name)));
         } else {
             $strict ? PHPUnit::assertSame($value, data_get($data, $name)) : PHPUnit::assertEquals($value, data_get($data, $name));
@@ -232,7 +232,7 @@ trait MakesAssertions
     {
         $data = $this->lastState->getSnapshotData();
 
-        if (is_callable($value)) {
+        if (! is_string($value) && is_callable($value)) {
             PHPUnit::assertFalse($value(data_get($data, $name)));
         } else {
             $strict ? PHPUnit::assertNotSame($value, data_get($data, $name)) : PHPUnit::assertNotEquals($value, data_get($data, $name));
@@ -268,7 +268,7 @@ trait MakesAssertions
     {
         $data = data_get($this->lastState->getEffects(), 'returns.0');
 
-        if (is_callable($value)) {
+        if (! is_string($value) && is_callable($value)) {
             PHPUnit::assertTrue($value($data));
         } else {
             PHPUnit::assertEquals($value, $data);
