@@ -1,4 +1,5 @@
 import { globalDirective } from "@/directives"
+import { createUrlObjectFromString } from '@/plugins/navigate/links'
 import Alpine from 'alpinejs'
 
 Alpine.addInitSelector(() => `[wire\\:current]`)
@@ -20,19 +21,15 @@ globalDirective('current', ({ el, directive, cleanup }) => {
 
     if (options.ignore) return
 
-    // Fragment hrefs aren't supported as of yet...
-    if (expression.startsWith('#')) return
-
-    // If there is no href, let's not do anything...
-    if (! el.hasAttribute('href')) return
-
     let href = el.getAttribute('href')
 
-    let hrefUrl = new URL(href, window.location.href)
+    if (href === null || href.startsWith('#')) return
 
     let classes = expression.split(' ').filter(String)
 
     let refreshCurrent = url => {
+        let hrefUrl = createUrlObjectFromString(href)
+
         if (pathMatches(hrefUrl, url, options)) {
             el.classList.add(...classes)
             el.setAttribute('data-current', '')

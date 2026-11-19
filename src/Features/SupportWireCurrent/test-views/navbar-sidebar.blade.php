@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @if (request()->is('base-section/*'))
+        <base href="{{ request()->is('base-section/alternate/*') ? '/base-section/alternate/' : '/base-section/' }}">
+    @endif
     <title>Document</title>
     <style>
         .active {
@@ -24,6 +27,14 @@
                 <li><a href="/second" wire:navigate dusk="link.second.exact" wire:current.exact="active">exact: Link second</a></li>
                 <li><a href="/first/" wire:navigate dusk="link.first.slash" wire:current="active">Link first (trailing slash without .strict)</a></li>
                 <li><a href="/first/" wire:navigate dusk="link.first.slash.strict" wire:current.strict="active">Link first (trailing slash with .strict)</a></li>
+
+                @if (request()->is('base-section/*'))
+                    <li><a href="child/active" wire:current="active" dusk="base.current">Current link</a></li>
+                    <li><a href="child/active" wire:navigate dusk="base.navigate">Current navigation link</a></li>
+                    <li><a href="active" wire:current="active" dusk="base.other-current">Other link</a></li>
+                    <li><a href="active" wire:navigate dusk="base.other-navigate">Other navigation link</a></li>
+                    <li><a href="/base-section/alternate/active" wire:navigate dusk="base.change">Change base</a></li>
+                @endif
 
                 <li style="padding-top: 1rem">Route helper:</li>
                 <li><a href="{{ route('first') }}" wire:navigate dusk="route.link.first" wire:current="active">Link first</a></li>
