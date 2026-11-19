@@ -204,11 +204,11 @@ class TemporaryUploadedFile extends UploadedFile
 
         $newPath = trim($path.'/'.$name, '/');
 
-        Storage::disk($disk)->put(
+        $stored = Storage::disk($disk)->put(
             $newPath, $this->storage->readStream($this->path), $options
         );
 
-        return $newPath;
+        return $stored ? $newPath : false;
     }
 
     public static function generateHashName($file)
