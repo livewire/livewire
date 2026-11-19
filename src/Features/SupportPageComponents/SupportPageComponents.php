@@ -2,7 +2,7 @@
 
 namespace Livewire\Features\SupportPageComponents;
 
-use function Livewire\{on, once};
+use function Livewire\{before, on};
 use Livewire\Drawer\ImplicitRouteBinding;
 use Livewire\ComponentHook;
 use Livewire\Mechanisms\HandleRouting\LivewirePageController;
@@ -87,11 +87,17 @@ class SupportPageComponents extends ComponentHook
     static function interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration($callback)
     {
         $layoutConfig = null;
-        $slots = [];
+        $page = null;
+        $pageParent = app('livewire')->current();
 
-        // Only run this handler once for the parent-most component. Otherwise child components
-        // will run this handler too and override the configured layout...
-        $handler = once(function ($target, $view, $data) use (&$layoutConfig, &$slots) {
+        // A child can render before the page's render event, including during a mount listener.
+        $mount = before('mount', function ($target, $params, $key, $parent) use (&$page, $pageParent) {
+            if ($parent === $pageParent) $page ??= $target;
+        });
+
+        $handler = function ($target, $view, $data) use (&$layoutConfig, &$page) {
+            if ($target !== $page || $layoutConfig !== null) return;
+
             $layoutAttr = $target->getAttributes()->whereInstanceOf(BaseLayout::class)->first();
             $titleAttr = $target->getAttributes()->whereInstanceOf(BaseTitle::class)->first();
 
@@ -110,7 +116,7 @@ class SupportPageComponents extends ComponentHook
                 // to be later forwarded into the layout component itself...
                 $layoutConfig->viewContext = $viewContext;
             };
-        });
+        };
 
         $render = on('render', $handler);
         $renderPlaceholder = on('render.placeholder', $handler);
@@ -118,6 +124,7 @@ class SupportPageComponents extends ComponentHook
         try {
             $callback();
         } finally {
+            $mount();
             $render();
             $renderPlaceholder();
         }
