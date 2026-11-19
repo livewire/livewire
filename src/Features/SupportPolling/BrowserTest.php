@@ -27,6 +27,56 @@ class BrowserTest extends BrowserTestCase
             ;
     }
 
+    public function test_polling_waits_for_the_connection_when_the_page_starts_offline()
+    {
+        Livewire::visit(new class extends Component {
+            public int $pollCount = 0;
+
+            public function countPoll()
+            {
+                $this->pollCount++;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div wire:poll.keep-alive.1234ms="countPoll">
+                    <span dusk="poll-count">{{ $pollCount }}</span>
+
+                    <script>
+                        Object.defineProperty(navigator, 'onLine', { value: false, configurable: true })
+
+                        const originalSetInterval = window.setInterval
+                        window.setInterval = (callback, duration, ...args) => {
+                            if (duration !== 1234) return originalSetInterval(callback, duration, ...args)
+
+                            window.setInterval = originalSetInterval
+                            window.runPollTick = callback
+                        }
+
+                        document.addEventListener('livewire:init', () => {
+                            window.pollAttempts = 0
+
+                            Livewire.interceptAction(({ action }) => {
+                                if (action.name === 'countPoll') window.pollAttempts++
+                            })
+                        })
+                    </script>
+                </div>
+                HTML;
+            }
+        })
+            ->waitForLivewireToLoad()
+            ->tap(fn ($browser) => $browser->script('window.runPollTick()'))
+            ->assertScript('window.pollAttempts', 0)
+            ->tap(fn ($browser) => $browser->script(<<<'JS'
+                delete navigator.onLine
+                window.dispatchEvent(new Event('online'))
+                window.runPollTick()
+                JS))
+            ->waitForTextIn('@poll-count', '1');
+    }
+
     public function test_poll_duration_can_be_in_minutes()
     {
         Livewire::visit(new class extends Component {
