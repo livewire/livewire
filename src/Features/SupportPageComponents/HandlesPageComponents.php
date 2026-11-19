@@ -11,11 +11,10 @@ trait HandlesPageComponents
         // simple invokable controllers. Ex: Route::get('...', SomeLivewireComponent::class);
         $html = null;
 
-        $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$html) {
-            $params = SupportPageComponents::gatherMountMethodParamsFromRouteParameters($this);
+        $params = SupportPageComponents::gatherMountMethodParamsFromRouteParameters($this);
+        $name = $this->getName() !== null ? $this->getName() : $this::class;
 
-            $name = $this->getName() !== null ? $this->getName() : $this::class;
-
+        $layoutConfig = SupportPageComponents::interceptTheRenderOfTheComponentAndRetreiveTheLayoutConfiguration(function () use (&$html, $name, $params) {
             $html = app('livewire')->mount($name, $params);
         });
 

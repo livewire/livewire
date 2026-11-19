@@ -8,11 +8,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Livewire\Component;
 use Livewire\EventBus;
 use Livewire\Livewire;
 
-use function Livewire\invade;
+use function Livewire\{before, invade};
 
 class UnitTest extends \Tests\TestCase
 {
@@ -204,6 +205,37 @@ class UnitTest extends \Tests\TestCase
         Route::get('/foo', ComponentWithCustomLayout::class);
 
         $this->withoutExceptionHandling()->get('/foo')->assertSee('baz');
+    }
+
+    public function test_page_keeps_its_layout_when_a_child_renders_first()
+    {
+        Route::get('/page-with-early-child', PageWithChildMountedDuringRender::class);
+
+        $this->withoutExceptionHandling()
+            ->get('/page-with-early-child')
+            ->assertOk()
+            ->assertSeeText('Nested content')
+            ->assertSeeText('Page layout');
+    }
+
+    public function test_page_keeps_its_layout_when_a_child_renders_during_an_earlier_mount_listener()
+    {
+        $removeListener = before('mount', function ($component) {
+            if ($component instanceof ComponentWithCustomLayout) {
+                Livewire::mount(ComponentForConfigurableLayoutTest::class);
+            }
+        });
+
+        try {
+            Route::get('/page-with-mount-listener-child', ComponentWithCustomLayout::class);
+
+            $this->withoutExceptionHandling()
+                ->get('/page-with-mount-listener-child')
+                ->assertOk()
+                ->assertSeeText('baz');
+        } finally {
+            $removeListener();
+        }
     }
 
     public function test_can_set_custom_slot_for_a_layout()
@@ -486,6 +518,7 @@ class UnitTest extends \Tests\TestCase
     {
         $eventBus = invade(app(EventBus::class));
 
+        $mountListenersBefore = $eventBus->listenersBefore['mount'] ?? [];
         $renderListenersBefore = $eventBus->listeners['render'] ?? [];
         $placeholderListenersBefore = $eventBus->listeners['render.placeholder'] ?? [];
 
@@ -497,6 +530,10 @@ class UnitTest extends \Tests\TestCase
             //
         }
 
+        $this->assertSame(
+            $mountListenersBefore,
+            $eventBus->listenersBefore['mount'] ?? [],
+        );
         $this->assertSame(
             $renderListenersBefore,
             $eventBus->listeners['render'] ?? [],
@@ -642,6 +679,17 @@ class ComponentWithCustomLayout extends Component
         return view('null-view')->layout('layouts.app-with-bar', [
             'bar' => 'baz'
         ]);
+    }
+}
+
+class PageWithChildMountedDuringRender extends Component
+{
+    public function render()
+    {
+        $child = Livewire::mount(ComponentForConfigurableLayoutTest::class, ['name' => 'Nested content']);
+
+        return view('show-name', ['name' => new HtmlString($child)])
+            ->layout('layouts.app-with-bar', ['bar' => 'Page layout']);
     }
 }
 
