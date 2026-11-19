@@ -45,13 +45,9 @@ class SingleFileParser extends Parser
 
     public static function extractClassPortion(string &$contents): string
     {
-        $pattern = '/<\?php\s*.*?\s*\?>/s';
-
-        $classPortion = static::extractPattern($pattern, $contents);
-
-        if ($classPortion === false) {
-            throw new \Exception('Class contents not found');
-        }
+        [$start, $length] = static::phpBlockRanges($contents)[0] ?? throw new \Exception('Class contents not found');
+        $classPortion = substr($contents, $start, $length);
+        $contents = substr_replace($contents, '', $start, $length);
 
         return $classPortion;
     }
@@ -139,11 +135,29 @@ class SingleFileParser extends Parser
 
     private static function getViewPortion(string $contents): string
     {
-        // Remove the PHP class portion to get just the view
-        $classPattern = '/<\?php\s*.*?\s*\?>/s';
-        $viewContents = preg_replace($classPattern, '', $contents);
+        foreach (array_reverse(static::phpBlockRanges($contents)) as [$start, $length]) {
+            $contents = substr_replace($contents, '', $start, $length);
+        }
 
-        return trim($viewContents);
+        return trim($contents);
+    }
+
+    private static function phpBlockRanges(string $contents): array
+    {
+        $ranges = [];
+        $start = null;
+
+        foreach (\PhpToken::tokenize($contents) as $token) {
+            if ($token->id === T_OPEN_TAG && str_starts_with($token->text, '<?php')) {
+                $start = $token->pos;
+            } elseif ($token->id === T_CLOSE_TAG && $start !== null) {
+                // PHP includes a following newline in the closing token.
+                $ranges[] = [$start, $token->pos + strlen('?>') - $start];
+                $start = null;
+            }
+        }
+
+        return $ranges;
     }
 
     protected static function extractPattern(string $pattern, string &$contents): string | false
