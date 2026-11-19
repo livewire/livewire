@@ -872,12 +872,17 @@ class BrowserTest extends \Tests\BrowserTestCase
     public function test_navigate_scrolls_to_fragment_targets()
     {
         $this->browse(function ($browser) {
-            foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments'] as $index => $fragment) {
+            foreach ([
+                ['comments', '@second-target'],
+                ['comments%3Areplies', '@replies-target'],
+                ['100%', '@percentage-target'],
+                ['legacy-comments', '@legacy-target'],
+            ] as $index => [$fragment, $target]) {
                 $browser
                     ->visit('/first-scroll')
                     ->waitForNavigate()->click('@link.to.fragment.'.$index)
                     ->assertFragmentIs($fragment)
-                    ->assertInViewPort('@second-target');
+                    ->assertInViewPort($target);
             }
         });
     }
@@ -2326,7 +2331,7 @@ class FirstScrollPage extends Component
         <div>
             <div>On first</div>
 
-            <div style="position: fixed; top: 0; right: 0;">
+            <div style="position: absolute; top: 0; right: 0;">
                 <a href="/second-scroll#comments" wire:navigate.preserve-scroll dusk="link.to.fragment.with.preserve.scroll">Preserve scroll</a>
 
                 @foreach (['comments', 'comments%3Areplies', '100%', 'legacy-comments', 'missing'] as $fragment)
@@ -2446,9 +2451,9 @@ class SecondScrollPage extends Component
             <div style="height: 100vh;">spacer</div>
 
             <div id="comments" dusk="second-target">
-                <span id="comments:replies">Replies</span>
-                <span id="100%">Percentage</span>
-                <a name="legacy-comments">Legacy comments</a>
+                <div id="comments:replies" dusk="replies-target">Replies</div>
+                <div id="100%" dusk="percentage-target">Percentage</div>
+                <a name="legacy-comments" dusk="legacy-target" style="display: block;">Legacy comments</a>
                 below the fold
             </div>
 
