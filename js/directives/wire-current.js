@@ -1,4 +1,5 @@
 import { globalDirective } from "@/directives"
+import { createUrlObjectFromString } from '@/plugins/navigate/links'
 import Alpine from 'alpinejs'
 
 Alpine.addInitSelector(() => `[wire\\:current]`)
@@ -24,11 +25,11 @@ globalDirective('current', ({ el, directive, cleanup }) => {
 
     if (href === null || href.startsWith('#')) return
 
-    let hrefUrl = new URL(href, window.location.href)
-
     let classes = expression.split(' ').filter(String)
 
     let refreshCurrent = url => {
+        let hrefUrl = createUrlObjectFromString(href)
+
         if (pathMatches(hrefUrl, url, options)) {
             el.classList.add(...classes)
             el.setAttribute('data-current', '')

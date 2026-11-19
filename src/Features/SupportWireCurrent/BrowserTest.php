@@ -23,8 +23,36 @@ class BrowserTest extends BrowserTestCase
             Route::get('/first', FirstPage::class)->middleware('web')->name('first');
             Route::get('/first/sub', FirstSubPage::class)->middleware('web')->name('first.sub');
             Route::get('/second', SecondPage::class)->middleware('web')->name('second');
+            Route::get('/base-section/child/active', FirstPage::class)->middleware('web');
+            Route::get('/base-section/alternate/active', SecondPage::class)->middleware('web');
             Route::get('/wire-current-inside-component', WireCurrentInsideComponentPage::class)->middleware('web')->name('wire-current-inside-component');
         };
+    }
+
+    public function test_current_links_resolve_relative_urls_against_the_document_base()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/base-section/child/active')
+                ->waitForText('On first')
+
+                ->assertAttribute('@base.current', 'data-current', '')
+                ->assertHasClass('@base.current', 'active')
+                ->assertAttribute('@base.navigate', 'data-current', '')
+
+                ->assertAttributeMissing('@base.other-current', 'data-current')
+                ->assertAttributeMissing('@base.other-navigate', 'data-current')
+
+                ->click('@base.change')
+                ->waitForText('On second')
+                ->waitFor('[dusk="base.other-current"][data-current]')
+
+                ->assertAttributeMissing('@base.current', 'data-current')
+                ->assertAttributeMissing('@base.navigate', 'data-current')
+                ->assertHasClass('@base.other-current', 'active')
+                ->assertAttribute('@base.other-navigate', 'data-current', '')
+                ;
+        });
     }
 
     public function test_wire_current_matches_urls_properly()
