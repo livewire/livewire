@@ -51,6 +51,19 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('avatars')->assertExists('uploaded-avatar.png');
     }
 
+    public function test_store_as_returns_false_when_destination_cannot_be_written()
+    {
+        $disk = Storage::fake('avatars', ['throw' => false]);
+        $disk->makeDirectory('photos/avatar.jpg');
+
+        $file = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->viewData('photo');
+
+        $this->assertFalse($file->storeAs('photos', 'avatar.jpg', 'avatars'));
+        $this->assertDirectoryExists($disk->path('photos/avatar.jpg'));
+    }
+
     public function test_can_remove_a_file_property()
     {
         $file = UploadedFile::fake()->image('avatar.jpg');
