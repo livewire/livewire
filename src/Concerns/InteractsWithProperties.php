@@ -133,7 +133,7 @@ trait InteractsWithProperties
                 $value = $value->all();
             }
 
-            $paths = is_array($value) ? array_keys(Arr::dot($value, $key . '.')) : [$key];
+            $paths = is_array($value) && $value !== [] ? array_keys(Arr::dot($value, $key . '.')) : [$key];
 
             foreach ($paths as $path) {
                 if (in_array($path, $properties) || Str::startsWith($path, $prefixes)) continue;
