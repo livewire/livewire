@@ -13,7 +13,7 @@ class Checksum {
     protected static $rateLimitingEnabledForTesting = false;
 
     static function verify($snapshot) {
-        // Check if this IP is already blocked due to too many failures
+        // Check if this user or IP is already blocked due to too many failures
         static::enforceRateLimit();
 
         $checksum = $snapshot['checksum'];
@@ -75,6 +75,12 @@ class Checksum {
 
     protected static function rateLimitKey(): string
     {
+        // Key by the authenticated user when there is one, so a single bad client
+        // can't lock out everyone sharing its IP address (NAT, VPN, CGNAT)...
+        if ($user = request()->user()) {
+            return 'livewire-checksum-failures:user:' . $user->getAuthIdentifier();
+        }
+
         return 'livewire-checksum-failures:' . request()->ip();
     }
 
