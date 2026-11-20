@@ -4,11 +4,41 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\Route;
+use Livewire\Mechanisms\HandleComponents\Checksum;
 use Livewire\Component as BaseComponent;
 use Livewire\Livewire;
 
 class UnitTest extends \LegacyTests\Unit\TestCase
 {
+    public function test_persistent_middleware_response_is_returned_on_subsequent_requests()
+    {
+        Route::get('/with-response-middleware', fn () => 'page')
+            ->middleware(ReturnsResponseMiddleware::class);
+
+        Livewire::addPersistentMiddleware(ReturnsResponseMiddleware::class);
+
+        $snapshot = Livewire::test(ComponentWithAction::class)->snapshot;
+        $snapshot['memo']['path'] = 'with-response-middleware';
+        $snapshot['memo']['method'] = 'GET';
+        unset($snapshot['checksum']);
+        $snapshot['checksum'] = Checksum::generate($snapshot);
+
+        ComponentWithAction::$called = false;
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson('/livewire/update', [
+                'components' => [[
+                    'calls' => [['method' => 'save', 'params' => [], 'path' => '']],
+                    'updates' => [],
+                    'snapshot' => json_encode($snapshot),
+                ]],
+            ]);
+
+        $response->assertStatus(418);
+        $this->assertFalse(ComponentWithAction::$called);
+    }
+
     public function test_it_does_not_have_persistent_middleware_memory_leak_when_adding_middleware()
     {
         $base = Livewire::getPersistentMiddleware();
@@ -67,6 +97,29 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $response->assertJsonPath('components.0.snapshot', $snapshot);
     }
 
+}
+
+class ComponentWithAction extends BaseComponent
+{
+    public static $called = false;
+
+    public function save()
+    {
+        static::$called = true;
+    }
+
+    public function render()
+    {
+        return '<div></div>';
+    }
+}
+
+class ReturnsResponseMiddleware
+{
+    public function handle($request, $next)
+    {
+        return response()->json([], 418);
+    }
 }
 
 class EmptyComponent extends BaseComponent
