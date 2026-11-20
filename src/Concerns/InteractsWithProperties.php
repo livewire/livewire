@@ -113,16 +113,24 @@ trait InteractsWithProperties
         // Excepted paths that sit inside a property, like "form.content.foo".
         $nested = array_filter($properties, fn ($property) => Utils::containsDots($property));
 
-        $roots = array_map(fn ($property) => Utils::beforeFirstDot($property), $nested);
-
         $prefixes = array_map(fn ($property) => $property . '.', $nested);
+
+        $keysToKeep = [];
+
+        foreach ($nested as $property) {
+            while (Utils::containsDots($property)) {
+                $property = Str::beforeLast($property, '.');
+
+                $keysToKeep[] = $property;
+            }
+        }
 
         $keysToReset = [];
 
         foreach ($this->all() as $key => $value) {
             if (in_array($key, $properties)) continue;
 
-            if (! in_array($key, $roots)) {
+            if (! in_array($key, $keysToKeep)) {
                 $keysToReset[] = $key;
 
                 continue;
@@ -133,10 +141,21 @@ trait InteractsWithProperties
                 $value = $value->all();
             }
 
-            $paths = is_array($value) && $value !== [] ? array_keys(Arr::dot($value, $key . '.')) : [$key];
+            // Only arrays can be broken down into paths, anything else is reset as a whole.
+            if (! is_array($value)) {
+                $keysToReset[] = $key;
 
-            foreach ($paths as $path) {
-                if (in_array($path, $properties) || Str::startsWith($path, $prefixes)) continue;
+                continue;
+            }
+
+            foreach (array_keys(Arr::dot($value, $key . '.')) as $path) {
+                if (
+                    in_array($path, $properties) ||
+                    in_array($path, $keysToKeep) ||
+                    Str::startsWith($path, $prefixes)
+                ) {
+                    continue;
+                }
 
                 $keysToReset[] = $path;
             }

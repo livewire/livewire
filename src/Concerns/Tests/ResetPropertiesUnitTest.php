@@ -202,6 +202,14 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
             ->call('resetKeysExcept', 'nestedArrayProp.foo')
             ->assertSetStrict('nestedArrayProp.foo', null);
     }
+
+    public function test_reset_except_does_not_reset_an_empty_array_that_holds_an_excepted_path()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.foo', [])
+            ->call('resetKeysExcept', 'nestedArrayProp.foo.bar')
+            ->assertSetStrict('nestedArrayProp.foo', []);
+    }
 }
 
 class ResetPropertiesComponent extends TestComponent
