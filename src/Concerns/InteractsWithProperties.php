@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Form;
 
@@ -109,21 +110,33 @@ trait InteractsWithProperties
             $properties = $properties[0];
         }
 
+        // Excepted paths that sit inside a property, like "form.content.foo".
+        $nested = array_filter($properties, fn ($property) => Utils::containsDots($property));
+
+        $roots = array_map(fn ($property) => Utils::beforeFirstDot($property), $nested);
+
+        $prefixes = array_map(fn ($property) => $property . '.', $nested);
+
         $keysToReset = [];
 
-        foreach (array_keys($this->all()) as $key) {
+        foreach ($this->all() as $key => $value) {
             if (in_array($key, $properties)) continue;
 
-            if (! isset($this->{$key}) || ! is_subclass_of($this->{$key}, Form::class)) {
+            if (! in_array($key, $roots)) {
                 $keysToReset[] = $key;
 
                 continue;
             }
 
-            foreach (array_keys($this->{$key}->all()) as $field) {
-                $path = $key . '.' . $field;
+            // Form objects are treated as the array of their fields.
+            if ($value instanceof Form) {
+                $value = $value->all();
+            }
 
-                if (in_array($path, $properties)) continue;
+            $paths = is_array($value) ? array_keys(Arr::dot($value, $key . '.')) : [$key];
+
+            foreach ($paths as $path) {
+                if (in_array($path, $properties) || Str::startsWith($path, $prefixes)) continue;
 
                 $keysToReset[] = $path;
             }

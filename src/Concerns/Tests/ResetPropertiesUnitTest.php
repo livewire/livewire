@@ -183,6 +183,25 @@ class ResetPropertiesUnitTest extends \Tests\TestCase
         $this->assertEquals('baz', $component->pullResult['foo']);
         $this->assertFalse(array_key_exists('bob', $component->pullResult));
     }
+
+    public function test_can_reset_all_except_a_nested_array_property()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->set('foo', 'baz')
+            ->set('nestedArrayProp.foo', 'changed')
+            ->set('nestedArrayProp.newKey', 'dynamic')
+            ->call('resetKeysExcept', 'nestedArrayProp.foo')
+            ->assertSetStrict('foo', 'bar')
+            ->assertSetStrict('nestedArrayProp', ['foo' => 'changed', 'nullValue' => null]);
+    }
+
+    public function test_reset_except_keeps_a_nested_array_property_that_is_null()
+    {
+        Livewire::test(ResetPropertiesComponent::class)
+            ->set('nestedArrayProp.foo', null)
+            ->call('resetKeysExcept', 'nestedArrayProp.foo')
+            ->assertSetStrict('nestedArrayProp.foo', null);
+    }
 }
 
 class ResetPropertiesComponent extends TestComponent
