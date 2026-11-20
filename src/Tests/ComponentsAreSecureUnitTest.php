@@ -233,6 +233,16 @@ class ComponentsAreSecureUnitTest extends \Tests\TestCase
         $component->runAction('hydratePropertyName');
     }
 
+    public function test_cannot_call_with_from_frontend()
+    {
+        $this->expectException(MethodNotFoundException::class);
+
+        app('livewire')->component('with-target', WithMethodStub::class);
+        $component = app('livewire')->test('with-target');
+
+        $component->runAction('with');
+    }
+
     public function test_can_call_methods_that_share_lifecycle_prefix_but_are_not_lifecycle_hooks()
     {
         app('livewire')->component('lifecycle-target', LifecycleMethodStub::class);
@@ -266,6 +276,14 @@ class UnsafeComponentStub extends TestComponent
     public function someMethod()
     {
         throw new \Exception('Should not be able to acess me!');
+    }
+}
+
+class WithMethodStub extends TestComponent
+{
+    public function with()
+    {
+        return ['foo' => 'bar'];
     }
 }
 
