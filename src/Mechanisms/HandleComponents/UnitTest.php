@@ -340,6 +340,24 @@ class UnitTest extends \Tests\TestCase
         $this->assertEmpty($reported);
     }
 
+    public function test_method_not_found_exception_is_reported_when_rejected_request_reporting_is_enabled()
+    {
+        config()->set('app.debug', false);
+        config()->set('livewire.report_rejected_requests', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MethodNotFoundException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MethodNotFoundException('invalidAction'));
+
+        $this->assertCount(1, $reported);
+    }
+
     public function test_invalid_call_method_name_throws_method_not_found_when_debug_is_enabled()
     {
         config()->set('app.debug', true);
