@@ -189,15 +189,21 @@ class Utils extends BaseUtils
 
     static function applyMiddleware(\Illuminate\Http\Request $request, $middleware = [])
     {
+        $passed = false;
+
         $response = (new \Illuminate\Pipeline\Pipeline(app()))
             ->send($request)
             ->through($middleware)
-            ->then(function() {
+            ->then(function() use (&$passed) {
+                $passed = true;
+
                 return new \Illuminate\Http\Response();
             });
 
-        if ($response instanceof \Illuminate\Http\RedirectResponse) {
-            abort($response);
+        if (! $passed) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                \Illuminate\Routing\Router::toResponse($request, $response)
+            );
         }
 
         return $response;
