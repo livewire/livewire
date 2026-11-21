@@ -195,7 +195,7 @@ Good page titles are crucial for SEO:
 
 ## Learn more
 
-For more information about full-page components, layouts, and routing, see the [Pages documentation](/docs/4.x/pages#setting-a-page-title).
+For more information about full-page components, layouts, and routing, see the [Pages documentation](/docs/4.x/pages#setting-the-page-title).
 
 ## Reference
 

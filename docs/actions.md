@@ -96,7 +96,7 @@ When this button is clicked, the `delete()` method will be called and `$id` will
 > For more information, consult our documentation regarding [security concerns and best practices](/docs/4.x/actions#security-concerns).
 
 
-As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/4.x/components#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
+As an added convenience, you may automatically resolve Eloquent models by a corresponding model ID that is provided to an action as a parameter. This is very similar to [route model binding](/docs/4.x/pages#using-route-model-binding). To get started, type-hint an action parameter with a model class and the appropriate model will automatically be retrieved from the database and passed to the action instead of the ID:
 
 ```php
 <?php // resources/views/components/post/⚡index.blade.php
