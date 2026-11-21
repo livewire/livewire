@@ -5,6 +5,7 @@ namespace Livewire\Mechanisms\PersistentMiddleware;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Router;
 use Livewire\Mechanisms\Mechanism;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use function Livewire\on;
 use Illuminate\Support\Str;
@@ -26,6 +27,8 @@ class PersistentMiddleware extends Mechanism
 
     protected $path;
     protected $method;
+    protected $origin;
+    protected $routeContext;
     protected $lastMiddlewareRoute;
     protected $resolvedRouteModels = [];
 
@@ -33,16 +36,19 @@ class PersistentMiddleware extends Mechanism
     {
         on('dehydrate', function ($component, $context) {
             [$path, $method] = $this->extractPathAndMethodFromRequest();
+            $isLivewireRoute = app(HandleRequests::class)->isLivewireRoute();
 
             $context->addMemo('path', $path);
             $context->addMemo('method', $method);
+            $context->addMemo('origin', $isLivewireRoute ? $this->origin : request()->getSchemeAndHttpHost());
+            $context->addMemo('route', $isLivewireRoute ? $this->routeContext : $this->getRouteContext(request()->route()));
         });
 
         on('snapshot-verified', function ($snapshot) {
             // Only apply middleware to requests hitting the Livewire update endpoint, and not any fake requests such as a test.
             if (! app(HandleRequests::class)->isLivewireRoute()) return;
 
-            $this->extractPathAndMethodFromSnapshot($snapshot);
+            $this->extractRequestContextFromSnapshot($snapshot);
 
             $this->applyPersistentMiddleware();
         });
@@ -51,6 +57,8 @@ class PersistentMiddleware extends Mechanism
             // Only flush these at the end of a full request, so that child components have access to this data.
             $this->path = null;
             $this->method = null;
+            $this->origin = null;
+            $this->routeContext = null;
             $this->lastMiddlewareRoute = null;
             $this->resolvedRouteModels = [];
         });
@@ -85,21 +93,28 @@ class PersistentMiddleware extends Mechanism
         return [request()->path(), request()->method()];
     }
 
-    protected function extractPathAndMethodFromSnapshot($snapshot)
+    protected function extractRequestContextFromSnapshot($snapshot)
     {
         if (
-            ! isset($snapshot['memo']['path'])
-            || ! isset($snapshot['memo']['method'])
-        ) return;
+            ! is_string($snapshot['memo']['path'] ?? null)
+            || ! is_string($snapshot['memo']['method'] ?? null)
+            || ! is_string($snapshot['memo']['origin'] ?? null)
+            || ! array_key_exists('route', $snapshot['memo'])
+            || ! (is_array($snapshot['memo']['route']) || is_null($snapshot['memo']['route']))
+        ) abort(404);
 
         // Store these locally, so dynamically added child components can use this data.
         $this->path = $snapshot['memo']['path'];
         $this->method = $snapshot['memo']['method'];
+        $this->origin = $snapshot['memo']['origin'];
+        $this->routeContext = $snapshot['memo']['route'];
     }
 
     protected function applyPersistentMiddleware()
     {
-        $routeKey = $this->method . '|' . $this->path;
+        if ($this->origin !== request()->getSchemeAndHttpHost()) abort(404);
+
+        $routeKey = $this->method . '|' . $this->origin . '|' . $this->path . '|' . json_encode($this->routeContext);
 
         // If middleware was applied for the immediately preceding snapshot's
         // route, skip re-applying. When consecutive component snapshots share
@@ -174,7 +189,10 @@ class PersistentMiddleware extends Mechanism
     {
         $route = $this->getRouteFromRequest($request);
 
-        if (! $route) return [];
+        // Rendered without a route (an error page, say) and still matching none: no route middleware applied then, so none now.
+        if (! $route && $this->routeContext === null) return [];
+
+        if ($this->routeContext !== $this->getRouteContext($route)) abort(404);
 
         $middleware = app('router')->gatherRouteMiddleware($route);
 
@@ -187,11 +205,21 @@ class PersistentMiddleware extends Mechanism
             $route = app('router')->getRoutes()->match($request);
             $route->setContainer(app());
             $request->setRouteResolver(fn() => $route);
-        } catch (NotFoundHttpException $e){
+        } catch (NotFoundHttpException | MethodNotAllowedHttpException $exception) {
             return null;
         }
 
         return $route;
+    }
+
+    protected function getRouteContext($route)
+    {
+        if (! $route) return null;
+
+        return [
+            'uri' => $route->uri(),
+            'domain' => $route->getDomain(),
+        ];
     }
 
     protected function filterMiddlewareByPersistentMiddleware($middleware)
