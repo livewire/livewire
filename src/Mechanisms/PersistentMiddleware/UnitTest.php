@@ -25,6 +25,8 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $snapshot = Livewire::test(ComponentWithAction::class)->snapshot;
         $snapshot['memo']['path'] = 'with-response-middleware';
         $snapshot['memo']['method'] = 'GET';
+        $snapshot['memo']['origin'] = 'http://localhost';
+        $snapshot['memo']['route'] = ['uri' => 'with-response-middleware', 'domain' => null];
         unset($snapshot['checksum']);
         $snapshot['checksum'] = Checksum::generate($snapshot);
 
