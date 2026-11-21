@@ -222,6 +222,34 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         $this->assertSame(1, ProtectedActionComponent::$calls);
     }
 
+    public function test_it_allows_an_update_for_a_component_rendered_without_a_route()
+    {
+        Livewire::component('protected-action', ProtectedActionComponent::class);
+        ProtectedActionComponent::$calls = 0;
+
+        $snapshot = Utils::extractAttributeDataFromHtml(Livewire::mount('protected-action'), 'wire:snapshot');
+
+        $this->assertNull($snapshot['memo']['route']);
+
+        $this->updateComponent('localhost', $snapshot)->assertSuccessful();
+        $this->assertSame(1, ProtectedActionComponent::$calls);
+    }
+
+    public function test_it_rejects_an_update_for_a_component_rendered_without_a_route_once_a_route_matches_its_path()
+    {
+        Livewire::component('protected-action', ProtectedActionComponent::class);
+        ProtectedActionComponent::$calls = 0;
+
+        $snapshot = Utils::extractAttributeDataFromHtml(Livewire::mount('protected-action'), 'wire:snapshot');
+
+        Livewire::addPersistentMiddleware(ProtectedActionMiddleware::class);
+        Route::get('/'.ltrim($snapshot['memo']['path'], '/'), fn () => 'page')->middleware(ProtectedActionMiddleware::class);
+        ProtectedActionMiddleware::$allowed = false;
+
+        $this->updateComponent('localhost', $snapshot)->assertNotFound();
+        $this->assertSame(0, ProtectedActionComponent::$calls);
+    }
+
     private function renderProtectedComponent(string $host, ?string $domain = null): array
     {
         ProtectedActionMiddleware::$allowed = true;
