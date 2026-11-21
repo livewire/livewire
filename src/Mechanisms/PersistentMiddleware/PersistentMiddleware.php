@@ -99,7 +99,8 @@ class PersistentMiddleware extends Mechanism
             ! is_string($snapshot['memo']['path'] ?? null)
             || ! is_string($snapshot['memo']['method'] ?? null)
             || ! is_string($snapshot['memo']['origin'] ?? null)
-            || ! is_array($snapshot['memo']['route'] ?? null)
+            || ! array_key_exists('route', $snapshot['memo'])
+            || ! (is_array($snapshot['memo']['route']) || is_null($snapshot['memo']['route']))
         ) abort(404);
 
         // Store these locally, so dynamically added child components can use this data.
@@ -188,6 +189,9 @@ class PersistentMiddleware extends Mechanism
     {
         $route = $this->getRouteFromRequest($request);
 
+        // Rendered without a route (an error page, say) and still matching none: no route middleware applied then, so none now.
+        if (! $route && $this->routeContext === null) return [];
+
         if ($this->routeContext !== $this->getRouteContext($route)) abort(404);
 
         $middleware = app('router')->gatherRouteMiddleware($route);
@@ -202,7 +206,7 @@ class PersistentMiddleware extends Mechanism
             $route->setContainer(app());
             $request->setRouteResolver(fn() => $route);
         } catch (NotFoundHttpException | MethodNotAllowedHttpException $exception) {
-            abort(404);
+            return null;
         }
 
         return $route;
