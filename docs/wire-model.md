@@ -269,6 +269,16 @@ By default, `wire:model` only listens for input/change events that originate dir
 
 For example, if you have a modal with `wire:model="showModal"` and an input field inside it, clearing that input won't accidentally close the modal by bubbling up a change event.
 
+### The `.self` modifier
+
+This default matches the `.self` modifier. In Livewire v3, you had to add `.self` yourself to get this behavior, so you may still see it in existing code or in third-party documentation, such as Flux's modal docs:
+
+```blade
+<flux:modal wire:model.self="showModal">
+```
+
+In Livewire v4, `.self` is accepted but has no extra effect. You can leave it in place or remove it.
+
 ### Listening to child events
 
 In rare cases where you want `wire:model` to also respond to events bubbling up from child elements, you can use the `.deep` modifier:
@@ -350,6 +360,7 @@ wire:model="property[0]"
 | `.number` | Cast value to `int` on the server |
 | `.boolean` | Cast value to `bool` on the server |
 | `.fill` | Use initial value from HTML `value` attribute |
+| `.self` | Only listen to events from the element itself (default in v4) |
 | `.deep` | Also listen to events from child elements |
 | `.renderless` | Skip re-rendering after a live model update |
 | `.preserve-scroll` | Maintain scroll position during updates |
