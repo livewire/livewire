@@ -117,6 +117,8 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
+          # Keep legacy Laravel installable for compatibility tests, while retaining audit reports.
+          composer config --json policy.advisories.ignore '{"laravel/framework":{"constraint":"<12","on-audit":false,"reason":"Legacy Laravel compatibility tests only."}}'
           composer update --prefer-stable --no-interaction
 
       - name: Download built assets
@@ -184,6 +186,8 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
+          # Keep legacy Laravel installable for compatibility tests, while retaining audit reports.
+          composer config --json policy.advisories.ignore '{"laravel/framework":{"constraint":"<12","on-audit":false,"reason":"Legacy Laravel compatibility tests only."}}'
           composer update --prefer-stable --no-interaction
 
       - name: Download built assets
@@ -261,6 +265,8 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update --dev
+          # Keep legacy Laravel installable for compatibility tests, while retaining audit reports.
+          composer config --json policy.advisories.ignore '{"laravel/framework":{"constraint":"<12","on-audit":false,"reason":"Legacy Laravel compatibility tests only."}}'
           composer update --prefer-stable --no-interaction
 
       - name: Download built assets

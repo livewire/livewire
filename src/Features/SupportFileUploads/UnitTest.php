@@ -830,6 +830,34 @@ class UnitTest extends \Tests\TestCase
         Storage::disk('avatars')->assertMissing('malicious.php');
     }
 
+    public function test_extension_validation_passes_for_a_file_with_an_allowed_extension()
+    {
+        Storage::fake('avatars');
+
+        Livewire::test(FileExtensionValidatorComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.png'))
+            ->call('save')
+            ->assertHasNoErrors('photo');
+
+        Storage::disk('avatars')->assertExists('malicious.png');
+    }
+
+    public function test_temporary_files_are_stored_with_a_fixed_extension()
+    {
+        $disk = Storage::fake('tmp-for-tests');
+
+        $file = UploadedFile::fake()->createWithContent('report.txt', 'hello');
+
+        $temporaryFile = Livewire::test(FileUploadComponent::class)
+            ->set('photo', $file)
+            ->viewData('photo');
+
+        $this->assertStringEndsWith('.bin', $temporaryFile->getFilename());
+        $disk->assertExists('livewire-tmp/'.$temporaryFile->getFilename());
+        $this->assertSame('report.txt', $temporaryFile->getClientOriginalName());
+        $this->assertSame('txt', $temporaryFile->getClientOriginalExtension());
+    }
+
     public function test_the_file_upload_controller_middleware_prepends_the_web_group()
     {
         config()->set('livewire.temporary_file_upload.middleware', ['throttle:60,1']);
