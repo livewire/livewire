@@ -68,10 +68,10 @@ export class Component {
         return this.$wire.$intercept(action, callback)
     }
 
-    mergeNewSnapshot(snapshotEncoded, effects, updates = {}) {
+    mergeNewSnapshot(snapshotEncoded, effects, updates = {}, canonical = this.canonical) {
         let snapshot = JSON.parse(snapshotEncoded)
 
-        let oldCanonical = deepClone(this.canonical)
+        let oldCanonical = deepClone(canonical)
         let updatedOldCanonical = this.applyUpdates(oldCanonical, updates)
 
         let newCanonical = extractData(deepClone(snapshot.data))
