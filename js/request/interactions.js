@@ -51,15 +51,16 @@ export function coordinateNetworkInteractions(messageBus) {
             action.metadata.renderless = true
         }
 
-        let activeMessages = messageBus.activeMessagesMatchingScope(action)
+        // Wire:click.async:
+        // - allow async actions incoming to pass through...
+        if (action.isAsync()) return
+
+        // - in-flight async messages never hold anything back, so look past them: an async
+        //   message sent before a regular one must not let a new action run alongside it...
+        let activeMessages = messageBus.activeMessagesMatchingScope(action).filter(message => ! message.isAsync())
         let message = activeMessages[0]
 
         if (message) {
-            // Wire:click.async:
-            // - allow async actions incoming to pass through...
-            // - if active message actions are async, allow the incoming async action to pass through as well...
-            if (message.isAsync() || action.isAsync()) return
-
             // Wire:poll:
             // - Throw away new polls if a request of any kind is in-flight...
             if (action.metadata.type === 'poll') {

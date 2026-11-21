@@ -67,6 +67,68 @@ class BrowserTest extends \Tests\BrowserTestCase
             ;
     }
 
+    public function test_a_new_component_level_user_action_is_queued_behind_an_old_component_level_user_action_even_when_an_async_action_was_sent_before_it()
+    {
+        Livewire::visit(
+            new class extends Component {
+                public function asyncRequest() {
+                    usleep(1500 * 1000); // Keep the async request in flight for the whole test...
+                }
+
+                public function firstRequest() {
+                    usleep(1000 * 1000); // Keep the first request in flight while Dusk queues the second...
+                }
+
+                public function secondRequest() {
+                    // Don't sleep the second request...
+                }
+
+                public function render() {
+                    return <<<'HTML'
+                    <div>
+                        <button wire:click.async="asyncRequest" dusk="async-request">Async Request</button>
+                        <button wire:click="firstRequest" dusk="first-request">First Request</button>
+                        <button wire:click="secondRequest" dusk="second-request">Second Request</button>
+                    </div>
+                    @script
+                    <script>
+                        window.intercepts = []
+
+                        this.interceptMessage(({ message, onSend, onSuccess }) => {
+                            let action = [...message.actions][0]
+
+                            onSend(() => window.intercepts.push(`${action.name} sent`))
+                            onSuccess(() => window.intercepts.push(`${action.name} succeeded`))
+                        })
+                    </script>
+                    @endscript
+                    HTML;
+                }
+            }
+        )
+            ->waitForLivewireToLoad()
+
+            // The async request is the oldest one in flight...
+            ->click('@async-request')
+            ->waitUntil("window.intercepts.includes('asyncRequest sent')")
+
+            ->click('@first-request')
+            ->waitUntil("window.intercepts.includes('firstRequest sent')")
+
+            ->click('@second-request')
+            ->waitUntil("window.intercepts.includes('secondRequest succeeded')")
+            ->waitUntil("window.intercepts.includes('asyncRequest succeeded')")
+
+            // The second request waits for the first one, whatever else is in flight...
+            ->assertScript("window.intercepts.filter(i => ! i.startsWith('asyncRequest'))", [
+                'firstRequest sent',
+                'firstRequest succeeded',
+                'secondRequest sent',
+                'secondRequest succeeded',
+            ])
+            ;
+    }
+
     public function test_a_new_component_level_user_action_cancels_an_old_component_level_poll_action_for_the_same_component()
     {
         Livewire::visit(
