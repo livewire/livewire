@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Form;
 
@@ -109,9 +110,58 @@ trait InteractsWithProperties
             $properties = $properties[0];
         }
 
-        $keysToReset = array_diff(array_keys($this->all()), $properties);
+        // Excepted paths that sit inside a property, like "form.content.foo".
+        $nested = array_filter($properties, fn ($property) => Utils::containsDots($property));
 
-        if($keysToReset === []) {
+        $prefixes = array_map(fn ($property) => $property . '.', $nested);
+
+        $keysToKeep = [];
+
+        foreach ($nested as $property) {
+            while (Utils::containsDots($property)) {
+                $property = Str::beforeLast($property, '.');
+
+                $keysToKeep[] = $property;
+            }
+        }
+
+        $keysToReset = [];
+
+        foreach ($this->all() as $key => $value) {
+            if (in_array($key, $properties)) continue;
+
+            if (! in_array($key, $keysToKeep)) {
+                $keysToReset[] = $key;
+
+                continue;
+            }
+
+            // Form objects are treated as the array of their fields.
+            if ($value instanceof Form) {
+                $value = $value->all();
+            }
+
+            // Only arrays can be broken down into paths, anything else is reset as a whole.
+            if (! is_array($value)) {
+                $keysToReset[] = $key;
+
+                continue;
+            }
+
+            foreach (array_keys(Arr::dot($value, $key . '.')) as $path) {
+                if (
+                    in_array($path, $properties) ||
+                    in_array($path, $keysToKeep) ||
+                    Str::startsWith($path, $prefixes)
+                ) {
+                    continue;
+                }
+
+                $keysToReset[] = $path;
+            }
+        }
+
+        if ($keysToReset === []) {
             return;
         }
 
