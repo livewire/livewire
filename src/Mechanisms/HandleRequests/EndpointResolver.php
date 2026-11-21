@@ -12,9 +12,29 @@ class EndpointResolver
      */
     public static function prefix(): string
     {
-        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
+        return static::normalize(config('livewire.base_path_prefix')) . static::basePath();
+    }
 
+    /**
+     * Get the base path for all Livewire endpoints.
+     */
+    protected static function basePath(): string
+    {
+        $customBasePath = config('livewire.custom_base_path');
+        if ($customBasePath !== null) {
+            return static::normalize($customBasePath);
+        }
+        $hash = substr(hash('sha256', config('app.key') . 'livewire-endpoint'), 0, 8);
         return '/livewire-' . $hash;
+    }
+
+    /**
+     * Normalize a path by ensuring it starts with a slash and has no trailing slash.
+     */
+    protected static function normalize(?string $path): string
+    {
+        $path = trim($path ?? '', '/');
+        return $path === '' ? '' : '/' . $path;
     }
 
     /**
