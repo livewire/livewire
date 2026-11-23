@@ -481,13 +481,18 @@ class BrowserTest extends \Tests\BrowserTestCase
         JS]))
         // A starts: the signed URL roundtrip finishes, then its binary request hangs...
         ->waitForLivewire()->attach('@upload', __DIR__.'/browser_test_image.png')
+        // Give the hung binary request a moment to be registered in the bag...
+        ->pause(50)
         // B queues behind A → upload bag is [A, B]...
         ->attach('@upload', __DIR__.'/browser_test_image2.png')
         ->tap(fn ($b) => $b->script('window.__hungUploads = false'))
         // Cancel A, should start B.
         ->click('@cancel')
         ->waitFor('@preview')
-        ->waitForTextIn('@filename', 'browser_test_image2.png');
+        ->waitForTextIn('@filename', 'browser_test_image2.png')
+        // A later upload must still be able to start (guards against residual bag pollution)...
+        ->attach('@upload', __DIR__.'/browser_test_image.png')
+        ->waitForTextIn('@filename', 'browser_test_image.png');
     }
 }
 
