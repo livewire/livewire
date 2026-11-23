@@ -13,7 +13,9 @@ export function prefetchHtml(destination, callback, errorCallback) {
 
     if (prefetches[uri]) return
 
-    prefetches[uri] = { finished: false, html: null, whenFinished: () => setTimeout(() => delete prefetches[uri], cacheDuration), whenFailed: () => {} }
+    let prefetch = { finished: false, html: null, whenFinished: () => setTimeout(() => prefetches[uri] === prefetch && delete prefetches[uri], cacheDuration), whenFailed: () => {} }
+
+    prefetches[uri] = prefetch
 
     performFetch(uri, (html, routedUri, status) => {
         storeCurrentPageStatus(status)
