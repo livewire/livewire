@@ -257,3 +257,4 @@ Internally, Livewire has hydration support for the most common PHP and Laravel t
 - **[Properties](/docs/4.x/properties)** — How properties are preserved between requests
 - **[Morphing](/docs/4.x/morphing)** — How Livewire updates the DOM
 - **[Synthesizers](/docs/4.x/synthesizers)** — Customize property serialization
+- **[Release Tokens](/docs/4.x/release-tokens)** — Expire snapshots a deployment has made incompatible

@@ -469,17 +469,26 @@ export function getNonce() {
     return null
 }
 
-export function replaceNoncesInHtml(html) {
+export function replaceNoncesInHtml(html, nonces) {
     let nonce = getNonce()
     if (! nonce) return html
 
-    let nonceMatch = html.match(/nonce="([^"]+)"/)
-    if (! nonceMatch) return html
+    for (let newNonce of nonces) {
+        if (newNonce === nonce) continue
 
-    let newNonce = nonceMatch[1]
-    if (newNonce === nonce) return html
+        html = html.replaceAll(`nonce="${newNonce}"`, `nonce="${nonce}"`)
+    }
 
-    return html.replaceAll(`nonce="${newNonce}"`, `nonce="${nonce}"`)
+    return html
+}
+
+export function getNoncesFromCspHeaders(headers) {
+    let policies = [
+        headers.get('Content-Security-Policy'),
+        headers.get('Content-Security-Policy-Report-Only'),
+    ].join(' ')
+
+    return Array.from(policies.matchAll(/'nonce-([^']+)'/g), match => match[1])
 }
 
 export function cloneScriptTag(el) {
@@ -489,13 +498,7 @@ export function cloneScriptTag(el) {
     script.async = el.async
 
     for (let attr of el.attributes) {
-        if (attr.name === 'nonce') {
-            // Browsers clear .nonce from DOMParser-parsed elements,
-            // so fall back to the page's original nonce...
-            script.nonce = getNonce() || el.nonce
-        } else {
-            script.setAttribute(attr.name, attr.value)
-        }
+        script.setAttribute(attr.name, attr.value)
     }
 
     return script
