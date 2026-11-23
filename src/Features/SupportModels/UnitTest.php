@@ -193,6 +193,30 @@ class UnitTest extends \Tests\TestCase
         ->assertSee('First-1');
     }
 
+    public function test_collections_are_hydrated_using_the_models_queueable_ids()
+    {
+        Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public function mount() {
+                $this->articles = QueueableArticle::all()->reverse();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                </div>
+            HTML; }
+        })
+        ->assertSee('Second-0')
+        ->assertSee('First-1')
+        ->call('$refresh')
+        ->assertSee('Second-0')
+        ->assertSee('First-1');
+    }
+
     public function test_it_does_not_trigger_ClassMorphViolationException_when_morh_map_is_enforced()
     {
         // reset morph
@@ -356,6 +380,39 @@ class UnitTest extends \Tests\TestCase
             ->assertSee('Selected: First');
 
         $this->assertCount(1, Article::resolveConnection()->getQueryLog());
+    }
+
+    public function test_a_model_property_reuses_a_model_with_a_custom_queueable_id_already_hydrated_by_a_collection_property()
+    {
+        $component = Livewire::test(new class extends \Livewire\Component {
+            public Collection $articles;
+
+            public QueueableArticle $selected;
+
+            public function mount() {
+                $this->articles = QueueableArticle::all();
+                $this->selected = $this->articles->first();
+            }
+
+            public function render() { return <<<'HTML'
+                <div>
+                    @foreach($articles as $article)
+                    {{ $article->title.'-'.$loop->index }}
+                    @endforeach
+                    {{ 'Selected: '.$selected->title }}
+                </div>
+            HTML; }
+        });
+
+        QueueableArticle::resolveConnection()->enableQueryLog();
+        QueueableArticle::resolveConnection()->flushQueryLog();
+
+        $component->call('$refresh')
+            ->assertSee('First-0')
+            ->assertSee('Second-1')
+            ->assertSee('Selected: First');
+
+        $this->assertCount(1, QueueableArticle::resolveConnection()->getQueryLog());
     }
 
     public function test_a_collection_property_only_queries_models_not_already_hydrated_by_a_model_property()
@@ -782,6 +839,30 @@ class Article extends Model
         ['title' => 'First'],
         ['title' => 'Second'],
     ];
+}
+
+class QueueableArticle extends Model
+{
+    use Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'ulid' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'title' => 'First'],
+        ['id' => 2, 'ulid' => '01ARZ3NDEKTSV4RRFFQ69G5FAW', 'title' => 'Second'],
+    ];
+
+    public function getQueueableId()
+    {
+        return $this->ulid;
+    }
+
+    public function newQueryForRestoration($ids)
+    {
+        $query = $this->newQueryWithoutScopes();
+
+        return is_array($ids)
+            ? $query->whereIn('ulid', $ids)
+            : $query->where('ulid', $ids);
+    }
 }
 
 // Uses its own table so modifying or deleting rows doesn't affect other tests...

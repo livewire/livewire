@@ -27,7 +27,7 @@ class SupportModels extends ComponentHook
 
     static function rememberResolvedModel($model)
     {
-        $hash = get_class($model).':'.$model->getKey();
+        $hash = get_class($model).':'.$model->getQueueableId();
 
         // Don't track models that have gone stale, otherwise a deletion or an
         // update made through the original instance couldn't be detected...
