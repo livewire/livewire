@@ -153,7 +153,7 @@ class SupportReactiveProps extends ComponentHook
             return false;
         }
 
-        if (($meta['key'] ?? null) != $model->getKey()) return false;
+        if (($meta['key'] ?? null) != $model->getQueueableId()) return false;
 
         // Catch all the ways the parent could have mutated the model this request:
         // local attribute changes (isDirty), saves (wasChanged), and creates (wasRecentlyCreated).

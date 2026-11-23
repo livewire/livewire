@@ -349,6 +349,40 @@ class UnitTest extends \Tests\TestCase
         $this->assertCount(1, array_values($articleQueries));
     }
 
+    public function test_route_bound_models_with_custom_queueable_ids_are_not_queried_twice_on_update()
+    {
+        Route::livewire('/test-queueable-articles/{article}', QueueableRouteModelBindingComponent::class)
+            ->middleware('web');
+
+        $response = $this->withoutExceptionHandling()->get('/test-queueable-articles/01ARZ3NDEKTSV4RRFFQ69G5FAV');
+        $response->assertOk();
+        $response->assertSee('First');
+
+        $snapshot = Utils::extractAttributeDataFromHtml($response->getContent(), 'wire:snapshot');
+        $encodedSnapshot = json_encode($snapshot);
+
+        app('livewire')->flushState();
+
+        QueueableArticle::resolveConnection()->enableQueryLog();
+        QueueableArticle::resolveConnection()->flushQueryLog();
+
+        $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(app('livewire')->getUpdateUri(), [
+                'components' => [
+                    [
+                        'snapshot' => $encodedSnapshot,
+                        'calls' => [['method' => '$refresh', 'params' => [], 'path' => '']],
+                        'updates' => [],
+                    ],
+                ],
+            ])->assertOk();
+
+        $queryLog = QueueableArticle::resolveConnection()->getQueryLog();
+        $articleQueries = array_filter($queryLog, fn ($q) => str_contains($q['query'], 'queueable_articles'));
+
+        $this->assertCount(1, array_values($articleQueries));
+    }
+
     public function test_a_model_property_reuses_a_model_already_hydrated_by_a_collection_property()
     {
         $component = Livewire::test(new class extends \Livewire\Component {
@@ -855,6 +889,11 @@ class QueueableArticle extends Model
         return $this->ulid;
     }
 
+    public function getRouteKeyName()
+    {
+        return 'ulid';
+    }
+
     public function newQueryForRestoration($ids)
     {
         $query = $this->newQueryWithoutScopes();
@@ -894,6 +933,16 @@ class ExtendedArticle extends Article
 class RouteModelBindingComponent extends \Livewire\Component
 {
     public Article $article;
+
+    public function render()
+    {
+        return '<div>{{ $article->title }}</div>';
+    }
+}
+
+class QueueableRouteModelBindingComponent extends \Livewire\Component
+{
+    public QueueableArticle $article;
 
     public function render()
     {
