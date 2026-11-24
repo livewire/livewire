@@ -14,6 +14,8 @@ directive('offline', ({ el, directive, cleanup }) => {
     offlineHandlers.add(setOffline)
     onlineHandlers.add(setOnline)
 
+    if (navigator.onLine === false) setOffline()
+
     cleanup(() => {
         offlineHandlers.delete(setOffline)
         onlineHandlers.delete(setOnline)
