@@ -42,11 +42,13 @@ class SupportEvents extends ComponentHook
             // Run any authorization checks on the listener method since
             // its normal "call" hook doesn't get run when the method
             // is called as an event listener...
-            $this->component->getAttributes()
+            $authorized = $this->component->getAttributes()
                 ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->each(fn ($i) => $i->call($params));
+                ->every(fn ($i) => $i->call($params));
+
+            if (! $authorized) return $returnEarly();
 
             $returnEarly(
                 wrap($this->component)->$method(...$params)
