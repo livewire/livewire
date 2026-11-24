@@ -244,6 +244,13 @@ export class Component {
 
         let childrenMemo = {}
 
+        let previous = snapshot.memo.children || {}
+        Object.entries(previous).forEach(([key, [tag, id]]) => {
+            if (document.querySelector(`[wire\\:id="${id}"]`)) {
+                childrenMemo[key] = [tag, id]
+            }
+        })
+
         children.forEach(child => {
             childrenMemo[child.key] = [child.el.tagName.toLowerCase(), child.id]
         })
