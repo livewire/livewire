@@ -60,6 +60,35 @@ class UnitTest extends \Tests\TestCase
         $this->assertFileExists($viewPath);
     }
 
+    public function test_compiles_a_single_file_component_with_a_quoted_php_closing_tag()
+    {
+        $source = $this->tempPath . '/quoted-closing-tag.blade.php';
+        File::put($source, <<<'BLADE'
+<?php
+
+use Livewire\Component;
+
+new class extends Component {
+    public string $label = 'Draft ?> marker';
+
+    public string $example = <<<'HTML'
+<style>p { color: red; }</style>
+HTML;
+};
+?>
+
+<div>{{ $label }}</div>
+BLADE);
+
+        $cacheManager = new CacheManager($this->cacheDir);
+        $class = (new Compiler($cacheManager))->compile($source);
+        $component = new $class;
+
+        $this->assertSame('Draft ?> marker', $component->label);
+        $this->assertSame('<style>p { color: red; }</style>', $component->example);
+        $this->assertFileDoesNotExist($cacheManager->getStylePath($source));
+    }
+
     public function test_can_parse_sfc_component()
     {
         $compiler = new Compiler(new CacheManager($this->cacheDir));
