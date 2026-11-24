@@ -19,13 +19,21 @@ class SupportJson extends ComponentHook
 
             // This listener runs the method itself, before the regular "call" hooks
             // would authorize it, so run any authorization checks first...
-            $component->getAttributes()
+            $authorized = $component->getAttributes()
                 ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->each(fn ($i) => $i->call($params));
+                ->every(fn ($i) => $i->call($params));
 
             $component->skipRender();
+
+            if (! $authorized) {
+                $existingMeta = $context->effects['returnsMeta'] ?? [];
+                $existingMeta[$index] = ['status' => 403];
+                $context->addEffect('returnsMeta', $existingMeta);
+
+                return $returnEarly(null);
+            }
 
             try {
                 $result = $component->{$method}(...$params);

@@ -905,6 +905,8 @@ class UnitTest extends TestCase
                 #[BaseAuthorize(AuthorizationPost::class)]
                 public function store() : bool
                 {
+                    Session::put('action-ran', true);
+
                     return true;
                 }
 
@@ -921,6 +923,43 @@ class UnitTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(Session::has('exception-hook-triggered'));
+        $this->assertFalse(Session::has('action-ran'));
+    }
+
+    public function test_listener_and_json_method_return_early_when_exception_hook_handles_authorize()
+    {
+        Gate::define('cannot-run', fn () : bool => false);
+
+        $component = Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                public $listenerRan = false;
+
+                public $jsonRan = false;
+
+                #[BaseAuthorize('cannot-run')]
+                #[BaseOn('some-event')]
+                public function listener()
+                {
+                    $this->listenerRan = true;
+                }
+
+                #[\Livewire\Attributes\Json]
+                #[BaseAuthorize('cannot-run')]
+                public function json()
+                {
+                    Session::put('json-ran', true);
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof AuthorizationException) $stopPropagation();
+                }
+            });
+
+        $component->dispatch('some-event')->assertOk()->assertSet('listenerRan', false);
+        $component->call('json')->assertOk();
+
+        $this->assertFalse(Session::has('json-ran'));
     }
 
     public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()

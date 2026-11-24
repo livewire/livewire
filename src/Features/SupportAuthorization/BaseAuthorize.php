@@ -20,12 +20,16 @@ class BaseAuthorize extends LivewireAttribute
         public array|string|null $argument = null,
     ) {}
 
-    public function call(array $parameters) : void
+    public function call(array $parameters, ?\Closure $returnEarly = null) : bool
     {
-        wrap($this->component)->tap(function () use ($parameters) {
+        $authorized = false;
+
+        wrap($this->component)->tap(function () use ($parameters, &$authorized) {
             // Authorize defined gate or class name
             if (is_null($this->argument)) {
                 $this->authorize($this->ability);
+
+                $authorized = true;
     
                 return;
             }
@@ -47,7 +51,15 @@ class BaseAuthorize extends LivewireAttribute
             }
     
             $this->authorize($this->ability, $resolved);
+
+            $authorized = true;
         });
+
+        // When the component's exception() hook stops propagation, return early,
+        // the same as when $this->authorize() throws inside the method...
+        if (! $authorized && $returnEarly) $returnEarly();
+
+        return $authorized;
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed
