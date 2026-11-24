@@ -267,6 +267,7 @@ function sendMessages() {
         request.messages.forEach(message => {
             message.snapshot = message.component.getEncodedSnapshotWithLatestChildrenMergedIn()
             message.updates = message.component.getUpdates()
+            message.canonical = message.component.canonical
             message.calls = Array.from(message.actions).map(i => ({
                 method: i.name,
                 params: i.params,
@@ -466,7 +467,7 @@ function sendMessages() {
                             let morphed = false
 
                             Alpine.transaction(async () => {
-                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates)
+                                message.component.mergeNewSnapshot(snapshotEncoded, effects, message.updates, message.canonical)
 
                                 message.invokeOnSync()
                                 if (message.isCancelled()) return
