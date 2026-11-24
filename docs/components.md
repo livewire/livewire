@@ -358,7 +358,7 @@ public function posts()
 </div>
 ```
 
-Notice the `$this->` prefix - this tells Livewire to call the method and cache the result for the current request only (not between requests). For more details, see the [computed properties section](/docs/4.x/properties#computed-properties) in the properties documentation.
+Notice the `$this->` prefix - this tells Livewire to call the method and cache the result for the current request only (not between requests). For more details, see the [computed properties documentation](/docs/4.x/computed-properties).
 
 ### Passing data from render()
 
