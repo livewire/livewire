@@ -89,6 +89,43 @@ class BrowserTest extends BrowserTestCase
         ;
     }
 
+    public function test_confirm_dialog_follows_its_attribute_after_a_morph()
+    {
+        Livewire::visit(new class extends Component {
+            public $message = 'Initial confirmation';
+            public $count = 0;
+
+            public function increment() { $this->count++; }
+
+            public function render() { return <<<'HTML'
+            <div>
+                <button type="button" id="increment" dusk="button" wire:click="increment"
+                    @if ($message) wire:confirm="{{ $message }}" @endif
+                >Increment</button>
+                <button type="button" dusk="change" wire:click="$set('message', 'Updated confirmation')">Change message</button>
+                <button type="button" dusk="remove" wire:click="$set('message', '')">Remove confirmation</button>
+                <span dusk="count">{{ $count }}</span>
+            </div>
+            HTML; }
+        })
+        ->tap(fn ($browser) => $browser->script('window.confirmButton = document.getElementById("increment")'))
+        ->click('@button')
+        ->assertDialogOpened('Initial confirmation')
+        ->dismissDialog()
+        ->waitForLivewire()->click('@change')
+        ->click('@button')
+        ->assertDialogOpened('Updated confirmation')
+        ->dismissDialog()
+        ->waitForLivewire()->click('@remove')
+        ->assertAttributeMissing('@button', 'wire:confirm')
+        ->assertScript('return window.confirmButton === document.getElementById("increment")')
+        ->tap(fn ($browser) => $browser->script('window.confirmCalls = 0; window.confirm = () => { window.confirmCalls++; return true }'))
+        ->waitForLivewire()->click('@button')
+        ->assertSeeIn('@count', '1')
+        ->assertScript('return window.confirmCalls', 0)
+        ;
+    }
+
     public function test_can_prompt_a_user_for_a_match()
     {
         Livewire::visit(new class extends Component {
