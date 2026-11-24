@@ -425,8 +425,8 @@ function sendMessages() {
 
                 let messageResponsePayloads = responseJson.components
 
-                request.messages.forEach(message => {
-                    messageResponsePayloads.forEach(payload => {
+                Array.from(request.messages).forEach((message, index) => {
+                    responsePayloadsForMessage(messageResponsePayloads, message, index).forEach(payload => {
                         if (message.isCancelled()) return
 
                         // Server skipped this child (unchanged reactive props)...
@@ -512,6 +512,23 @@ function sendMessages() {
             },
         })
     })
+}
+
+function responsePayloadsForMessage(payloads, message, index) {
+    // The server answers every message in the order it was sent. A request can carry more than one
+    // message for the same component (separate async calls each bundled with the same reactive or
+    // modelable child), so matching by component id alone would hand all of them the last payload...
+    let payload = payloads[index]
+
+    if (payload && responsePayloadComponentId(payload) === message.component.id) return [payload]
+
+    return payloads
+}
+
+function responsePayloadComponentId(payload) {
+    if (payload.skip) return payload.id
+
+    return JSON.parse(payload.snapshot).memo.id
 }
 
 function discardIfSuperseded(message) {
