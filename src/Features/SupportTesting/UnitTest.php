@@ -620,6 +620,28 @@ class UnitTest extends \LegacyTests\Unit\TestCase
             ->assertReturned(fn ($data) => $data === 'bar');
     }
 
+    function test_assert_returned_compares_strings_that_name_php_functions()
+    {
+        $test = Livewire::test(ComponentWithMethodThatReturnsData::class)
+            ->call('foo', 'trim')
+            ->assertReturned('trim');
+
+        $this->expectException(ExpectationFailedException::class);
+
+        $test->assertReturned('is_string');
+    }
+
+    function test_snapshot_assertions_compare_strings_that_name_php_functions()
+    {
+        Livewire::test(new class extends TestComponent {
+            public $value = 'trim';
+        })
+            ->assertSnapshotSet('value', 'trim')
+            ->assertSnapshotNotSet('value', 'is_string')
+            ->assertSnapshotSet('value', fn ($value) => $value === 'trim')
+            ->assertSnapshotNotSet('value', fn ($value) => $value === 'is_string');
+    }
+
     function test_type_errors_thrown_from_component_actions_are_rethrown()
     {
         config()->set('app.debug', false);
@@ -907,9 +929,9 @@ class ComponentWhichReceivesEvent extends Component
 
 class ComponentWithMethodThatReturnsData extends TestComponent
 {
-    function foo()
+    function foo($value = 'bar')
     {
-        return 'bar';
+        return $value;
     }
 }
 
