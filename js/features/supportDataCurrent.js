@@ -1,5 +1,6 @@
 import { pathMatches } from '@/directives/wire-current'
 import { wireNavigateSelector } from '@/directives/wire-navigate'
+import { createUrlObjectFromString } from '@/plugins/navigate/links'
 
 document.addEventListener('livewire:navigated', () => {
     updateNavigateLinks()
@@ -28,7 +29,7 @@ function updateNavigateLinks() {
         if (! href || href.startsWith('#')) return
 
         try {
-            let hrefUrl = new URL(href, window.location.href)
+            let hrefUrl = createUrlObjectFromString(href)
 
             // Check if this link matches the current URL (using default partial matching)
             if (pathMatches(hrefUrl, currentUrl, options)) {
