@@ -258,6 +258,8 @@ class UploadManager {
             this.uploadBag.shift(name).cancelledCallback();
 
             if (cancelledCallback) cancelledCallback()
+
+            if (this.uploadBag.get(name).length > 0) this.startUpload(name, this.uploadBag.last(name))
         }
     }
 }
