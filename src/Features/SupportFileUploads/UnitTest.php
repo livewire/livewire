@@ -4,10 +4,12 @@ namespace Livewire\Features\SupportFileUploads;
 
 use App\Livewire\UploadFile;
 use Carbon\Carbon;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Livewire\WithFileUploads;
 use Livewire\Livewire;
 use Livewire\Facades\GenerateSignedUploadUrlFacade;
+use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Livewire\Features\SupportDisablingBackButtonCache\SupportDisablingBackButtonCache;
 use League\Flysystem\PathTraversalDetected;
 use Illuminate\Validation\Rule;
@@ -26,6 +28,60 @@ class UnitTest extends \Tests\TestCase
 
         Livewire::test(NonFileUploadComponent::class)
             ->set('photo', UploadedFile::fake()->image('avatar.jpg'));
+    }
+
+    public function test_start_upload_call_on_component_without_file_uploads_trait_returns_419_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $component = Livewire::test(NonFileUploadComponent::class);
+
+        $response = $this->withHeaders(['X-Livewire' => 'true'])
+            ->postJson(EndpointResolver::updatePath(), ['components' => [
+                [
+                    'snapshot' => json_encode($component->snapshot),
+                    'updates' => [],
+                    'calls' => [
+                        ['method' => '_startUpload', 'params' => ['photo', [], false], 'metadata' => []],
+                    ],
+                ],
+            ]]);
+
+        $response->assertStatus(419);
+    }
+
+    public function test_missing_file_uploads_trait_exception_is_not_reported_when_debug_is_disabled()
+    {
+        config()->set('app.debug', false);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MissingFileUploadsTraitException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MissingFileUploadsTraitException(new NonFileUploadComponent));
+
+        $this->assertEmpty($reported);
+    }
+
+    public function test_missing_file_uploads_trait_exception_is_reported_when_debug_is_enabled()
+    {
+        config()->set('app.debug', true);
+
+        $reported = [];
+        app(ExceptionHandler::class)
+            ->reportable(function (MissingFileUploadsTraitException $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        app(ExceptionHandler::class)->report(new MissingFileUploadsTraitException(new NonFileUploadComponent));
+
+        $this->assertCount(1, $reported);
     }
 
     public function test_s3_driver_only_supports_single_file_uploads()
