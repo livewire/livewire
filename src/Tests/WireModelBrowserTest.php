@@ -44,6 +44,10 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
                         <input type="text" dusk="default-input">
                     </div>
 
+                    <div wire:model.self="foo">
+                        <input type="text" dusk="self-input">
+                    </div>
+
                     <div wire:model.deep="foo">
                         <input type="text" dusk="bubble-input">
                     </div>
@@ -55,6 +59,8 @@ class WireModelBrowserTest extends \Tests\BrowserTestCase
         })
             ->waitForLivewireToLoad()
             ->typeSlowly('@default-input', 'livewire', 50)
+            ->assertDontSeeIn('@text', 'livewire')
+            ->typeSlowly('@self-input', 'livewire', 50)
             ->assertDontSeeIn('@text', 'livewire')
             ->typeSlowly('@bubble-input', 'livewire', 50)
             ->assertSeeIn('@text', 'livewire');

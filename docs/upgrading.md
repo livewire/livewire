@@ -141,7 +141,7 @@ Using `Route::livewire()` is now the preferred method and is required for single
 
 In v3, `wire:model` would respond to input/change events that bubbled up from child elements. This caused unexpected behavior when using `wire:model` on container elements (like modals or accordions) that contained form inputs—clearing an input inside would bubble up and potentially close the modal.
 
-In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior).
+In v4, `wire:model` now only listens for events originating directly on the element itself (equivalent to the `.self` modifier behavior). Existing `.self` modifiers keep working, so you don't need to remove them.
 
 If you have code that relies on capturing events from child elements, add the `.deep` modifier:
 
