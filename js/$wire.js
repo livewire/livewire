@@ -309,6 +309,13 @@ wireProperty('$commit', (component) => () => {
     }
 })
 
+wireProperty('__lazyLoad', (component) => (...params) => {
+    // Lazy and deferred placeholders call this from an x-intersect/x-init expression, and
+    // Alpine reports a rejected promise from there as an expression error. Livewire already
+    // handles a failed or cancelled request, so settle without rejecting here...
+    return fireAction(component, '__lazyLoad', params).catch(() => {})
+})
+
 wireProperty('$on', (component) => (...params) => listen(component, ...params))
 
 wireProperty('$hook', (component) => (name, callback) => {
