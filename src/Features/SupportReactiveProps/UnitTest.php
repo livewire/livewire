@@ -86,6 +86,19 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(SupportReactiveProps::valuesMatch($snapshotValue, $article));
     }
 
+    public function test_values_match_uses_the_models_queueable_id()
+    {
+        $article = QueueableArticle::query()->first();
+
+        $snapshotValue = [null, [
+            'class' => QueueableArticle::class,
+            'key' => $article->getQueueableId(),
+            's' => 'mdl',
+        ]];
+
+        $this->assertTrue(SupportReactiveProps::valuesMatch($snapshotValue, $article));
+    }
+
     public function test_accessing_lazy_loaded_relation_on_reactive_model_does_not_throw()
     {
         $article = Article::first();
@@ -300,5 +313,19 @@ class Article extends \Illuminate\Database\Eloquent\Model
     public function author()
     {
         return $this->belongsTo(Author::class);
+    }
+}
+
+class QueueableArticle extends \Illuminate\Database\Eloquent\Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'ulid' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'title' => 'First'],
+    ];
+
+    public function getQueueableId()
+    {
+        return $this->ulid;
     }
 }

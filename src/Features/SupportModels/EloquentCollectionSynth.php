@@ -97,7 +97,7 @@ class EloquentCollectionSynth extends Synth {
                 $collection = (new $modelClass)->newQueryForRestoration($missingKeys)->useWritePdo()->get();
 
                 foreach ($collection as $model) {
-                    $models[$model->getKey()] = $model;
+                    $models[$model->getQueueableId()] = $model;
 
                     SupportModels::rememberResolvedModel($model);
                 }

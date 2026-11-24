@@ -143,7 +143,7 @@ class PersistentMiddleware extends Mechanism
         if ($route = $request->route()) {
             foreach ($route->parameters() as $parameter) {
                 if ($parameter instanceof Model) {
-                    $key = get_class($parameter).':'.$parameter->getKey();
+                    $key = get_class($parameter).':'.$parameter->getQueueableId();
                     $this->resolvedRouteModels[$key] = $parameter;
                 }
             }
