@@ -31,20 +31,53 @@ export function whenThisLinkIsPressed(el, callback) {
 
         if (linkShouldBeHandledNatively(el)) return;
 
-        e.preventDefault()
+        // We don't cancel "mousedown" here. Cancelling it would keep focus in the previously
+        // focused field (so its blur/change never fires), suppress :active styles, and
+        // stop native drags from starting (like dragging a wire:sort item that's a link)...
+
+        let pressedAt = { x: e.clientX, y: e.clientY }
 
         callback((whenReleased) => {
-            let handler = e => {
+            let moved = false
+
+            let cleanup = () => {
+                document.removeEventListener('mouseup', onMouseUp, true)
+                document.removeEventListener('mousemove', onMouseMove, true)
+                document.removeEventListener('dragstart', onDragStart, true)
+            }
+
+            // Listen on the document so a press that's released somewhere else still cleans up after itself...
+            let onMouseUp = e => {
+                cleanup()
+
+                // Only a press that's released on this link, without dragging, is a click...
+                if (! el.contains(e.target) || moved) return
+
                 e.preventDefault()
 
                 requestAnimationFrame(() => {
                     whenReleased()
                 })
-
-                el.removeEventListener('mouseup', handler)
             }
 
-            el.addEventListener('mouseup', handler)
+            // A drag that doesn't use native drag events (like a SortableJS "forceFallback" drag) only shows up as pointer movement...
+            let onMouseMove = e => {
+                if (Math.hypot(e.clientX - pressedAt.x, e.clientY - pressedAt.y) > dragThreshold) moved = true
+            }
+
+            // If the press turns into a native drag (of this link or of a draggable ancestor), it isn't a click, so don't navigate...
+            let onDragStart = e => {
+                cleanup()
+
+                // Links are draggable by default. Cancelling "mousedown" used to stop that default drag, so keep stopping it,
+                // otherwise it takes over drags that don't use native drag events. Links that opt in with draggable="true"
+                // (like SortableJS's native drag items) still drag...
+                if (isDefaultDragOf(el, e)) e.preventDefault()
+            }
+
+            document.addEventListener('mouseup', onMouseUp, true)
+            document.addEventListener('mousemove', onMouseMove, true)
+            document.addEventListener('dragstart', onDragStart, true)
         })
     })
 
@@ -58,6 +91,20 @@ export function whenThisLinkIsPressed(el, callback) {
 
         callback(whenReleased => whenReleased())
     })
+}
+
+// How far (in px) the pointer can move during a press before it counts as a drag instead of a click...
+let dragThreshold = 5
+
+function isDefaultDragOf(el, e) {
+    // Dragging selected text reports the text node as the target...
+    let source = e.target instanceof Element ? e.target : e.target.parentElement
+
+    if (! source || ! el.contains(source)) return false
+
+    let optedIn = source.closest('[draggable="true"]')
+
+    return ! (optedIn && el.contains(optedIn))
 }
 
 export function whenThisLinkIsHoveredOrFocusedFor(el, ms = 60, callback) {
