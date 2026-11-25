@@ -96,6 +96,33 @@ class BrowserTest extends \Tests\BrowserTestCase
         ;
     }
 
+    public function test_the_error_modal_stays_modal_when_another_request_fails_while_it_is_open(): void
+    {
+        Livewire::visit(new class extends BaseComponent {
+            public function fail($attempt)
+            {
+                abort(response("Failure {$attempt}", 500));
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button type="button" wire:click="fail(1)" dusk="fail">Fail</button>
+                </div>
+                HTML;
+            }
+        })
+            ->click('@fail')
+            ->waitFor('#livewire-error')
+            // The open modal blocks clicks on the page, so the second request is sent from a script, like a poll would...
+            ->tap(fn ($browser) => $browser->script('window.Livewire.first().fail(2).catch(() => {})'))
+            ->waitUntil("document.querySelector('#livewire-error iframe')?.contentDocument?.body?.textContent === 'Failure 2'")
+            ->assertScript("document.getElementById('livewire-error').matches(':modal')")
+            ->assertScript("document.querySelectorAll('#livewire-error').length", 1)
+        ;
+    }
+
     protected function returnEmptyUpdateResponses(): void
     {
         Livewire::setUpdateRoute(function ($handle, $path) {
