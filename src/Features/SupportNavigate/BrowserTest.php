@@ -40,6 +40,9 @@ class BrowserTest extends \Tests\BrowserTestCase
             Livewire::component('third-asset-page', ThirdAssetPage::class);
             Livewire::component('first-tracked-asset-page', FirstTrackedAssetPage::class);
             Livewire::component('second-tracked-asset-page', SecondTrackedAssetPage::class);
+            Livewire::component('first-versioned-asset-page', FirstVersionedAssetPage::class);
+            Livewire::component('next-build-asset-page', NextBuildAssetPage::class);
+            Livewire::component('same-build-asset-page', SameBuildAssetPage::class);
             Livewire::component('second-remote-asset', SecondRemoteAsset::class);
             Livewire::component('first-scroll-page', FirstScrollPage::class);
             Livewire::component('first-scroll-page-with-filament-replace-state-wrapper', FirstScrollPageWithFilamentReplaceStateWrapper::class);
@@ -93,8 +96,15 @@ class BrowserTest extends \Tests\BrowserTestCase
 
             Route::get('/first-tracked-asset', FirstTrackedAssetPage::class)->middleware('web');
             Route::get('/second-tracked-asset', SecondTrackedAssetPage::class)->middleware('web');
+            Route::get('/first-versioned-asset', FirstVersionedAssetPage::class)->middleware('web');
+            Route::get('/next-build-asset', NextBuildAssetPage::class)->middleware('web');
+            Route::get('/same-build-asset', SameBuildAssetPage::class)->middleware('web');
 
             Route::get('/test-navigate-asset.js', function () {
+                return Utils::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
+            });
+
+            Route::get('/test-navigate-asset-{hash}.js', function () {
                 return Utils::pretendResponseIsFile(__DIR__ . '/test-views/test-navigate-asset.js');
             });
 
@@ -823,6 +833,35 @@ class BrowserTest extends \Tests\BrowserTestCase
                 ->waitForText('On second')
                 ->assertScript('return window._lw_dusk_test', false)
                 ->assertScript('return _lw_dusk_asset_count', 1);
+        });
+    }
+
+    public function test_tracked_assets_reload_the_page_when_their_version_changes()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-versioned-asset')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->assertScript('return _lw_dusk_asset_count', 1)
+                ->click('@link.to.next.build')
+                ->waitForText('On next build')
+                ->assertScript('return window._lw_dusk_test', false)
+                ->assertScript('return _lw_dusk_asset_count', 1);
+        });
+    }
+
+    public function test_tracked_assets_from_the_same_version_do_not_reload_the_page()
+    {
+        $this->browse(function ($browser) {
+            $browser
+                ->visit('/first-versioned-asset')
+                ->tap(fn ($b) => $b->script('window._lw_dusk_test = true'))
+                ->assertScript('return window._lw_dusk_test')
+                ->click('@link.to.same.build')
+                ->waitForText('On same build')
+                ->assertScript('return window._lw_dusk_test')
+                ->assertScript('return _lw_dusk_asset_count', 2);
         });
     }
 
@@ -2271,6 +2310,39 @@ class SecondTrackedAssetPage extends Component
     public function render()
     {
         return '<div>On second asset page</div>';
+    }
+}
+
+class FirstVersionedAssetPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::versioned-tracked-layout')]
+    public function render()
+    {
+        return <<<'HTML'
+        <div>
+            On first versioned page
+            <a href="/next-build-asset" wire:navigate dusk="link.to.next.build">Next build</a>
+            <a href="/same-build-asset" wire:navigate dusk="link.to.same.build">Same build</a>
+        </div>
+        HTML;
+    }
+}
+
+class NextBuildAssetPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::changed-versioned-tracked-layout')]
+    public function render()
+    {
+        return '<div>On next build page</div>';
+    }
+}
+
+class SameBuildAssetPage extends Component
+{
+    #[\Livewire\Attributes\Layout('test-views::same-build-tracked-layout')]
+    public function render()
+    {
+        return '<div>On same build page</div>';
     }
 }
 
