@@ -124,7 +124,7 @@ trait InteractsWithProperties
         foreach ($properties as $property) {
             $root = Utils::beforeFirstDot($property);
 
-            if ($root === $property || in_array($root, $properties)) continue;
+            if (! property_exists($this, $property) || $root === $property || in_array($root, $properties)) continue;
 
             $source = $this->{$root} ?? null;
             $source = $source instanceof Form ? $source->all() : $source;
