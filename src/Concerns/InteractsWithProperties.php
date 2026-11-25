@@ -4,6 +4,7 @@ namespace Livewire\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Livewire\Drawer\Utils;
 use Livewire\Form;
 
@@ -111,11 +112,47 @@ trait InteractsWithProperties
 
         $keysToReset = array_diff(array_keys($this->all()), $properties);
 
-        if($keysToReset === []) {
+        if ($keysToReset === []) {
             return;
         }
 
+        // Excepted paths that sit inside a property ("form.title", "settings.a.b")
+        // can't be skipped by the top-level diff above, so remember their values
+        // and put them back after the reset...
+        $keysToKeep = [];
+
+        foreach ($properties as $property) {
+            $root = Utils::beforeFirstDot($property);
+
+            if ($root === $property || in_array($root, $properties)) continue;
+
+            $source = $this->{$root} ?? null;
+            $source = $source instanceof Form ? $source->all() : $source;
+
+            if (! is_array($source)) continue;
+
+            $full = $path = Utils::afterFirstDot($property);
+
+            // If the excepted path doesn't exist, fall back to its closest existing
+            // parent, but only when that parent is a leaf (null, scalar, empty array)...
+            while (! Arr::has($source, $path)) {
+                if (! Utils::containsDots($path)) continue 2;
+
+                $path = Str::beforeLast($path, '.');
+            }
+
+            $value = Arr::get($source, $path);
+
+            if ($path !== $full && is_array($value) && $value !== []) continue;
+
+            $keysToKeep[$root . '.' . $path] = $value;
+        }
+
         $this->reset($keysToReset);
+
+        foreach ($keysToKeep as $path => $value) {
+            data_set($this, $path, $value);
+        }
     }
 
     public function pull($properties = null)

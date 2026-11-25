@@ -1276,6 +1276,77 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.content.foo', ['bar' => 'baz'])
             ->assertSetStrict('form.content.1', false);
     }
+
+    public function test_reset_except_with_nested_form_property_does_not_reset_the_excepted_field()
+    {
+        Livewire::test(ComponentWithFormObject::class)
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->call('resetKeysExcept', 'form.title')
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'keep')
+        ;
+    }
+
+    public function test_reset_except_with_mixed_top_level_and_nested_form_properties()
+    {
+        Livewire::test(ComponentWithFormObject::class)
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->set('other', 'changed')
+            ->call('resetKeysExcept', ['other', 'form.title'])
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'bar')
+            ->assertSetStrict('other', 'changed')
+        ;
+    }
+
+    public function test_reset_except_with_whole_form_and_nested_property_leaves_the_form_untouched()
+    {
+        Livewire::test(ComponentWithFormObject::class)
+            ->set('form.title', 'Some Title')
+            ->set('form.content', 'Some content...')
+            ->call('resetKeysExcept', ['form', 'form.title'])
+            ->assertSetStrict('form.title', 'Some Title')
+            ->assertSetStrict('form.content', 'Some content...')
+        ;
+    }
+
+    public function test_reset_except_preserves_deeply_nested_form_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetKeysExcept($keys)
+            {
+                $this->resetExcept($keys);
+            }
+        })
+            ->set('form.title', 'Some Title...')
+            ->set('form.content.foo', [])
+            ->call('resetKeysExcept', 'form.content.foo')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content.foo', []);
+    }
+
+    public function test_form_reset_except_with_nested_array_property()
+    {
+        Livewire::test(new class extends TestComponent {
+            public PostFormStubWithArrayDefaults $form;
+
+            public function resetKeysExcept($keys)
+            {
+                $this->form->resetExcept($keys);
+            }
+        })
+            ->set('form.title', 'Some Title')
+            ->set('form.content.foo', [])
+            ->call('resetKeysExcept', 'content.foo')
+            ->assertSetStrict('form.title', 'foo')
+            ->assertSetStrict('form.content.foo', []);
+    }
 }
 
 class PostFormStub extends Form
@@ -1731,5 +1802,16 @@ class BaseFormWithValidationInLifecycleHookStub extends \Livewire\Features\Suppo
     public function rules()
     {
         return ['title' => 'required'];
+    }
+}
+
+class ComponentWithFormObject extends TestComponent
+{
+    public PostFormStubWithDefaults $form;
+    public $other = 'keep';
+
+    public function resetKeysExcept($keys)
+    {
+        $this->resetExcept($keys);
     }
 }
