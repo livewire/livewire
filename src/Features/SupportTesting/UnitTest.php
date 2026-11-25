@@ -6,6 +6,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Validation\ValidationRule;
 use PHPUnit\Framework\ExpectationFailedException;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Testing\TestView;
@@ -664,6 +665,19 @@ class UnitTest extends \LegacyTests\Unit\TestCase
         Livewire::test(ComponentWithMethodThatReturnsData::class)
             ->call('foo')
             ->assertReturned('bar');
+    }
+
+    public function test_a_faked_exception_handler_still_handles_exceptions_after_testing_a_component()
+    {
+        Exceptions::fake();
+
+        Livewire::test(ComponentWithMethodThatReturnsData::class);
+
+        Route::get('/throws-runtime-exception', fn () => throw new \RuntimeException('Boom'));
+
+        $this->get('/throws-runtime-exception')->assertServerError();
+
+        Exceptions::assertReported(\RuntimeException::class);
     }
 
     public function test_can_set_cookies_for_use_with_testing()

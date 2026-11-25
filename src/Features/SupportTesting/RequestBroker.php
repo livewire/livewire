@@ -8,6 +8,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Testing\Fakes\ExceptionHandlerFake;
 use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class RequestBroker
@@ -25,6 +26,9 @@ class RequestBroker
     {
         $cachedHandler = app(ExceptionHandler::class);
 
+        // A faked handler is not rebound when exception handling is disabled: its inner handler is swapped instead.
+        $cachedInnerHandler = $cachedHandler instanceof ExceptionHandlerFake ? $cachedHandler->handler() : null;
+
         $cachedShouldSkipMiddleware = $this->app->shouldSkipMiddleware();
 
         $this->withoutExceptionHandling([HttpException::class, AuthorizationException::class, ModelNotFoundException::class])->withoutMiddleware();
@@ -34,6 +38,10 @@ class RequestBroker
                 fn () => $callback($this),
             );
         } finally {
+            if ($cachedInnerHandler) {
+                $cachedHandler->setHandler($cachedInnerHandler);
+            }
+
             $this->app->instance(ExceptionHandler::class, $cachedHandler);
 
             if (! $cachedShouldSkipMiddleware) {
