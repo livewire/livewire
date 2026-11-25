@@ -17,6 +17,10 @@ use BackedEnum;
  * @method $this assertOk()
  * @method $this assertStatus(int $status)
  *
+ * @property array $snapshot
+ * @property-read array $effects
+ * @property-read TComponent $target
+ *
  * @mixin \Illuminate\Testing\TestResponse
  */
 
