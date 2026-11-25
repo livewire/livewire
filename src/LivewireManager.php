@@ -233,7 +233,7 @@ class LivewireManager
      * @param class-string<TComponent>|TComponent|string|array<array-key, \Livewire\Component> $name
      * @param array $params
      *
-     * @return Testable<TComponent>
+     * @return ($name is class-string<TComponent>|TComponent ? Testable<TComponent> : Testable<\Livewire\Component>)
      */
     function test($name, $params = [])
     {
