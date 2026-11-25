@@ -125,7 +125,8 @@ export class Component {
     getUpdates() {
         let propertiesDiff = diffAndConsolidate(this.canonical, this.ephemeral)
 
-        return this.mergeQueuedUpdates(propertiesDiff)
+        // Clone, as consolidated diffs reference "ephemeral" and later writes would leak into a sent request...
+        return deepClone(this.mergeQueuedUpdates(propertiesDiff))
     }
 
     applyUpdates(object, updates) {
