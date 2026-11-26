@@ -12,6 +12,7 @@ class ExtendBlade extends Mechanism
     protected $directives = [];
     protected $precompilers = [];
     protected $renderCounter = 0;
+    protected $renderCleanups = [];
 
     protected static $livewireComponents = [];
 
@@ -46,13 +47,25 @@ class ExtendBlade extends Mechanism
 
             $this->renderCounter++;
 
-            return function ($html) use ($view, $undo, $target) {
+            $cleanup = function () use ($undo) {
                 $this->endLivewireRendering();
 
                 $this->renderCounter--;
 
                 if ($this->renderCounter === 0) {
                     $undo();
+                }
+            };
+
+            $this->renderCleanups[] = $cleanup;
+
+            return function ($html) use ($cleanup) {
+                $index = array_search($cleanup, $this->renderCleanups, true);
+
+                if ($index !== false) {
+                    unset($this->renderCleanups[$index]);
+
+                    $cleanup();
                 }
 
                 return $html;
@@ -72,6 +85,8 @@ class ExtendBlade extends Mechanism
         on('flush-state', function () {
             app()->singleton(DeterministicBladeKeys::class);
 
+            $this->unwindRenderCleanups();
+
             static::$livewireComponents = [];
         });
 
@@ -84,6 +99,20 @@ class ExtendBlade extends Mechanism
 
             return $value;
         });
+    }
+
+    function renderCleanupDepth()
+    {
+        return count($this->renderCleanups);
+    }
+
+    function unwindRenderCleanups($depth = 0)
+    {
+        while (count($this->renderCleanups) > $depth) {
+            $cleanup = array_pop($this->renderCleanups);
+
+            $cleanup();
+        }
     }
 
     function livewireOnlyDirective($name, $handler)

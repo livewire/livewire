@@ -234,6 +234,8 @@ trait HandlesIslands
             $html = $view->render();
         } finally {
             $revertShare();
+
+            app(ExtendBlade::class)->endLivewireRendering();
         }
 
         $replaceHtml = function ($newHtml) use (&$html) {
@@ -241,8 +243,6 @@ trait HandlesIslands
         };
 
         $finish($html, $replaceHtml);
-
-        app(ExtendBlade::class)->endLivewireRendering();
 
         return $html;
     }
