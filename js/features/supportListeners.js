@@ -17,6 +17,8 @@ function registerListeners(component, listeners) {
         let handler = (e) => {
             if (component.isLazy && ! component.hasBeenLazyLoaded) return
 
+            if (e.__livewire?.excludedComponentId === component.id) return
+
             if (e.__livewire) e.__livewire.receivedBy.push(component)
 
             // Event listeners may live in a completely different component than

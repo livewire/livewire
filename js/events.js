@@ -35,8 +35,14 @@ export function dispatchRef(component, ref, name, params) {
     dispatchEvent(el, name, params, false)
 }
 
+export function dispatchOthers(component, name, params) {
+    dispatchEvent(component.el, name, params, true, component.id)
+}
+
 export function listen(component, name, callback) {
     component.el.addEventListener(name, e => {
+        if (e.__livewire?.excludedComponentId === component.id) return
+
         callback(e.detail)
     })
 }
@@ -56,7 +62,7 @@ export function on(eventName, callback) {
     }
 }
 
-function dispatchEvent(target, name, params, bubbles = true) {
+function dispatchEvent(target, name, params, bubbles = true, excludedComponentId = null) {
     // We need to ensure the params are an array (or object), so we need to wrap them if they're not already...
     if (typeof params === 'string') {
         params = [params]
@@ -64,7 +70,7 @@ function dispatchEvent(target, name, params, bubbles = true) {
 
     let e = new CustomEvent(name, { bubbles, detail: params })
 
-    e.__livewire = { name, params, receivedBy: [] }
+    e.__livewire = { name, params, receivedBy: [], excludedComponentId }
 
     target.dispatchEvent(e)
 }

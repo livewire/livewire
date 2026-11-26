@@ -200,6 +200,24 @@ class UnitTest extends \Tests\TestCase
         $this->assertTrue(in_array(['self' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
     }
 
+    public function test_server_dispatched_others_events_are_provided_to_frontend()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('dispatchOthersGoo');
+
+        $this->assertTrue(in_array(['others' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
+    }
+
+    public function test_server_dispatched_others_events_using_to_are_provided_to_frontend()
+    {
+        $component = Livewire::test(ReceivesEvents::class);
+
+        $component->call('dispatchToOthersGoo');
+
+        $this->assertTrue(in_array(['others' => true, 'name' => 'goo', 'params' => ['car']], $component->effects['dispatches']));
+    }
+
     public function test_component_can_set_dynamic_listeners()
     {
         Livewire::test(ReceivesEventsWithDynamicListeners::class, ['listener' => 'bob'])
@@ -290,6 +308,16 @@ class ReceivesEvents extends TestComponent
     public function dispatchSelfGoo()
     {
         $this->dispatch('goo', 'car')->self();
+    }
+
+    public function dispatchOthersGoo()
+    {
+        $this->dispatch('goo', 'car')->others();
+    }
+
+    public function dispatchToOthersGoo()
+    {
+        $this->dispatch('goo', 'car')->to(others: true);
     }
 
     public function dispatchToGooGone()

@@ -871,6 +871,9 @@ let $wire = {
     // Dispatch an event onto this component and no others...
     $dispatchSelf(event, params = {}) { ... },
 
+    // Dispatch an event to every listener except those of this component...
+    $dispatchOthers(event, params = {}) { ... },
+
     // A JS API to upload a file directly to component
     // rather than through `wire:model`...
     $upload(
