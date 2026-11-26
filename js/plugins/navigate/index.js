@@ -104,6 +104,11 @@ export default function (Alpine) {
         showProgressBar && showAndStartProgressBar()
 
         fetchHtmlOrUsePrefetchedHtml(destination, (html, finalDestination) => {
+            // A newer navigation started while this page was loading, and the
+            // user is on their way there now. Swapping this page in would put
+            // them back on the one they left...
+            if (navigation.isCancelled()) return
+
             // The request may have been redirected off to another origin. We can't
             // swap that page into this document, so let the browser visit it...
             if (! isSameOrigin(finalDestination)) {
@@ -171,6 +176,10 @@ export default function (Alpine) {
                 })
             })
         }, (error) => {
+            // Superseded by a newer navigation, which owns the progress bar now
+            // and must not be sent off to this abandoned destination...
+            if (navigation.isCancelled()) return
+
             navigation.cancel()
 
             showProgressBar && finishAndHideProgressBar()
