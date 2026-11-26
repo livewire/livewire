@@ -1,11 +1,11 @@
 import { directive, getDirectives } from "@/directives"
-import { setNextActionMetadata, setNextActionOrigin, sessionIsExpired } from '@/request'
+import { setNextActionMetadata, setNextActionOrigin, sessionIsExpired, interceptComponentMessage } from '@/request'
 import { evaluateActionExpression } from '../evaluator'
 
-directive('poll', ({ el, directive, component }) => {
-    let interval = extractDurationFrom(directive.modifiers, 2000)
+directive('poll', ({ el, directive, component, cleanup }) => {
+    let interval = extractIntervalFrom(directive.modifiers, 2000)
 
-    let { start, pauseWhile, throttleWhile, stopWhen } = poll(() => {
+    let { start, stop, onStop, pauseWhile, throttleWhile, stopWhen } = poll(() => {
         triggerComponentRequest(el, directive, component)
     }, interval)
 
@@ -17,7 +17,86 @@ directive('poll', ({ el, directive, component }) => {
     pauseWhile(() => livewireIsOffline())
     pauseWhile(() => sessionIsExpired())
     stopWhen(() => theElementIsDisconnected(el))
+
+    if (theDirectiveHasBackoff(directive)) {
+        let backoff = backoffFor(interval, extractBackoffLimitFrom(directive.modifiers, interval * 8))
+
+        let stopReporting = reportEachResponseTo(backoff, el, component)
+
+        pauseWhile(() => backoff.isWaiting())
+
+        onStop(stopReporting)
+    }
+
+    // The duration is part of the attribute name, so a morph that changes it
+    // removes this attribute and adds a new one with its own poll. This poll
+    // has to stop, or both keep running until the element leaves the DOM...
+    cleanup(() => stop())
 })
+
+export function backoffFor(interval, limit) {
+    let slowestMultiplier = Math.max(1, Math.floor(limit / interval))
+    let multiplier = 1
+    let sentAt = 0
+    let previousResponse = null
+
+    let slowDown = () => multiplier = Math.min(multiplier * 2, slowestMultiplier)
+    let speedUp = () => multiplier = 1
+
+    return {
+        // Polls with the same interval share one clock, so they batch into one request.
+        // A slowed down poll sits out whole ticks of that clock instead of keeping its
+        // own timer. Half a tick of slack covers the gap between a tick and its send...
+        isWaiting() {
+            return Date.now() < sentAt + (interval * multiplier) - (interval / 2)
+        },
+
+        pollWasSent() {
+            sentAt = Date.now()
+        },
+
+        pollSucceeded(response) {
+            response === previousResponse ? slowDown() : speedUp()
+
+            previousResponse = response
+        },
+
+        pollFailed() {
+            slowDown()
+        },
+
+        componentWasUpdated(response) {
+            speedUp()
+
+            previousResponse = response
+        },
+    }
+}
+
+function reportEachResponseTo(backoff, el, component) {
+    return interceptComponentMessage(component, ({ message, onSuccess, onError, onFailure }) => {
+        let actions = Array.from(message.actions).flatMap(action => [action, ...action.squashedActions])
+        let isOnlyPolls = actions.every(action => action.metadata.type === 'poll')
+        let isThisPoll = isOnlyPolls && actions.some(action => action.origin?.el === el)
+
+        // Another poll on the same component tells this one nothing...
+        if (isOnlyPolls && ! isThisPoll) return
+
+        if (! isThisPoll) {
+            return onSuccess(({ payload }) => backoff.componentWasUpdated(whatTheServerSent(payload)))
+        }
+
+        backoff.pollWasSent()
+
+        onSuccess(({ payload }) => backoff.pollSucceeded(whatTheServerSent(payload)))
+        onError(() => backoff.pollFailed())
+        onFailure(() => backoff.pollFailed())
+    })
+}
+
+function whatTheServerSent({ snapshot, effects }) {
+    return JSON.stringify([snapshot.data, effects])
+}
 
 function triggerComponentRequest(el, directive, component) {
     // Set targetEl to null to prevent data-loading on poll actions
@@ -33,16 +112,31 @@ export function poll(callback, interval = 2000) {
     let pauseConditions = []
     let throttleConditions = []
     let stopConditions = []
+    let stopCallbacks = []
+    let clear = null
+
+    let stop = () => {
+        if (! clear) return
+
+        clear()
+        clear = null
+
+        stopCallbacks.forEach(i => i())
+    }
 
     return {
         start() {
-            let clear = syncronizedInterval(interval, () => {
-                if (stopConditions.some(i => i())) return clear()
+            clear = syncronizedInterval(interval, () => {
+                if (stopConditions.some(i => i())) return stop()
                 if (pauseConditions.some(i => i())) return
                 if (throttleConditions.some(i => i()) && Math.random() < .95) return
 
                 callback()
             })
+        },
+        stop,
+        onStop(callback) {
+            stopCallbacks.push(callback)
         },
         pauseWhile(condition) {
             pauseConditions.push(condition)
@@ -105,6 +199,10 @@ function theDirectiveIsMissingKeepAlive(directive) {
     return ! directive.modifiers.includes('keep-alive')
 }
 
+function theDirectiveHasBackoff(directive) {
+    return directive.modifiers.includes('backoff')
+}
+
 function theDirectiveHasVisible(directive) {
     return directive.modifiers.includes('visible')
 }
@@ -122,6 +220,20 @@ function theElementIsNotInTheViewport(el) {
 
 export function theElementIsDisconnected(el) {
     return el.isConnected === false
+}
+
+// In `wire:poll.5s.backoff.30s` the duration right after `backoff` is the slowest
+// the poll may get, and any other duration is how often it polls...
+export function extractIntervalFrom(modifiers, defaultDuration) {
+    return extractDurationFrom(modifiers.filter((modifier, index) => modifiers[index - 1] !== 'backoff'), defaultDuration)
+}
+
+export function extractBackoffLimitFrom(modifiers, defaultDuration) {
+    if (! modifiers.includes('backoff')) return defaultDuration
+
+    let modifierAfterBackoff = modifiers[modifiers.indexOf('backoff') + 1] ?? ''
+
+    return extractDurationFrom([modifierAfterBackoff], defaultDuration)
 }
 
 export function extractDurationFrom(modifiers, defaultDuration) {

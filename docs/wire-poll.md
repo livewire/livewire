@@ -59,6 +59,31 @@ You can manually control how often the component will poll by appending the desi
 <div wire:poll.15000ms> <!-- In milliseconds... -->
 ```
 
+## Backing off
+
+Polling at a fixed interval keeps sending requests even when nothing has changed. Add the `.backoff` modifier and Livewire will wait twice as long after each poll that comes back unchanged:
+
+```blade
+<div wire:poll.5s.backoff> <!-- [tl! highlight] -->
+    Subscribers: {{ $count }}
+</div>
+```
+
+While the subscriber count stays the same, this component polls at 5, 10, 20, and 40 seconds, then every 40 seconds. As soon as a poll brings back something new, or the user interacts with the component, it goes back to polling every 5 seconds.
+
+A poll comes back unchanged when the server responds with the same data and the same HTML as the poll before it. Failed polls back off the same way, so a struggling server isn't hit at full speed while it recovers.
+
+By default, Livewire slows a poll down to 8 times its interval. You can set the slowest pace yourself by adding a duration after `.backoff`:
+
+```blade
+<div wire:poll.5s.backoff.30s>
+```
+
+Now the component never waits more than 30 seconds between polls.
+
+> [!tip] Keep values that change on every render out of the template
+> A value like the current time makes every response different, so the poll never backs off. Render it with Alpine instead, or move it outside the polling component.
+
 ## Background throttling
 
 To further cut down on server requests, Livewire automatically throttles polling when a page is in the background. For example, if a user keeps a page open in a different browser tab, Livewire will reduce the number of polling requests by 95% until the user revisits the tab.
@@ -93,5 +118,7 @@ wire:poll="action"
 | `.[number]m` | Poll interval in minutes (e.g., `.1m`) |
 | `.[number]s` | Poll interval in seconds (e.g., `.15s`) |
 | `.[number]ms` | Poll interval in milliseconds (e.g., `.15000ms`) |
+| `.backoff` | Double the interval after each poll that comes back unchanged |
+| `.backoff.[duration]` | Back off, but never wait longer than the given duration (e.g., `.backoff.30s`) |
 | `.keep-alive` | Continue polling even when the tab is in the background |
 | `.visible` | Only poll when the element is visible in the viewport |
