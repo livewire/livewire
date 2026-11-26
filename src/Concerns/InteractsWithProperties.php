@@ -110,11 +110,10 @@ trait InteractsWithProperties
             $properties = $properties[0];
         }
 
-        $keysToReset = array_diff(array_keys($this->all()), $properties);
+        $all = $this->all();
+        $keysToReset = array_diff(array_keys($all), $properties);
 
-        if ($keysToReset === []) {
-            return;
-        }
+        if ($keysToReset === []) return;
 
         // Excepted paths that sit inside a property ("form.title", "settings.a.b")
         // can't be skipped by the top-level diff above, so remember their values
@@ -124,10 +123,13 @@ trait InteractsWithProperties
         foreach ($properties as $property) {
             $root = Utils::beforeFirstDot($property);
 
-            if ($root === $property || in_array($root, $properties)) continue;
+            if ($root === $property || in_array($root, $properties) || ! array_key_exists($root, $all)) continue;
 
-            $source = $this->{$root} ?? null;
-            $source = $source instanceof Form ? $source->all() : $source;
+            $source = $all[$root];
+
+            if ($source instanceof Form) {
+                $source = $source->all();
+            }
 
             if (! is_array($source)) continue;
 
@@ -143,7 +145,8 @@ trait InteractsWithProperties
 
             $value = Arr::get($source, $path);
 
-            if ($path !== $full && is_array($value) && $value !== []) continue;
+            // Only a true leaf (null, scalar, empty array) may act as a fallback for a missing deeper path...
+            if ($path !== $full && ! ($value === null || is_scalar($value) || $value === [])) continue;
 
             $keysToKeep[$root . '.' . $path] = $value;
         }
