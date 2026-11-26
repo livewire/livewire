@@ -341,4 +341,20 @@ class UnitTest extends \Tests\TestCase
 
         $this->assertSame('hello', $value);
     }
+
+    public function test_invalid_enum_query_string_value_does_not_throw()
+    {
+        Livewire::withQueryParams(['status' => 'not-a-real-status'])
+            ->test(new class extends TestComponent {
+                #[BaseUrl]
+                public Status $status = Status::Draft;
+            })
+            ->assertSet('status', Status::Draft);
+    }
+}
+
+enum Status: string
+{
+    case Draft = 'draft';
+    case Published = 'published';
 }
