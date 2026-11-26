@@ -967,11 +967,13 @@ class UnitTest extends TestCase
     {
         $component = Livewire::actingAs(AuthorizationUser::find(1))
             ->test(new class extends TestComponent {
+                public bool $called = false;
+
                 #[\Livewire\Attributes\Json]
                 #[Authorize('edit', 'post')]
-                public function editPost(AuthorizationPost $post) : bool
+                public function editPost(AuthorizationPost $post)
                 {
-                    return true;
+                    $this->called = true;
                 }
 
                 public function exception($e, $stopPropagation)
@@ -980,6 +982,7 @@ class UnitTest extends TestCase
                 }
             })
             ->call('editPost', post: 3)
+            ->assertSetStrict('called', false)
             ->assertOk();
 
         $returnsMeta = $component->effects['returnsMeta'] ?? [];
