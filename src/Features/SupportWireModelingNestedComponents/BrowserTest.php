@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportWireModelingNestedComponents;
 
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Attributes\Async;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 use Livewire\Livewire;
@@ -303,6 +304,41 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->clickAtXPath('//body') // Blur the input so the child's commit is sent separately...
         ->waitForLivewire()->click('@refresh')
         ->assertConsoleLogHasNoErrors()
+        ;
+    }
+
+    public function test_parallel_async_actions_resolve_with_their_own_return_values()
+    {
+        Livewire::visit([
+            new class extends \Livewire\Component {
+                public $foo = '';
+
+                #[Async]
+                public function echoBack($input)
+                {
+                    return $input;
+                }
+
+                public function render() { return <<<'HTML'
+                <div>
+                    <livewire:child wire:model="foo" />
+                    <button x-on:click="$refs.output.textContent = (await Promise.all([$wire.echoBack('a'), $wire.echoBack('b'), $wire.echoBack('c')])).join(',')" dusk="run">run</button>
+                    <span x-ref="output" dusk="output"></span>
+                </div>
+                HTML; }
+            },
+            'child' => new class extends \Livewire\Component {
+                #[BaseModelable]
+                public $value = '';
+
+                public function render() { return <<<'HTML'
+                <div>Child</div>
+                HTML; }
+            },
+        ])
+        ->click('@run')
+        ->waitForTextIn('@output', ',')
+        ->assertSeeIn('@output', 'a,b,c')
         ;
     }
 
