@@ -45,6 +45,26 @@ class TemporaryUploadedFile extends UploadedFile
         return true;
     }
 
+    public function isFile(): bool
+    {
+        return is_file($this->getPathname());
+    }
+
+    public function isReadable(): bool
+    {
+        return is_readable($this->getPathname());
+    }
+
+    public function getMTime(): int
+    {
+        return (int) $this->storage->lastModified($this->path);
+    }
+
+    public function __toString(): string
+    {
+        return $this->getPathname();
+    }
+
     public function getSize(): int
     {
         if (app()->runningUnitTests()) {

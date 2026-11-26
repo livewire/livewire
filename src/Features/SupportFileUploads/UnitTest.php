@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Testing\FileFactory;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestComponent;
 
 class UnitTest extends \Tests\TestCase
@@ -1131,6 +1132,78 @@ class UnitTest extends \Tests\TestCase
         $url = preg_replace('#^https://#', 'http://', $url);
 
         $this->get($url)->assertOk();
+    }
+
+    public function test_temporary_uploaded_file_describes_the_stored_file_on_local_disks()
+    {
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->get('photo');
+
+        // Without this, isFile() can pass by accident thanks to a stale stat cache...
+        clearstatcache();
+
+        $this->assertTrue($photo->isFile());
+        $this->assertTrue($photo->isReadable());
+        $this->assertSame($photo->getPathname(), (string) $photo);
+        $this->assertSame(filemtime($photo->getPathname()), $photo->getMTime());
+    }
+
+    public function test_temporary_uploaded_file_can_be_returned_as_a_file_response()
+    {
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->get('photo');
+
+        $response = response()->file($photo);
+
+        $this->assertInstanceOf(BinaryFileResponse::class, $response);
+        $this->assertSame($photo->getPathname(), $response->getFile()->getPathname());
+    }
+
+    public function test_temporary_uploaded_file_is_not_a_file_once_it_is_deleted()
+    {
+        Storage::fake('avatars');
+
+        $photo = Livewire::test(FileUploadComponent::class)
+            ->set('photo', UploadedFile::fake()->image('avatar.jpg'))
+            ->get('photo');
+
+        $photo->delete();
+
+        clearstatcache();
+
+        $this->assertFalse($photo->isFile());
+        $this->assertFalse($photo->isReadable());
+    }
+
+    public function test_temporary_uploaded_file_is_not_a_file_when_the_disk_has_no_local_path()
+    {
+        config()->set('livewire.temporary_file_upload.disk', 'tmp-for-tests');
+
+        // Like S3, a disk without a root returns the bare object key as its path...
+        $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter(
+            storage_path('framework/testing/disks/tmp-for-tests'),
+        );
+
+        Storage::set('tmp-for-tests', $disk = new FilesystemAdapter(new \League\Flysystem\Filesystem($adapter), $adapter));
+
+        $disk->put('livewire-tmp/remote.bin', file_get_contents(__DIR__.'/browser_test_image.png'));
+
+        $file = TemporaryUploadedFile::createFromLivewire('remote.bin');
+
+        // Asserted first and without clearstatcache(), so a stale stat cache can't hide a wrong answer...
+        $this->assertFalse($file->isFile());
+        $this->assertFalse($file->isReadable());
+
+        $this->assertTrue($file->exists());
+        $this->assertSame('livewire-tmp/remote.bin', $file->getPathname());
+        $this->assertSame('livewire-tmp/remote.bin', (string) $file);
+        $this->assertSame($disk->lastModified('livewire-tmp/remote.bin'), $file->getMTime());
     }
 
     protected function useS3LikeTemporaryUploadDisk()
