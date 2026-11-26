@@ -205,6 +205,81 @@ Available modes:
 - `wire:island.append` - Add to the end
 - `wire:island.prepend` - Add to the beginning
 
+## Updating part of an island
+
+An append-mode island can contain several loaded pages. Replacing the whole island to edit one item would discard the other pages. Declare a named `@islandPart` to update, insert, or remove one element instead:
+
+```blade
+<ul>
+    @island(name: 'users')
+        @foreach ($this->users as $user)
+            @islandPart(name: 'user')
+                <li wire:key="user-{{ $user->id }}">
+                    {{ $user->name }}
+                </li>
+            @endislandPart
+        @endforeach
+    @endisland
+</ul>
+```
+
+During compilation, Livewire copies the root's `wire:key` expression into a `data-island-part` attribute. The declaration remains ordinary inline Blade during initial loading and whole-island renders. It does not create a child component or render a separate view for each item.
+
+After saving an edited user, render only that part from a component action:
+
+```php
+$this->renderIslandPart(
+    island: 'users',
+    name: 'user',
+    target: 'user-'.$user->id,
+    with: ['user' => $user],
+);
+
+$this->skipRender();
+```
+
+`name` selects the cached template; `target` identifies the existing element. Pass local variables through `with` because an independent part render does not execute the surrounding loop. This preserves the other loaded items, pagination state, Alpine state, and nested component identities.
+
+These helpers queue part effects without suppressing a base render. Call `skipRender()` when only the part should update. An action originating inside an island can also trigger an implicit whole-island render; use a renderless action directive, such as `wire:click.renderless`, when that action should only produce part effects.
+
+### Inserting and removing parts
+
+Use `mode: 'append'` or `mode: 'prepend'` to insert a new element at an island boundary:
+
+```php
+$this->renderIslandPart(
+    island: 'users',
+    name: 'user',
+    target: 'user-'.$user->id,
+    with: ['user' => $user],
+    mode: 'prepend',
+);
+
+$this->skipRender();
+```
+
+For insertion, place the island directly inside the collection container, as in the `<ul>` example above. The target must not already exist.
+
+Remove an existing part without rendering its template:
+
+```php
+$this->removeIslandPart('users', 'user', target: 'user-'.$user->id);
+$this->skipRender();
+```
+
+### Part identity and scope
+
+- Each independently rendered part must have exactly one root element.
+- An explicit `data-island-part` attribute takes precedence over `wire:key`.
+- Parts outside a directly enclosing Blade loop default to their literal template name when neither attribute is supplied.
+- Repeated parts require a stable key or an explicit target. Repetition through raw PHP or included views is not inferred; supply explicit identity in those cases.
+- Automatic attribute insertion requires a literal opening tag. Conditional roots need explicit `data-island-part` attributes on their possible roots.
+- Blade component roots support `:wire:key` and must forward their attributes to their rendered root.
+- Target lookup is scoped to the owning component and nearest island. Missing or duplicate targets, and invalid incoming roots, report a browser error before mutation.
+- Nested Livewire components need stable explicit child keys because normal inline rendering and independent part rendering use separate Blade views.
+
+Part declarations accept only a non-empty literal template name. Names must be unique within their immediate island, and parts cannot contain other part declarations.
+
 ## Nested islands
 
 Islands can be nested inside each other. When an outer island re-renders, inner islands are skipped by default:
