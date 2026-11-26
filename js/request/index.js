@@ -25,6 +25,10 @@ export function setNextActionOrigin(origin) {
     outstandingActionOrigin = origin
 }
 
+export function hasOutstandingActionOrigin() {
+    return outstandingActionOrigin !== null
+}
+
 export function setNextActionMetadata(metadata) {
     outstandingActionMetadata = metadata
 }

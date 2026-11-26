@@ -189,4 +189,35 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->assertAttributeMissing('@container', 'data-loading')
         ;
     }
+
+    public function test_data_loading_is_applied_to_element_with_wire_click_dispatch_not_component_root()
+    {
+        Livewire::visit(new class extends \Livewire\Component {
+            #[\Livewire\Attributes\On('refresh-something')]
+            public function handleRefresh()
+            {
+                usleep(250 * 1000);
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div dusk="root">
+                    <button wire:click="$dispatch('refresh-something')" dusk="dispatch-button">Refresh</button>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->assertAttributeMissing('@dispatch-button', 'data-loading')
+        ->assertAttributeMissing('@root', 'data-loading')
+        ->click('@dispatch-button')
+        ->pause(10)
+        ->assertAttribute('@dispatch-button', 'data-loading', 'true')
+        ->assertAttributeMissing('@root', 'data-loading')
+        ->pause(350)
+        ->assertAttributeMissing('@dispatch-button', 'data-loading')
+        ->assertAttributeMissing('@root', 'data-loading')
+        ;
+    }
 }
