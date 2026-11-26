@@ -7,6 +7,7 @@ import { showHtmlModal } from '@/utils/modal.js'
 import { MessageBus, scopeSymbolFromMessage } from './messageBus.js'
 import Message from './message.js'
 import Action from './action.js'
+import { collectSubtreeHashes } from '@/features/supportSubtreeHashes'
 
 let outstandingActionOrigin = null
 let outstandingActionMetadata = {}
@@ -278,6 +279,10 @@ function sendMessages() {
                 updates: message.updates,
                 calls: message.calls,
             }
+
+            let hashes = collectSubtreeHashes(message.component)
+
+            if (hashes) message.payload.hashes = hashes
         })
     })
 

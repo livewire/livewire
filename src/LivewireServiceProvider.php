@@ -210,6 +210,7 @@ class LivewireServiceProvider extends \Illuminate\Support\ServiceProvider
             Features\SupportLifecycleHooks\SupportLifecycleHooks::class,
             Features\SupportLegacyModels\SupportLegacyModels::class,
             Features\SupportWireables\SupportWireables::class,
+            Features\SupportSubtreeHashes\SupportSubtreeHashes::class,
         ] as $feature) {
             app('livewire')->componentHook($feature);
         }

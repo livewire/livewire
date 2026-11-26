@@ -5,6 +5,7 @@ import { on as hook, trigger, triggerAsync } from './hooks'
 import { directive } from './directives'
 import Alpine from 'alpinejs'
 import { fireAction, interceptAction, interceptMessage, interceptRequest } from '@/request'
+import { markChanged } from '@/features/supportSubtreeHashes'
 
 let Livewire = {
     directive,
@@ -24,6 +25,7 @@ let Livewire = {
     triggerAsync,
     dispatch,
     on,
+    markChanged,
     get navigate() {
         return Alpine.navigate
     }

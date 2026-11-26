@@ -15,6 +15,7 @@ import morph from '@alpinejs/morph'
 import mask from '@alpinejs/mask'
 import Alpine from 'alpinejs'
 import { dispatch } from './utils'
+import { reportMorphsOutsideLivewire } from './features/supportSubtreeHashes'
 
 export function start() {
     setTimeout(() => ensureLivewireScriptIsntMisplaced())
@@ -23,6 +24,7 @@ export function start() {
     dispatch(document, 'livewire:initializing')
 
     Alpine.plugin(morph)
+    Alpine.plugin(reportMorphsOutsideLivewire)
     Alpine.plugin(history)
     Alpine.plugin(intersect)
     Alpine.plugin(sort)

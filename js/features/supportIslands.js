@@ -1,6 +1,7 @@
 import { closestFragment, extractFragmentMetadataFromHtml, extractInnerHtmlFromFragmentHtml, findFragment } from '@/fragment'
 import { interceptAction, interceptMessage } from '@/request'
 import { morphFragment, getTagName } from '@/morph'
+import { forgetHashesAround } from '@/features/supportSubtreeHashes'
 
 interceptAction(({ action }) => {
     let origin = action.origin
@@ -99,7 +100,11 @@ export async function renderIsland(component, islandHtml) {
         await morphFragment(component, fragment.startMarkerNode, fragment.endMarkerNode, strippedContent)
     } else if (mode === 'append') {
         fragment.append(parentElementTag, strippedContent)
+
+        forgetHashesAround(fragment.startMarkerNode)
     } else if (mode === 'prepend') {
         fragment.prepend(parentElementTag, strippedContent)
+
+        forgetHashesAround(fragment.startMarkerNode)
     }
 }
