@@ -231,7 +231,7 @@ function diffRecursive(left, right, path, diffs, rootLeft, rootRight) {
     // Helper to check if an array has non-numeric (string) keys
     // Arrays with string keys need granular diffs because JSON.stringify ignores them
     let hasNonNumericKeys = (arr) => {
-        return isArray(arr) && Object.keys(arr).some(k => isNaN(parseInt(k)))
+        return isArray(arr) && Object.keys(arr).some(k => ! /^\d+$/.test(k))
     }
 
     // Are they COMPLETELY different types?
