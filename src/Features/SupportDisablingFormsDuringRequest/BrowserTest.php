@@ -66,4 +66,26 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(600)
         ->assertAttributeMissing('@color', 'disabled');
     }
+
+    public function test_submit_button_with_wire_loading_attr_is_enabled_after_a_failed_request()
+    {
+        Livewire::visit(new class extends Component {
+            public function submit() {
+                abort(500);
+            }
+
+            public function render() {
+                return <<<'HTML'
+                <div>
+                    <form wire:submit="submit">
+                        <button type="submit" wire:loading.attr="disabled" dusk="submit">Submit</button>
+                    </form>
+                </div>
+                HTML;
+            }
+        })
+        ->click('@submit')
+        ->waitFor('#livewire-error')
+        ->assertAttributeMissing('@submit', 'disabled');
+    }
 }
