@@ -61,6 +61,21 @@ class EnumUnitTest extends \Tests\TestCase
             ->assertSet('list', [])
         ;
     }
+
+    public function test_setting_an_enum_property_to_an_array_aborts_with_419()
+    {
+        config()->set('app.debug', false);
+
+        Livewire::test(ComponentWithNullablePublicEnumCaster::class)
+            ->set('status', [])
+            ->assertStatus(419);
+
+        Livewire::test(new class extends TestComponent {
+            public TestingEnum $status = TestingEnum::TEST;
+        })
+            ->set('status', [])
+            ->assertStatus(419);
+    }
 }
 
 enum TestingEnum: string
