@@ -66,4 +66,44 @@ class BrowserTest extends \Tests\BrowserTestCase
         ->pause(600)
         ->assertAttributeMissing('@color', 'disabled');
     }
+
+    public function test_form_lock_does_not_re_enable_elements_the_server_rendered_as_disabled_or_readonly()
+    {
+        Livewire::visit(new class extends Component {
+            public bool $locked = false;
+
+            public function submit()
+            {
+                $this->locked = true;
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <form wire:submit="submit">
+                        <input type="text" dusk="text" @readonly($locked) />
+                        <input type="checkbox" dusk="checkbox" @disabled($locked) />
+                        <select dusk="select" @disabled($locked)><option>x</option></select>
+                        <button type="submit" dusk="button" @disabled($locked)>Send</button>
+                    </form>
+
+                    <p dusk="state">server locked = {{ $locked ? 'true' : 'false' }}</p>
+                </div>
+                HTML;
+            }
+        })
+            ->assertSeeIn('@state', 'server locked = false')
+            ->assertAttributeMissing('@text', 'readonly')
+            ->assertAttributeMissing('@checkbox', 'disabled')
+            ->assertAttributeMissing('@select', 'disabled')
+            ->assertAttributeMissing('@button', 'disabled')
+            ->waitForLivewire()->click('@button')
+            ->assertSeeIn('@state', 'server locked = true')
+            // After the request, server-rendered locked state must remain
+            ->assertAttribute('@text', 'readonly', 'true')
+            ->assertAttribute('@checkbox', 'disabled', 'true')
+            ->assertAttribute('@select', 'disabled', 'true')
+            ->assertAttribute('@button', 'disabled', 'true');
+    }
 }
