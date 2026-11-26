@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportIslands;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Tests\BrowserTestCase;
 use Livewire\Livewire;
 
@@ -346,6 +347,37 @@ class BrowserTest extends BrowserTestCase
             ->assertPresent('@island-increment')
             ->assertPresent('@root-increment')
             ;
+    }
+
+    public function test_deferred_island_with_video_loads_asset_only_once()
+    {
+        Route::get('/test-video.mp4', function () {
+            return response('fake-video-bytes', 200, [
+                'Content-Type' => 'video/mp4',
+                'Cache-Control' => 'no-store',
+            ]);
+        });
+
+        Livewire::visit(new class extends \Livewire\Component {
+            public function render() {
+                return <<<'BLADE'
+                <div>
+                    @island(defer: true)
+                        <div>
+                            <video autoplay controls id="videoPlayer" dusk="video">
+                                <source src="/test-video.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    @endisland
+                </div>
+                BLADE;
+            }
+        })
+            ->assertNotPresent('@video')
+            ->waitFor('@video')
+            ->assertPresent('@video')
+            ->pause(500)
+            ->assertScript("performance.getEntriesByType('resource').filter(e => e.name.includes('/test-video.mp4')).length", 1);
     }
 
     public function test_lazy_with_placeholder()
