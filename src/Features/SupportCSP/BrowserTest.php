@@ -381,4 +381,33 @@ class BrowserTest extends BrowserTestCase
             ->assertSee('Age: 30')
         ;
     }
+
+    public function test_js_actions_can_be_called_from_alpine_expressions_with_csp()
+    {
+        $browser = Livewire::visit(new class extends Component {
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button id="one" dusk="one" x-on:click="$js.nextTab($el)">One</button>
+                    <button id="two" dusk="two" x-on:click="$wire.$js.nextTab($el)">Two</button>
+                    <button id="three" dusk="three" x-on:click="$wire.$js['nextTab']($el)">Three</button>
+                </div>
+                HTML;
+            }
+        });
+
+        // Register the `$js` action from a script (inline scripts are blocked
+        // by the CSP build), then call it from the markup expressions above...
+        $browser->script("Livewire.first().\$js('nextTab', (el) => { window.calls = [...(window.calls ?? []), el.id] })");
+
+        $browser->click('@one')
+            ->assertScript('window.calls.join(",") === "one"')
+            ->click('@two')
+            ->assertScript('window.calls.join(",") === "one,two"')
+            ->click('@three')
+            ->assertScript('window.calls.join(",") === "one,two,three"')
+            ->assertConsoleLogHasNoErrors()
+        ;
+    }
 }
