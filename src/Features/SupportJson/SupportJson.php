@@ -3,6 +3,9 @@
 namespace Livewire\Features\SupportJson;
 
 use function Livewire\on;
+
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
@@ -19,17 +22,27 @@ class SupportJson extends ComponentHook
 
             // This listener runs the method itself, before the regular "call" hooks
             // would authorize it, so run any authorization checks first...
-            $authorized = $component->getAttributes()
+            $result = null;
+            $component->getAttributes()
                 ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->every(fn ($i) => $i->call($params));
+                ->each(function ($i) use ($params, &$result) {
+                    return is_null($result = $i->call($params)); // short-circuited when false
+                });
 
             $component->skipRender();
 
-            if (! $authorized) {
+            if (! is_null($result)) {
+                $status = match (true) {
+                    $result instanceof HttpExceptionInterface => $result->getStatusCode(),
+                    $result instanceof AuthorizationException => $result->status() ?? 403,
+                    $result instanceof ModelNotFoundException => 404,
+                    default => 500
+                };
+
                 $existingMeta = $context->effects['returnsMeta'] ?? [];
-                $existingMeta[$index] = ['status' => 403];
+                $existingMeta[$index] = ['status' => $status];
                 $context->addEffect('returnsMeta', $existingMeta);
 
                 return $returnEarly(null);

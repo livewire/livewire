@@ -4,6 +4,7 @@ namespace Livewire\Features\SupportAuthorization;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\Gate;
@@ -960,6 +961,32 @@ class UnitTest extends TestCase
         $component->call('json')->assertOk();
 
         $this->assertFalse(Session::has('json-ran'));
+    }
+
+    public function test_json_method_returns_404_when_model_not_found()
+    {
+        $component = Livewire::actingAs(AuthorizationUser::find(1))
+            ->test(new class extends TestComponent {
+                #[\Livewire\Attributes\Json]
+                #[Authorize('edit', 'post')]
+                public function editPost(AuthorizationPost $post) : bool
+                {
+                    return true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof ModelNotFoundException) $stopPropagation();
+                }
+            })
+            ->call('editPost', post: 3)
+            ->assertOk();
+
+        $returnsMeta = $component->effects['returnsMeta'] ?? [];
+
+        $this->assertArrayHasKey(0, $returnsMeta);
+        $this->assertArrayHasKey('status', $returnsMeta[0]);
+        $this->assertSame(404, $returnsMeta[0]['status']);
     }
 
     public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
