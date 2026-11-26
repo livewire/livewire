@@ -128,7 +128,11 @@ trait InteractsWithProperties
             $source = $all[$root];
 
             if ($source instanceof Form) {
-                $source = $source->all();
+                $source = array_filter(
+                    $source->all(),
+                    fn ($value, $name) => (new \ReflectionProperty($source, (string) $name))->isInitialized($source),
+                    ARRAY_FILTER_USE_BOTH
+                );
             }
 
             if (! is_array($source)) continue;

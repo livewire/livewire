@@ -1347,6 +1347,31 @@ class UnitTest extends \Tests\TestCase
             ->assertSetStrict('form.title', 'foo')
             ->assertSetStrict('form.content.foo', []);
     }
+
+    public function test_reset_except_preserves_uninitialized_required_typed_form_property()
+    {
+        $component = Livewire::test(new class extends TestComponent {
+            public PostFormStubWithRequiredTypedProperties $form;
+
+            public function mount()
+            {
+                $this->form->content = 'Some content...';
+            }
+
+            public function resetKeysExcept($keys)
+            {
+                $this->resetExcept($keys);
+            }
+        })
+            ->call('resetKeysExcept', 'form.title')
+            ->assertSetStrict('form.title', null)
+            ->assertSetStrict('form.content', null)
+            ->assertOk();
+
+        $form = $component->instance()->form;
+
+        $this->assertFalse((new \ReflectionProperty($form, 'title'))->isInitialized($form));
+    }
 }
 
 class PostFormStub extends Form
