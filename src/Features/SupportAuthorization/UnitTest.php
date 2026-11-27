@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportAuthorization;
 
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\User as AuthUser;
@@ -992,6 +993,68 @@ class UnitTest extends TestCase
         $this->assertSame(404, $returnsMeta[0]['status']);
     }
 
+    public function test_json_method_returns_404_when_authorization_denied_as_not_found()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        $component = Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public bool $called = false;
+
+                #[\Livewire\Attributes\Json]
+                #[Authorize('delete', 'post')]
+                public function deletePost(AuthorizationPost $post)
+                {
+                    $this->called = true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof AuthorizationException) $stopPropagation();
+                }
+            })
+            ->call('deletePost', post: 1)
+            ->assertSetStrict('called', false)
+            ->assertOk();
+
+        $returnsMeta = $component->effects['returnsMeta'] ?? [];
+
+        $this->assertArrayHasKey(0, $returnsMeta);
+        $this->assertArrayHasKey('status', $returnsMeta[0]);
+        $this->assertSame(404, $returnsMeta[0]['status']);
+    }
+
+    public function test_json_method_returns_400_when_authorization_denied_with_custom_status()
+    {
+        Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
+
+        $component = Livewire::actingAs(AuthorizationUser::find(2))
+            ->test(new class extends TestComponent {
+                public bool $called = false;
+
+                #[\Livewire\Attributes\Json]
+                #[Authorize('restore', 'post')]
+                public function restorePost(AuthorizationPost $post)
+                {
+                    $this->called = true;
+                }
+
+                public function exception($e, $stopPropagation)
+                {
+                    if ($e instanceof AuthorizationException) $stopPropagation();
+                }
+            })
+            ->call('restorePost', post: 1)
+            ->assertSetStrict('called', false)
+            ->assertOk();
+
+        $returnsMeta = $component->effects['returnsMeta'] ?? [];
+
+        $this->assertArrayHasKey(0, $returnsMeta);
+        $this->assertArrayHasKey('status', $returnsMeta[0]);
+        $this->assertSame(400, $returnsMeta[0]['status']);
+    }
+
     public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
     {
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
@@ -1060,6 +1123,20 @@ class AuthorizationPostPolicy
     public function edit(AuthorizationUser $user, AuthorizationPost $post) : bool
     {
         return (int) $post->user_id === (int) $user->id;
+    }
+
+    public function delete(AuthorizationUser $user, AuthorizationPost $post) : Response
+    {
+        return (int) $post->user_id === (int) $user->id
+            ? Response::allow()
+            : Response::denyAsNotFound();
+    }
+
+    public function restore(AuthorizationUser $user, AuthorizationPost $post) : Response
+    {
+        return (int) $post->user_id === (int) $user->id
+            ? Response::allow()
+            : Response::denyWithStatus(400);
     }
 }
 
