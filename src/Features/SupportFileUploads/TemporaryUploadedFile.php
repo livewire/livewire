@@ -90,6 +90,15 @@ class TemporaryUploadedFile extends UploadedFile
 
     protected function detectMimeTypeFromContents(): string
     {
+        $diskConfig = FileUploadConfiguration::diskConfig();
+
+        if (is_array($diskConfig) && ($diskConfig['driver'] ?? null) === 'local') {
+            $path = $this->storage->path($this->path);
+
+            return (new FinfoMimeTypeDetector())->detectMimeTypeFromFile($path)
+                ?: 'application/octet-stream';
+        }
+
         $stream = $this->storage->readStream($this->path);
 
         if (! is_resource($stream)) {
