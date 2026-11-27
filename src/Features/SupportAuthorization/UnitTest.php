@@ -986,11 +986,7 @@ class UnitTest extends TestCase
             ->assertSetStrict('called', false)
             ->assertOk();
 
-        $returnsMeta = $component->effects['returnsMeta'] ?? [];
-
-        $this->assertArrayHasKey(0, $returnsMeta);
-        $this->assertArrayHasKey('status', $returnsMeta[0]);
-        $this->assertSame(404, $returnsMeta[0]['status']);
+        $this->assertStatusCode($component, 404);
     }
 
     public function test_json_method_returns_404_when_authorization_denied_as_not_found()
@@ -1017,11 +1013,7 @@ class UnitTest extends TestCase
             ->assertSetStrict('called', false)
             ->assertOk();
 
-        $returnsMeta = $component->effects['returnsMeta'] ?? [];
-
-        $this->assertArrayHasKey(0, $returnsMeta);
-        $this->assertArrayHasKey('status', $returnsMeta[0]);
-        $this->assertSame(404, $returnsMeta[0]['status']);
+        $this->assertStatusCode($component, 404);
     }
 
     public function test_json_method_returns_400_when_authorization_denied_with_custom_status()
@@ -1048,11 +1040,7 @@ class UnitTest extends TestCase
             ->assertSetStrict('called', false)
             ->assertOk();
 
-        $returnsMeta = $component->effects['returnsMeta'] ?? [];
-
-        $this->assertArrayHasKey(0, $returnsMeta);
-        $this->assertArrayHasKey('status', $returnsMeta[0]);
-        $this->assertSame(400, $returnsMeta[0]['status']);
+        $this->assertStatusCode($component, 400);
     }
 
     public function test_can_authorize_using_attribute_and_trait_method_at_the_same_time()
@@ -1081,6 +1069,15 @@ class UnitTest extends TestCase
             ->assertOk();
 
         $this->assertFalse(Session::has('exception-hook-triggered'));
+    }
+
+    protected function assertStatusCode($component, $status)
+    {
+        $returnsMeta = $component->effects['returnsMeta'] ?? [];
+
+        $this->assertArrayHasKey(0, $returnsMeta);
+        $this->assertArrayHasKey('status', $returnsMeta[0]);
+        $this->assertSame($status, $returnsMeta[0]['status']);
     }
 }
 
