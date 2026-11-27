@@ -974,6 +974,26 @@ class UnitTest extends \Tests\TestCase
         $this->assertSame(1, $disk->readStreamCalls);
     }
 
+    public function test_temporary_upload_mime_type_uses_the_whole_file_on_a_local_disk()
+    {
+        Storage::fake('local-temp');
+
+        config()->set('livewire.temporary_file_upload.disk', 'local-temp');
+
+        $contents = json_encode(array_fill(0, 5000, [
+            'id' => 1,
+            'name' => 'Lorem ipsum',
+            'email' => 'lorem@example.com',
+        ]));
+
+        Storage::disk('local-temp')->put('livewire-tmp/large.json', $contents);
+
+        $file = TemporaryUploadedFile::createFromLivewire('large.json');
+
+        $this->assertSame('application/json', $file->getMimeType());
+        $this->assertSame('json', $file->extension());
+    }
+
     public function test_temporary_upload_mime_type_is_detected_past_an_id3_tag_larger_than_the_sample()
     {
         $disk = $this->useS3LikeTemporaryUploadDisk();
