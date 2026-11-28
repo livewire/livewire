@@ -34,7 +34,7 @@ class SupportJson extends ComponentHook
 
             if (! $authorized) {
                 $status = static::getStatusCode(
-                    store($component)->get('exceptionForJsonMethod')
+                    store($component)->get('exceptionForJsonMethod', new AuthorizationException)
                 );
 
                 $existingMeta = $context->effects['returnsMeta'] ?? [];
