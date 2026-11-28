@@ -3,6 +3,9 @@
 namespace Livewire\Features\SupportJson;
 
 use function Livewire\on;
+
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\ComponentHook;
 use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
@@ -49,7 +52,7 @@ class SupportJson extends ComponentHook
                 // Return null so the returns array stays aligned
                 $returnEarly(null);
             } catch (\Throwable $e) {
-                $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+                $status = static::getStatusCode($e);
 
                 $existingMeta = $context->effects['returnsMeta'] ?? [];
                 $existingMeta[$index] = ['status' => $status];
@@ -66,5 +69,15 @@ class SupportJson extends ComponentHook
             ->filter(fn ($attr) => $attr instanceof BaseJson)
             ->filter(fn ($attr) => $attr->getName() === $method)
             ->isNotEmpty();
+    }
+
+    protected static function getStatusCode(\Throwable $e)
+    {
+        return match (true) {
+            $e instanceof HttpExceptionInterface => $e->getStatusCode(),
+            $e instanceof AuthorizationException => $e->status() ?? 403,
+            $e instanceof ModelNotFoundException => 404,
+            default => 500
+        };
     }
 }

@@ -319,7 +319,7 @@ class BrowserTest extends BrowserTestCase
         ->click('@call')
         ->waitForTextIn('@title', 'First')
         ->click('@call-missing')
-        ->waitForTextIn('@status', '500')
+        ->waitForTextIn('@status', '404')
         ;
     }
 }
