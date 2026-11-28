@@ -20,51 +20,46 @@ class BaseAuthorize extends LivewireAttribute
         public array|string|null $argument = null,
     ) {}
 
-    public function call(array $parameters, ?\Closure $returnEarly = null) : ?\Throwable
+    public function call(array $parameters, ?\Closure $returnEarly = null) : bool
     {
-        $result = null;
+        $authorized = false;
 
-        wrap($this->component)->tap(function () use ($parameters, &$result) {
-            try {
-                $this->runAuthorization($parameters);
-            } catch (\Throwable $e) {
-                throw ($result = $e);
+        wrap($this->component)->tap(function () use ($parameters, &$authorized) {
+            // Authorize defined gate or class name
+            if (is_null($this->argument)) {
+                $this->authorize($this->ability);
+
+                $authorized = true;
+    
+                return;
             }
+    
+            // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
+            $methodDependencies = null;
+            $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
+                return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
+                    app(),
+                    [$this->component, $this->getName()],
+                    $parameters,
+                );
+            };
+    
+            // Resolve each argument (prioritize method parameters first, then component properties)
+            $resolved = [];
+            foreach (Arr::wrap($this->argument) as $arg) {
+                $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
+            }
+    
+            $this->authorize($this->ability, $resolved);
+
+            $authorized = true;
         });
 
         // When the component's exception() hook stops propagation, return early,
         // the same as when $this->authorize() throws inside the method...
-        if (! is_null($result) && $returnEarly) $returnEarly();
+        if (! $authorized && $returnEarly) $returnEarly();
 
-        return $result;
-    }
-
-    protected function runAuthorization($parameters)
-    {
-        // Authorize defined gate or class name
-        if (is_null($this->argument)) {
-            $this->authorize($this->ability);
-
-            return;
-        }
-
-        // Resolve method dependencies lazily, then reuse them for multi-argument authorization checks...
-        $methodDependencies = null;
-        $resolveMethodDependencies = function () use (&$methodDependencies, $parameters): array {
-            return $methodDependencies ??= ImplicitlyBoundMethod::resolveMethodDependencies(
-                app(),
-                [$this->component, $this->getName()],
-                $parameters,
-            );
-        };
-
-        // Resolve each argument (prioritize method parameters first, then component properties)
-        $resolved = [];
-        foreach (Arr::wrap($this->argument) as $arg) {
-            $resolved[] = $this->resolveArgument($arg, $resolveMethodDependencies);
-        }
-
-        $this->authorize($this->ability, $resolved);
+        return $authorized;
     }
 
     protected function resolveArgument(string $arg, \Closure $resolveMethodDependencies): mixed

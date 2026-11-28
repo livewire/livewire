@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportJson;
 
 use function Livewire\on;
+use function Livewire\store;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -23,19 +24,18 @@ class SupportJson extends ComponentHook
 
             // This listener runs the method itself, before the regular "call" hooks
             // would authorize it, so run any authorization checks first...
-            $result = null;
-            $component->getAttributes()
+            $authorized = $component->getAttributes()
                 ->filter(fn ($i) => $i instanceof BaseAuthorize)
                 ->filter(fn ($i) => $i->getName() === $method)
                 ->filter(fn ($i) => $i->getLevel() === AttributeLevel::METHOD)
-                ->each(function ($i) use ($params, &$result) {
-                    return is_null($result = $i->call($params)); // short-circuited when false
-                });
+                ->every(fn ($i) => $i->call($params));
 
             $component->skipRender();
 
-            if (! is_null($result)) {
-                $status = static::getStatusCode($result);
+            if (! $authorized) {
+                $status = static::getStatusCode(
+                    store($component)->get('exceptionForJsonMethod')
+                );
 
                 $existingMeta = $context->effects['returnsMeta'] ?? [];
                 $existingMeta[$index] = ['status' => $status];
