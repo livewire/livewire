@@ -8,6 +8,7 @@ use Livewire\Features\SupportAttributes\AttributeLevel;
 use Livewire\Features\SupportAuthorization\BaseAuthorize;
 
 use Illuminate\Validation\ValidationException;
+use Livewire\ImplicitlyBoundMethod;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class SupportJson extends ComponentHook
@@ -36,7 +37,7 @@ class SupportJson extends ComponentHook
             }
 
             try {
-                $result = $component->{$method}(...$params);
+                $result = ImplicitlyBoundMethod::call(app(), [$component, $method], $params);
 
                 $returnEarly($result);
             } catch (ValidationException $e) {

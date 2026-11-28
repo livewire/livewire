@@ -277,4 +277,58 @@ class BrowserTest extends BrowserTestCase
         ->assertSeeIn('@error', 'error: 422')
         ;
     }
+
+    public function test_json_method_resolves_implicit_model_binding()
+    {
+        Livewire::visit(new class extends Component {
+            public $title = '';
+            public $status = '';
+
+            #[Json]
+            public function getPost(JsonBindingPost $post)
+            {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                ];
+            }
+
+            public function render()
+            {
+                return <<<'HTML'
+                <div>
+                    <button dusk="call" @click="
+                        $wire.getPost(1)
+                            .then(data => { $wire.title = data.title })
+                            .catch(e => { $wire.status = String(e.status) })
+                    ">Call</button>
+
+                    <button dusk="call-missing" @click="
+                        $wire.getPost(999)
+                            .then(data => {})
+                            .catch(e => { $wire.status = String(e.status) })
+                    ">Call Missing</button>
+
+                    <span dusk="title" wire:text="title"></span>
+                    <span dusk="status" wire:text="status"></span>
+                </div>
+                HTML;
+            }
+        })
+        ->waitForLivewireToLoad()
+        ->click('@call')
+        ->waitForTextIn('@title', 'First')
+        -
+        ->click('@call-missing')
+        ->waitForTextIn('@status', '500');
+    }
+}
+
+class JsonBindingPost extends \Illuminate\Database\Eloquent\Model
+{
+    use \Sushi\Sushi;
+
+    protected $rows = [
+        ['id' => 1, 'title' => 'First', 'user_id' => 1],
+    ];
 }
