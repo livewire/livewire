@@ -28,6 +28,8 @@ class Wrapped
                 $shouldPropagate = false;
             };
 
+            store($this->target)->set('exceptionForJsonMethod', $e);
+
             trigger('exception', $this->target, $e, $stopPropagation);
 
             $shouldPropagate && throw $e;
