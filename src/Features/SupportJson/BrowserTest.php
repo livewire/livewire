@@ -318,9 +318,9 @@ class BrowserTest extends BrowserTestCase
         ->waitForLivewireToLoad()
         ->click('@call')
         ->waitForTextIn('@title', 'First')
-        -
         ->click('@call-missing')
-        ->waitForTextIn('@status', '500');
+        ->waitForTextIn('@status', '500')
+        ;
     }
 }
 
