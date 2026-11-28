@@ -967,22 +967,15 @@ class UnitTest extends TestCase
     public function test_json_method_returns_404_when_model_not_found()
     {
         $component = Livewire::actingAs(AuthorizationUser::find(1))
-            ->test(new class extends TestComponent {
-                public bool $called = false;
+            ->test(ComponentWithJsonMethod::class);
 
-                #[\Livewire\Attributes\Json]
-                #[Authorize('edit', 'post')]
-                public function editPost(AuthorizationPost $post)
-                {
-                    $this->called = true;
-                }
+        $component->call('editWithAuthorize', post: 3)
+            ->assertSetStrict('called', false)
+            ->assertOk();
 
-                public function exception($e, $stopPropagation)
-                {
-                    if ($e instanceof ModelNotFoundException) $stopPropagation();
-                }
-            })
-            ->call('editPost', post: 3)
+        $this->assertStatusCode($component, 404);
+
+        $component->call('editWithoutAuthorize', post: 3)
             ->assertSetStrict('called', false)
             ->assertOk();
 
@@ -994,22 +987,15 @@ class UnitTest extends TestCase
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
 
         $component = Livewire::actingAs(AuthorizationUser::find(2))
-            ->test(new class extends TestComponent {
-                public bool $called = false;
+            ->test(ComponentWithJsonMethod::class);
 
-                #[\Livewire\Attributes\Json]
-                #[Authorize('delete', 'post')]
-                public function deletePost(AuthorizationPost $post)
-                {
-                    $this->called = true;
-                }
+        $component->call('deleteWithAuthorizeAttribute', post: 1)
+            ->assertSetStrict('called', false)
+            ->assertOk();
 
-                public function exception($e, $stopPropagation)
-                {
-                    if ($e instanceof AuthorizationException) $stopPropagation();
-                }
-            })
-            ->call('deletePost', post: 1)
+        $this->assertStatusCode($component, 404);
+
+        $component->call('deleteWithInlineAuthorize', post: 1)
             ->assertSetStrict('called', false)
             ->assertOk();
 
@@ -1021,22 +1007,15 @@ class UnitTest extends TestCase
         Gate::policy(AuthorizationPost::class, AuthorizationPostPolicy::class);
 
         $component = Livewire::actingAs(AuthorizationUser::find(2))
-            ->test(new class extends TestComponent {
-                public bool $called = false;
+            ->test(ComponentWithJsonMethod::class);
 
-                #[\Livewire\Attributes\Json]
-                #[Authorize('restore', 'post')]
-                public function restorePost(AuthorizationPost $post)
-                {
-                    $this->called = true;
-                }
+        $component->call('restoreWithAuthorizeAttribute', post: 1)
+            ->assertSetStrict('called', false)
+            ->assertOk();
 
-                public function exception($e, $stopPropagation)
-                {
-                    if ($e instanceof AuthorizationException) $stopPropagation();
-                }
-            })
-            ->call('restorePost', post: 1)
+        $this->assertStatusCode($component, 400);
+
+        $component->call('restoreWithInlineAuthorize', post: 1)
             ->assertSetStrict('called', false)
             ->assertOk();
 
@@ -1147,5 +1126,58 @@ class AuthorizationCommentPolicy
     public function edit(AuthorizationUser $user, AuthorizationComment $comment, AuthorizationPost $post) : bool
     {
         return (int) $comment->post_id === (int) $post->id && (int) $comment->user_id === (int) $user->id;
+    }
+}
+
+class ComponentWithJsonMethod extends TestComponent
+{
+    public bool $called = false;
+
+    #[\Livewire\Attributes\Json]
+    #[Authorize('edit', 'post')]
+    public function editWithAuthorize(AuthorizationPost $post)
+    {
+        $this->called = true;
+    }
+
+    #[\Livewire\Attributes\Json]
+    public function editWithoutAuthorize(AuthorizationPost $post)
+    {
+        $this->called = true;
+    }
+
+    #[\Livewire\Attributes\Json]
+    #[Authorize('delete', 'post')]
+    public function deleteWithAuthorizeAttribute(AuthorizationPost $post)
+    {
+        $this->called = true;
+    }
+
+    #[\Livewire\Attributes\Json]
+    public function deleteWithInlineAuthorize(AuthorizationPost $post)
+    {
+        $this->authorize('delete', $post);
+        $this->called = true;
+    }
+
+    #[\Livewire\Attributes\Json]
+    #[Authorize('restore', 'post')]
+    public function restoreWithAuthorizeAttribute(AuthorizationPost $post)
+    {
+        $this->called = true;
+    }
+
+    #[\Livewire\Attributes\Json]
+    public function restoreWithInlineAuthorize(AuthorizationPost $post)
+    {
+        $this->authorize('restore', $post);
+        $this->called = true;
+    }
+
+    public function exception($e, $stopPropagation)
+    {
+        if ($e instanceof ModelNotFoundException || $e instanceof AuthorizationException) {
+            $stopPropagation();
+        }
     }
 }
